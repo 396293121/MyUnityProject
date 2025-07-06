@@ -1,0 +1,345 @@
+{
+  "m_ObjectHideFlags": 0,
+  "m_CorrespondingSourceObject": {
+    "fileID": 0
+  },
+  "m_PrefabInstance": {
+    "fileID": 0
+  },
+  "m_PrefabAsset": {
+    "fileID": 0
+  },
+  "m_GameObject": {
+    "fileID": 0
+  },
+  "m_Enabled": 1,
+  "m_EditorHideFlags": 0,
+  "m_Script": {
+    "fileID": 11500000,
+    "guid": "audio-config-script-guid",
+    "type": 3
+  },
+  "m_Name": "AudioConfig",
+  "globalAudioConfig": {
+    "masterVolume": 1.0,
+    "musicVolume": 0.7,
+    "sfxVolume": 0.8,
+    "voiceVolume": 1.0,
+    "maxConcurrentSounds": 10,
+    "maxConcurrentMusic": 2,
+    "maxConcurrentVoice": 3
+  },
+  "characterSoundConfigs": [
+    {
+      "characterType": "warrior",
+      "attackSounds": [
+        {
+          "key": "warrior_attack_1",
+          "volume": 0.8,
+          "pitch": 1.0,
+          "loop": false,
+          "timing": {
+            "frame": 6,
+            "delay": 0
+          },
+          "duration": 800,
+          "minInterval": 200
+        },
+        {
+          "key": "warrior_attack_2",
+          "volume": 0.8,
+          "pitch": 1.1,
+          "loop": false,
+          "timing": {
+            "frame": 6,
+            "delay": 0
+          },
+          "duration": 900,
+          "minInterval": 200
+        }
+      ],
+      "movementSounds": [
+        {
+          "key": "footstep_heavy",
+          "volume": 0.4,
+          "pitch": 1.0,
+          "loop": false,
+          "timing": {
+            "frame": 0,
+            "delay": 0
+          },
+          "duration": 300,
+          "minInterval": 400
+        }
+      ],
+      "damageSounds": [
+        {
+          "key": "warrior_hurt",
+          "volume": 0.7,
+          "pitch": 1.0,
+          "loop": false,
+          "timing": {
+            "frame": 0,
+            "delay": 0
+          },
+          "duration": 600,
+          "minInterval": 500
+        }
+      ],
+      "skillSounds": {
+        "HEAVY_SLASH": [
+          {
+            "key": "heavy_slash_sound",
+            "volume": 0.9,
+            "pitch": 0.9,
+            "loop": false,
+            "timing": {
+              "frame": 8,
+              "delay": 0
+            },
+            "duration": 1200,
+            "minInterval": 300
+          }
+        ],
+        "WHIRLWIND": [
+          {
+            "key": "whirlwind_sound",
+            "volume": 0.8,
+            "pitch": 1.0,
+            "loop": false,
+            "timing": {
+              "frame": 10,
+              "delay": 0
+            },
+            "duration": 1500,
+            "minInterval": 500
+          }
+        ],
+        "BATTLE_CRY": [
+          {
+            "key": "battle_cry_sound",
+            "volume": 1.0,
+            "pitch": 0.8,
+            "loop": false,
+            "timing": {
+              "frame": 5,
+              "delay": 0
+            },
+            "duration": 2000,
+            "minInterval": 1000
+          }
+        ]
+      }
+    },
+    {
+      "characterType": "mage",
+      "attackSounds": [
+        {
+          "key": "magic_cast",
+          "volume": 0.7,
+          "pitch": 1.0,
+          "loop": false,
+          "timing": {
+            "frame": 5,
+            "delay": 0
+          },
+          "duration": 1000,
+          "minInterval": 300
+        }
+      ],
+      "movementSounds": [
+        {
+          "key": "footstep_light",
+          "volume": 0.3,
+          "pitch": 1.2,
+          "loop": false,
+          "timing": {
+            "frame": 0,
+            "delay": 0
+          },
+          "duration": 250,
+          "minInterval": 450
+        }
+      ],
+      "damageSounds": [
+        {
+          "key": "mage_hurt",
+          "volume": 0.6,
+          "pitch": 1.1,
+          "loop": false,
+          "timing": {
+            "frame": 0,
+            "delay": 0
+          },
+          "duration": 500,
+          "minInterval": 400
+        }
+      ],
+      "skillSounds": {}
+    },
+    {
+      "characterType": "archer",
+      "attackSounds": [
+        {
+          "key": "bow_shoot",
+          "volume": 0.6,
+          "pitch": 1.0,
+          "loop": false,
+          "timing": {
+            "frame": 4,
+            "delay": 0
+          },
+          "duration": 600,
+          "minInterval": 200
+        }
+      ],
+      "movementSounds": [
+        {
+          "key": "footstep_medium",
+          "volume": 0.35,
+          "pitch": 1.1,
+          "loop": false,
+          "timing": {
+            "frame": 0,
+            "delay": 0
+          },
+          "duration": 280,
+          "minInterval": 420
+        }
+      ],
+      "damageSounds": [
+        {
+          "key": "archer_hurt",
+          "volume": 0.65,
+          "pitch": 1.05,
+          "loop": false,
+          "timing": {
+            "frame": 0,
+            "delay": 0
+          },
+          "duration": 550,
+          "minInterval": 450
+        }
+      ],
+      "skillSounds": {}
+    }
+  ],
+  "enemySoundConfigs": [
+    {
+      "enemyType": "wild_boar",
+      "attackSounds": [
+        {
+          "key": "boar_attack",
+          "volume": 0.7,
+          "pitch": 0.9,
+          "loop": false,
+          "timing": {
+            "frame": 6,
+            "delay": 0
+          },
+          "duration": 800,
+          "minInterval": 300
+        }
+      ],
+      "movementSounds": [
+        {
+          "key": "boar_footstep",
+          "volume": 0.5,
+          "pitch": 0.8,
+          "loop": false,
+          "timing": {
+            "frame": 0,
+            "delay": 0
+          },
+          "duration": 400,
+          "minInterval": 600
+        }
+      ],
+      "damageSounds": [
+        {
+          "key": "boar_hurt",
+          "volume": 0.6,
+          "pitch": 0.85,
+          "loop": false,
+          "timing": {
+            "frame": 0,
+            "delay": 0
+          },
+          "duration": 700,
+          "minInterval": 500
+        }
+      ],
+      "skillSounds": {
+        "charge": [
+          {
+            "key": "boar_charge",
+            "volume": 0.8,
+            "pitch": 0.7,
+            "loop": false,
+            "timing": {
+              "frame": 0,
+              "delay": 0
+            },
+            "duration": 1500,
+            "minInterval": 800
+          }
+        ]
+      }
+    }
+  ],
+  "backgroundMusicConfigs": [
+    {
+      "key": "menu_music",
+      "name": "主菜单音乐",
+      "volume": 0.6,
+      "loop": true,
+      "fadeInTime": 1000,
+      "fadeOutTime": 1000,
+      "applicableScenes": ["MainMenu", "CharacterSelect"]
+    },
+    {
+      "key": "character_select_bgm",
+      "name": "角色选择音乐",
+      "volume": 0.5,
+      "loop": true,
+      "fadeInTime": 800,
+      "fadeOutTime": 800,
+      "applicableScenes": ["CharacterSelect"]
+    },
+    {
+      "key": "game_music",
+      "name": "游戏音乐",
+      "volume": 0.4,
+      "loop": true,
+      "fadeInTime": 1500,
+      "fadeOutTime": 1500,
+      "applicableScenes": ["GamePlay", "Battle"]
+    }
+  ],
+  "uiSoundConfigs": [
+    {
+      "key": "button_click",
+      "volume": 0.7,
+      "pitch": 1.0,
+      "loop": false,
+      "timing": {
+        "frame": 0,
+        "delay": 0
+      },
+      "duration": 200,
+      "minInterval": 100
+    },
+    {
+      "key": "button_hover",
+      "volume": 0.4,
+      "pitch": 1.2,
+      "loop": false,
+      "timing": {
+        "frame": 0,
+        "delay": 0
+      },
+      "duration": 150,
+      "minInterval": 50
+    }
+  ]
+}

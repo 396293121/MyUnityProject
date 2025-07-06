@@ -1,0 +1,197 @@
+{
+  "m_ObjectHideFlags": 0,
+  "m_CorrespondingSourceObject": {
+    "fileID": 0
+  },
+  "m_PrefabInstance": {
+    "fileID": 0
+  },
+  "m_PrefabAsset": {
+    "fileID": 0
+  },
+  "m_GameObject": {
+    "fileID": 0
+  },
+  "m_Enabled": 1,
+  "m_EditorHideFlags": 0,
+  "m_Script": {
+    "fileID": 11500000,
+    "guid": "your-script-guid-here",
+    "type": 3
+  },
+  "m_Name": "WildBoarEnemyConfig",
+  "globalTiming": {
+    "hurtFlashDuration": 100,
+    "attackHitDelay": 300,
+    "patrolRandomChance": 0.005,
+    "patrolWaitTime": 2000,
+    "baseAttackCooldown": 1500,
+    "deathFadeDuration": 2000,
+    "bodyDisableDelay": 500,
+    "debugDisplayDuration": 200,
+    "stateTransitionDelay": 50,
+    "hurtRecoveryDuration": 500,
+    "deathAnimationDuration": 1000,
+    "collisionDamageCooldown": 2000,
+    "playerInvulnerabilityDuration": 500
+  },
+  "globalPhysics": {
+    "bounce": 0.1,
+    "distanceThreshold": 10,
+    "movementThreshold": 5,
+    "chargeDamageMultiplier": 1.5
+  },
+  "stuckDetection": {
+    "checkInterval": 2000,
+    "stuckTimeThreshold": 5000,
+    "minMovementDistance": 20
+  },
+  "enemyConfigs": [
+    {
+      "id": "wild_boar",
+      "name": "野猪",
+      "description": "铁山村附近常见的野猪，性情暴躁。",
+      "type": "normal",
+      "level": 2,
+      "stats": {
+        "health": 40,
+        "attack": 18,
+        "defense": 15,
+        "speed": 80,
+        "exp": 15
+      },
+      "abilities": ["charge", "tusk_attack"],
+      "drops": [
+        {
+          "itemId": "pig_tusk",
+          "chance": 0.6,
+          "minQuantity": 1,
+          "maxQuantity": 2
+        },
+        {
+          "itemId": "thick_hide",
+          "chance": 0.4,
+          "minQuantity": 1,
+          "maxQuantity": 1
+        },
+        {
+          "itemId": "monster_meat",
+          "chance": 0.8,
+          "minQuantity": 1,
+          "maxQuantity": 2
+        }
+      ],
+      "goldDrop": {
+        "min": 2,
+        "max": 8
+      },
+      "spriteKey": "wild_boar_sprite",
+      "textureKey": "wild_boar_sprite",
+      "standardSize": {
+        "x": 250,
+        "y": 141
+      },
+      "anchorPoint": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "physicsBody": {
+        "width": 127,
+        "height": 87,
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "behavior": {
+        "type": "territorial",
+        "detectionRadius": 150,
+        "aggroRadius": 180,
+        "attackRange": 40,
+        "patrolRadius": 100,
+        "chaseSpeed": 80,
+        "chargeSpeed": 160,
+        "returnToPatrolDelay": 3000,
+        "attackCooldown": 1500,
+        "chargeTriggerDistance": 80,
+        "chargeMinDistance": 40,
+        "chargeCooldown": 5000,
+        "chargeStunDuration": 1500
+      },
+      "timing": {
+        "hurtFlashDuration": 100,
+        "invulnerabilityDuration": 500,
+        "attackHitDelay": 300,
+        "chargeDuration": 1000,
+        "chargeStunDuration": 1500,
+        "deathFadeDuration": 2000
+      },
+      "enhancedAnimation": {
+        "charge": {
+          "speedMultiplier": 2.0,
+          "duration": 1500,
+          "cooldown": 5000,
+          "stunDuration": 1500,
+          "frameRateMultiplier": 1.5
+        },
+        "attack": {
+          "keyFrameNumber": 6,
+          "hitbox": {
+            "width": 60,
+            "height": 50,
+            "offsetX": 30,
+            "offsetY": -10
+          },
+          "knockback": {
+            "force": 150,
+            "duration": 300
+          }
+        },
+        "hurt": {
+          "invulnerabilityDuration": 500,
+          "flashDuration": 100,
+          "knockbackResistance": 0.7
+        },
+        "death": {
+          "fadeOutDuration": 1000,
+          "bodyDisableDelay": 500
+        }
+      },
+      "stateMachine": {
+        "availableStates": ["idle", "patrol", "chase", "attack", "charge", "hurt", "stunned", "die"],
+        "transitions": [
+          {
+            "fromState": "idle",
+            "toStates": ["patrol", "chase", "hurt", "die"]
+          },
+          {
+            "fromState": "patrol",
+            "toStates": ["idle", "chase", "hurt", "die"]
+          },
+          {
+            "fromState": "chase",
+            "toStates": ["idle", "attack", "charge", "hurt", "die"]
+          },
+          {
+            "fromState": "attack",
+            "toStates": ["idle", "chase", "hurt", "die"]
+          },
+          {
+            "fromState": "charge",
+            "toStates": ["stunned", "hurt", "die"]
+          },
+          {
+            "fromState": "hurt",
+            "toStates": ["idle", "chase", "die"]
+          },
+          {
+            "fromState": "stunned",
+            "toStates": ["idle", "chase", "hurt", "die"]
+          },
+          {
+            "fromState": "die",
+            "toStates": []
+          }
+        ]
+      }
+    }
+  ]
+}
