@@ -3,12 +3,28 @@
   "WorkspaceRootPath": "C:\\Users\\Lenovo\\My project\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|c:\\users\\lenovo\\my project\\assets\\scripts\\ui\\characteroption.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|c:\\users\\lenovo\\my project\\assets\\scripts\\events\\gameevents.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\events\\gameevents.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|c:\\users\\lenovo\\my project\\assets\\newbehaviourscript.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|solutionrelative:assets\\newbehaviourscript.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|C:\\Users\\Lenovo\\My project\\assets\\healthbar.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|solutionrelative:assets\\healthbar.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|C:\\Users\\Lenovo\\My project\\Assets\\SimpleEnemy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|solutionrelative:Assets\\SimpleEnemy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|C:\\Users\\Lenovo\\My project\\assets\\scripts\\ui\\characteroption.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\characteroption.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Lenovo\\My project\\Library\\PackageCache\\com.unity.muse.common@2.0.10\\Runtime\\Backend\\GenerativeAIBackend.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Library\\PackageCache\\com.unity.muse.common@2.0.10\\Runtime\\Backend\\GenerativeAIBackend.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|C:\\Users\\Lenovo\\My project\\assets\\scripts\\systems\\testscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32C3BDE6-E125-3128-82C1-25D0441455A3}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\systems\\testscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Lenovo\\My project\\Assets\\Scripts\\Scenes\\CharacterSelectSceneController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -31,32 +47,80 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "CharacterOption.cs",
-              "DocumentMoniker": "C:\\Users\\Lenovo\\My project\\Assets\\Scripts\\UI\\CharacterOption.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\CharacterOption.cs",
-              "ToolTip": "C:\\Users\\Lenovo\\My project\\Assets\\Scripts\\UI\\CharacterOption.cs",
-              "RelativeToolTip": "Assets\\Scripts\\UI\\CharacterOption.cs",
-              "ViewState": "AgIAABoAAAAAAAAAAAAhwDIAAAARAAAAAAAAAA==",
+              "Title": "GameEvents.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\My project\\Assets\\Scripts\\Events\\GameEvents.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Events\\GameEvents.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\My project\\Assets\\Scripts\\Events\\GameEvents.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Events\\GameEvents.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-05T11:28:16.038Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "GenerativeAIBackend.cs",
-              "DocumentMoniker": "C:\\Users\\Lenovo\\My project\\Library\\PackageCache\\com.unity.muse.common@2.0.10\\Runtime\\Backend\\GenerativeAIBackend.cs",
-              "RelativeDocumentMoniker": "Library\\PackageCache\\com.unity.muse.common@2.0.10\\Runtime\\Backend\\GenerativeAIBackend.cs",
-              "ToolTip": "C:\\Users\\Lenovo\\My project\\Library\\PackageCache\\com.unity.muse.common@2.0.10\\Runtime\\Backend\\GenerativeAIBackend.cs",
-              "RelativeToolTip": "Library\\PackageCache\\com.unity.muse.common@2.0.10\\Runtime\\Backend\\GenerativeAIBackend.cs",
-              "ViewState": "AgIAAPcAAAAAAAAAAAAhwBABAAB9AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-05T06:23:42.67Z",
+              "WhenOpened": "2025-07-07T10:48:49.095Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "HealthBar.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\My project\\Assets\\HealthBar.cs",
+              "RelativeDocumentMoniker": "Assets\\HealthBar.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\My project\\Assets\\HealthBar.cs",
+              "RelativeToolTip": "Assets\\HealthBar.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-07T07:16:09.001Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "TestSceneController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\My project\\Assets\\Scripts\\Systems\\TestSceneController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Systems\\TestSceneController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\My project\\Assets\\Scripts\\Systems\\TestSceneController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Systems\\TestSceneController.cs",
+              "ViewState": "AgIAAAMCAAAAAAAAAAAkwCgCAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-06T14:57:37.776Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "SimpleEnemy.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\My project\\Assets\\SimpleEnemy.cs",
+              "RelativeDocumentMoniker": "Assets\\SimpleEnemy.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\My project\\Assets\\SimpleEnemy.cs",
+              "RelativeToolTip": "Assets\\SimpleEnemy.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-06T13:56:58.008Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "NewBehaviourScript.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\My project\\Assets\\NewBehaviourScript.cs",
+              "RelativeDocumentMoniker": "Assets\\NewBehaviourScript.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\My project\\Assets\\NewBehaviourScript.cs",
+              "RelativeToolTip": "Assets\\NewBehaviourScript.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAzwDUAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-06T11:56:20.327Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "CharacterOption.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\My project\\Assets\\Scripts\\UI\\CharacterOption.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\CharacterOption.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\My project\\Assets\\Scripts\\UI\\CharacterOption.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\CharacterOption.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADIAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-05T11:28:16.038Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
               "Title": "CharacterSelectSceneController.cs",
               "DocumentMoniker": "C:\\Users\\Lenovo\\My project\\Assets\\Scripts\\Scenes\\CharacterSelectSceneController.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Scenes\\CharacterSelectSceneController.cs",
@@ -67,7 +131,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 7,
               "Title": "ConfigManager.cs",
               "DocumentMoniker": "C:\\Users\\Lenovo\\My project\\Assets\\Scripts\\Managers\\ConfigManager.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Managers\\ConfigManager.cs",
