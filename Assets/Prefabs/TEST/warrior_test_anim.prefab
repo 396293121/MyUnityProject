@@ -9,12 +9,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2293877032079825830}
+  - component: {fileID: 2084112907248682885}
   - component: {fileID: 7109428010291904151}
   - component: {fileID: 1234094422006537599}
   - component: {fileID: 3954200196351654381}
   - component: {fileID: 5219955795635038263}
   - component: {fileID: 2021242179622106731}
-  - component: {fileID: 2084112907248682885}
   m_Layer: 10
   m_Name: warrior_test_anim
   m_TagString: Player
@@ -38,6 +38,35 @@ Transform:
   - {fileID: 3184754972417466405}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2084112907248682885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5332153218383502975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1bd6629f788cae4fa94d1273c0e6f5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 5
+  jumpForce: 10
+  maxHealth: 76.8254
+  attackDamage: 20
+  attackWidth: 2
+  attackHeight: 1
+  attackRange: 1.5
+  attackCooldown: 1
+  invincibilityTime: 1
+  knockbackForce: 5
+  attackAnimationName: Attack
+  showAttackRange: 1
+  showGroundDetection: 1
+  showMovementDirection: 1
+  attackRangeColor: {r: 1, g: 0, b: 0, a: 1}
+  groundDetectionColor: {r: 0, g: 1, b: 0, a: 1}
+  movementDirectionColor: {r: 0, g: 0, b: 1, a: 1}
 --- !u!212 &7109428010291904151
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -58,7 +87,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -228,20 +257,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 3.7014294, y: 6.6996164}
   m_EdgeRadius: 0
---- !u!114 &2084112907248682885
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5332153218383502975}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1bd6629f788cae4fa94d1273c0e6f5b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 5
-  jumpForce: 10
 --- !u!1 &6009178029295044069
 GameObject:
   m_ObjectHideFlags: 0
