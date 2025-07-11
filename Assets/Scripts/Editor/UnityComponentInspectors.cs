@@ -111,78 +111,78 @@ namespace CustomInspectors
     /// Rigidbody2D组件的自定义Inspector
     /// 为2D刚体物理属性添加中文标签和说明
     /// </summary>
-    [CustomEditor(typeof(Rigidbody2D))]
-    public class Rigidbody2DInspector : OdinEditor
-    {
-        public override void OnInspectorGUI()
-        {
-            Rigidbody2D rb = (Rigidbody2D)target;
+    // [CustomEditor(typeof(Rigidbody2D))]
+    // public class Rigidbody2DInspector : OdinEditor
+    // {
+    //     public override void OnInspectorGUI()
+    //     {
+    //         Rigidbody2D rb = (Rigidbody2D)target;
             
-            EditorGUILayout.Space();
+    //         EditorGUILayout.Space();
             
-            // 标题
-            SirenixEditorGUI.Title("Rigidbody2D (2D刚体组件)", "控制物体的2D物理行为和运动", TextAlignment.Left, true);
+    //         // 标题
+    //         SirenixEditorGUI.Title("Rigidbody2D (2D刚体组件)", "控制物体的2D物理行为和运动", TextAlignment.Left, true);
             
-            EditorGUILayout.Space();
-            // 基本属性
-            EditorGUILayout.BeginVertical("box");
-            EditorGUILayout.LabelField("Basic Properties (基本属性)", EditorStyles.boldLabel);
+    //         EditorGUILayout.Space();
+    //         // 基本属性
+    //         EditorGUILayout.BeginVertical("box");
+    //         EditorGUILayout.LabelField("Basic Properties (基本属性)", EditorStyles.boldLabel);
             
-            var helpStyle = new GUIStyle(EditorStyles.helpBox) { fontSize = 11 };
-            EditorGUILayout.LabelField("ℹ️ 物体类型决定了物理引擎如何处理这个物体", helpStyle);
-            rb.bodyType = (RigidbodyType2D)EditorGUILayout.EnumPopup("Body Type (物体类型)", rb.bodyType);
+    //         var helpStyle = new GUIStyle(EditorStyles.helpBox) { fontSize = 11 };
+    //         EditorGUILayout.LabelField("ℹ️ 物体类型决定了物理引擎如何处理这个物体", helpStyle);
+    //         rb.bodyType = (RigidbodyType2D)EditorGUILayout.EnumPopup("Body Type (物体类型)", rb.bodyType);
             
-            if (rb.bodyType == RigidbodyType2D.Dynamic)
-            {
-                EditorGUILayout.LabelField("ℹ️ 物体的质量，影响碰撞和力的作用效果", helpStyle);
-                rb.mass = EditorGUILayout.FloatField("Mass (质量)", rb.mass);
+    //         if (rb.bodyType == RigidbodyType2D.Dynamic)
+    //         {
+    //             EditorGUILayout.LabelField("ℹ️ 物体的质量，影响碰撞和力的作用效果", helpStyle);
+    //             rb.mass = EditorGUILayout.FloatField("Mass (质量)", rb.mass);
                 
-                EditorGUILayout.LabelField("ℹ️ 线性阻力，模拟空气阻力等效果", helpStyle);
-                rb.drag = EditorGUILayout.FloatField("Linear Drag (线性阻力)", rb.drag);
+    //             EditorGUILayout.LabelField("ℹ️ 线性阻力，模拟空气阻力等效果", helpStyle);
+    //             rb.drag = EditorGUILayout.FloatField("Linear Drag (线性阻力)", rb.drag);
                 
-                EditorGUILayout.LabelField("ℹ️ 角度阻力，影响旋转运动的衰减", helpStyle);
-                rb.angularDrag = EditorGUILayout.FloatField("Angular Drag (角度阻力)", rb.angularDrag);
+    //             EditorGUILayout.LabelField("ℹ️ 角度阻力，影响旋转运动的衰减", helpStyle);
+    //             rb.angularDrag = EditorGUILayout.FloatField("Angular Drag (角度阻力)", rb.angularDrag);
                 
-                EditorGUILayout.LabelField("ℹ️ 重力缩放，1为正常重力，0为无重力", helpStyle);
-                rb.gravityScale = EditorGUILayout.FloatField("Gravity Scale (重力缩放)", rb.gravityScale);
-            }
+    //             EditorGUILayout.LabelField("ℹ️ 重力缩放，1为正常重力，0为无重力", helpStyle);
+    //             rb.gravityScale = EditorGUILayout.FloatField("Gravity Scale (重力缩放)", rb.gravityScale);
+    //         }
             
-            EditorGUILayout.EndVertical();
+    //         EditorGUILayout.EndVertical();
             
-            EditorGUILayout.Space();
+    //         EditorGUILayout.Space();
             
-            // 约束
-            EditorGUILayout.BeginVertical("box");
-            EditorGUILayout.LabelField("Constraints (运动约束)", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("ℹ️ 限制物体在特定轴向上的移动或旋转", helpStyle);
+    //         // 约束
+    //         EditorGUILayout.BeginVertical("box");
+    //         EditorGUILayout.LabelField("Constraints (运动约束)", EditorStyles.boldLabel);
+    //         EditorGUILayout.LabelField("ℹ️ 限制物体在特定轴向上的移动或旋转", helpStyle);
             
-            rb.freezeRotation = EditorGUILayout.Toggle("Freeze Rotation (冻结旋转)", rb.freezeRotation);
-            rb.constraints = (RigidbodyConstraints2D)EditorGUILayout.EnumFlagsField("Constraints (位置约束)", rb.constraints);
+    //         rb.freezeRotation = EditorGUILayout.Toggle("Freeze Rotation (冻结旋转)", rb.freezeRotation);
+    //         rb.constraints = (RigidbodyConstraints2D)EditorGUILayout.EnumFlagsField("Constraints (位置约束)", rb.constraints);
             
-            EditorGUILayout.EndVertical();
+    //         EditorGUILayout.EndVertical();
             
-            EditorGUILayout.Space();
+    //         EditorGUILayout.Space();
             
-            // 运行时信息
-            if (Application.isPlaying)
-            {
-                EditorGUILayout.BeginVertical("box");
-                EditorGUILayout.LabelField("Runtime Info (运行时信息)", EditorStyles.boldLabel);
+    //         // 运行时信息
+    //         if (Application.isPlaying)
+    //         {
+    //             EditorGUILayout.BeginVertical("box");
+    //             EditorGUILayout.LabelField("Runtime Info (运行时信息)", EditorStyles.boldLabel);
                 
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.Vector2Field("Velocity (当前速度)", rb.velocity);
-                EditorGUILayout.FloatField("Angular Velocity (当前角速度)", rb.angularVelocity);
-                EditorGUI.EndDisabledGroup();
+    //             EditorGUI.BeginDisabledGroup(true);
+    //             EditorGUILayout.Vector2Field("Velocity (当前速度)", rb.velocity);
+    //             EditorGUILayout.FloatField("Angular Velocity (当前角速度)", rb.angularVelocity);
+    //             EditorGUI.EndDisabledGroup();
                 
-                EditorGUILayout.EndVertical();
-            }
+    //             EditorGUILayout.EndVertical();
+    //         }
             
-            if (GUI.changed)
-            {
-                EditorUtility.SetDirty(rb);
-            }
-        }
-    }
+    //         if (GUI.changed)
+    //         {
+    //             EditorUtility.SetDirty(rb);
+    //         }
+    //     }
+    // }
     
     /// <summary>
     /// BoxCollider2D组件的自定义Inspector

@@ -234,8 +234,13 @@ public class CustomSystemManager : MonoBehaviour
 
 ### 3. 可视化调试
 - Gizmos绘制
-- 状态可视化
-- 路径显示
+  - 技能碰撞框可视化（单体、圆形AOE、矩形AOE）
+  - 状态可视化
+  - 路径显示
+- 技能系统调试
+  - 技能冷却时间显示
+  - 技能范围预览
+  - 技能保护状态指示
 
 ## 扩展建议
 

@@ -120,7 +120,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3805356198524077889}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 4754159200252411264, guid: 2379b51bc08997c479d7bf6374279cba, type: 3}
+        m_TargetAssemblyTypeName: SceneLoader, Assembly-CSharp
+        m_MethodName: LoadScene
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: QuickTestScene
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &503591219675935706
 GameObject:
   m_ObjectHideFlags: 0
@@ -634,7 +646,6 @@ MonoBehaviour:
   hideEase: 26
   characterPreviewScale: 1
   preserveAspect: 1
-  warriorWalkFirstFrame: {fileID: 0}
   characterConfigs:
   - characterType: warrior
     displayName: "\u6218\u58EB"
@@ -666,10 +677,6 @@ MonoBehaviour:
     animationTrigger: Walk
     customScale: 1
     animatorController: {fileID: 9100000, guid: 893dda6907f7261479bbca9553a32e7e, type: 2}
-  warriorWalkSpritePath: Characters/warrior/warrior_walk_0
-  warriorStaticSpritePath: Characters/warrior_character_show
-  characterShowPathTemplate: Characters/{0}_character_show
-  characterPortraitPathTemplate: Characters/{0}/{0}_portrait
   showSoundKey: dialog_open
   hideSoundKey: dialog_close
   buttonClickSoundKey: button_click

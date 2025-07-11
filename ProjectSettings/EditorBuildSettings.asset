@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/CharacterSelectScene.unity
     guid: aaea7c609b106c449a11fbac801e201c
+  - enabled: 1
+    path: Assets/Scenes/QuickTestScene.unity
+    guid: 5143c399abf4b1047b9ec2f086f1bb2e
   m_configObjects: {}

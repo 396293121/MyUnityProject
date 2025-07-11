@@ -1,18 +1,22 @@
 using UnityEngine;
 using System.Collections;
 using Sirenix.OdinInspector;
+using System;
 
 [ShowOdinSerializedPropertiesInInspector]
 public class SimplePlayerController : MonoBehaviour
 {
     #region 角色属性配置
     
-    [TabGroup("角色配置", "移动设置")]
+   
+    private float _baseMoveSpeed = 5f;
+    private float _speedMultiplier = 1f;
+     [TabGroup("角色配置", "移动设置")]
     [BoxGroup("角色配置/移动设置/基础移动")]
     [LabelText("移动速度")]
-    [Range(1f, 20f)]
-    [Tooltip("角色的基础移动速度")]
-    public float moveSpeed = 5f;
+    [ShowInInspector, ReadOnly]
+    [Tooltip("角色的移动速度")]
+    public float moveSpeed => _baseMoveSpeed * _speedMultiplier;
     
     [BoxGroup("角色配置/移动设置/基础移动")]
     [LabelText("跳跃力度")]
@@ -27,11 +31,14 @@ public class SimplePlayerController : MonoBehaviour
     [Tooltip("角色的最大生命值")]
     public float maxHealth = 100f;
     
-    [BoxGroup("角色配置/战斗设置/攻击属性")]
+   
+    private float _baseAttackDamage = 20f;
+    private float _attackMultiplier = 1f;
+     [BoxGroup("角色配置/战斗设置/攻击属性")]
     [LabelText("攻击伤害")]
-    [Range(10f, 100f)]
+    [ShowInInspector, ReadOnly]
     [Tooltip("每次攻击造成的伤害值")]
-    public float attackDamage = 20f;
+    public float attackDamage => _baseAttackDamage * _attackMultiplier;
     
     [BoxGroup("角色配置/战斗设置/攻击属性")]
     [LabelText("攻击宽度")]
@@ -59,7 +66,7 @@ public class SimplePlayerController : MonoBehaviour
     
     [BoxGroup("角色配置/战斗设置/防御属性")]
     [LabelText("无敌时间")]
-    [Range(0.1f, 3f)]
+    [Range(0.1f, 999f)]
     [Tooltip("受伤后的无敌保护时间")]
     public float invincibilityTime = 0.5f;
     
@@ -116,7 +123,11 @@ public class SimplePlayerController : MonoBehaviour
     [ShowInInspector, ReadOnly]
     [Tooltip("角色是否处于受伤状态")]
     private bool isHurt = false;
-    
+    [BoxGroup("运行状态/行为状态/战斗状态")]
+    [LabelText("技能状态")]
+    [ShowInInspector, ReadOnly]
+    [Tooltip("角色是否正在执行技能")]
+    private bool isSkill = false;
     [BoxGroup("运行状态/行为状态/战斗状态")]
     [LabelText("死亡状态")]
     [ShowInInspector, ReadOnly]
@@ -223,8 +234,14 @@ public class SimplePlayerController : MonoBehaviour
         currentHealth = maxHealth;
         
         Debug.Log($"角色初始化完成 - 生命值: {currentHealth}/{maxHealth}");
-    }
+        GameEventsTest.onSkill.AddListener(OnSkill);
 
+    }
+    private void OnSkill()
+    {
+        isSkill = true;
+        Debug.Log("事件系统技能事件，999");
+    }
     /// <summary>
     /// 每帧更新角色状态和处理输入
     /// </summary>
@@ -235,7 +252,10 @@ public class SimplePlayerController : MonoBehaviour
         {
             return;
         }
-        
+        if (isSkill)
+        {
+            return;
+        }
         // 更新动画控制器参数
         UpdateAnimatorParameters();
         
@@ -328,7 +348,7 @@ public class SimplePlayerController : MonoBehaviour
         if (attackInput && canAttack && !isAttacking && !isHurt && !isDead)
         {
             Debug.Log("检测到攻击输入");
-            StartCoroutine(PerformAttack());
+            PerformAttack();
         }
     }
     
@@ -356,7 +376,7 @@ public class SimplePlayerController : MonoBehaviour
     /// 执行攻击的主协程，处理攻击状态和动画
     /// </summary>
     /// <returns>协程迭代器</returns>
-    IEnumerator PerformAttack()
+    void  PerformAttack()
     {
         // 设置攻击状态
         isAttacking = true;
@@ -367,48 +387,15 @@ public class SimplePlayerController : MonoBehaviour
         
         // 触发攻击动画
         animator.SetTrigger("Attack");
-        
+        AudioManagerTest.Instance?.PlaySound(AudioManagerTest.Instance.swordSwingSound);
+
         // 等待动画事件结束攻击状态（主要依赖Animation Event）
-        // 如果没有使用Animation Event，作为备用方案
-        yield return StartCoroutine(WaitForAttackAnimationComplete());
         
         // 备用结束逻辑（防止Animation Event失效）
         // 只有在Animation Event未正确触发时才执行
-        if (isAttacking && !damageTriggered)
-        {
-            EndAttack();
-            Debug.Log("攻击通过备用逻辑结束 - Animation Event可能未正确触发");
-        }
-        else if (isAttacking)
-        {
-            Debug.Log("检测到攻击状态仍为true，但伤害已触发，可能存在状态同步问题");
-        }
     }
     
-    /// <summary>
-    /// 等待攻击动画完成的备用协程
-    /// </summary>
-    /// <returns>协程迭代器</returns>
-    IEnumerator WaitForAttackAnimationComplete()
-    {
-        // 等待一帧确保动画开始播放
-        yield return null;
-        
-        // 持续检查动画播放状态
-        while (isAttacking)
-        {
-            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-            
-            // 检查攻击动画是否播放完成
-            if (stateInfo.IsName(attackAnimationName) && stateInfo.normalizedTime >= 1.0f)
-            {
-                break;
-            }
-            
-            yield return null;
-        }
-    }
-    
+
     /// <summary>
     /// Animation Event调用：在攻击动画的伤害帧触发
     /// </summary>
@@ -478,6 +465,7 @@ public class SimplePlayerController : MonoBehaviour
             if (target.CompareTag("Enemy"))
             {
                 enemiesHit++;
+                AudioManagerTest.Instance?.PlaySound(AudioManagerTest.Instance.swordHitSound);
                 Debug.Log($"攻击命中敌人: {target.name} (伤害: {attackDamage})");
                 
                 // 调用敌人的受伤方法（如果存在）
@@ -527,10 +515,10 @@ public class SimplePlayerController : MonoBehaviour
     /// <param name="damage">受到的伤害值</param>
     public void TakeDamage(float damage)
     {
-        // 检查角色是否处于无敌状态或已死亡
-        if (isDead || isInvincible) 
+        // 检查角色是否处于死亡状态、无敌状态、技能攻击状态或正在攻击
+        if (isDead || isInvincible||isSkill||isAttacking) 
         {
-            Debug.Log($"伤害被忽略 - 死亡状态: {isDead}, 无敌状态: {isInvincible}");
+            Debug.Log($"伤害被忽略 - 死亡状态: {isDead}, 无敌状态: {isInvincible},技能攻击状态:{isSkill},正在攻击:{isAttacking}");
             return;
         }
         
@@ -542,8 +530,8 @@ public class SimplePlayerController : MonoBehaviour
         Debug.Log($"玩家受到伤害: {actualDamage:F1}, 剩余生命值: {currentHealth:F1}/{maxHealth:F1}");
         
         // 触发受伤事件通知其他系统
-        if (GameEvents.OnPlayerTakeDamage != null)
-            GameEvents.OnPlayerTakeDamage.Invoke(actualDamage);
+        if (GameEventsTest.OnPlayerTakeDamage != null)
+            GameEventsTest.OnPlayerTakeDamage.Invoke(actualDamage);
         
         // 根据生命值状态决定后续行为
         if (currentHealth <= 0)
@@ -588,7 +576,17 @@ public class SimplePlayerController : MonoBehaviour
         // 启动无敌时间倒计时
         StartCoroutine(EndInvincibilityAfterDelay(invincibilityTime));
     }
-    
+        public void onSkillEnd()
+    {
+        Debug.Log("技能动画结束");
+        isSkill = false;
+        
+    }
+    public void onFallEnd()
+    {
+        Debug.Log("角色落地最后一帧");
+        animator.SetBool("fallingOver", true);
+    }
     /// <summary>
     /// 延迟结束无敌状态的协程
     /// </summary>
@@ -671,12 +669,6 @@ public class SimplePlayerController : MonoBehaviour
     {
         Debug.Log($"触发器检测到: {other.gameObject.name}, 标签: {other.gameObject.tag}");
 
-        // 地面检测
-        if (other.CompareTag("Ground"))
-        {
-            Debug.Log($"角色着地 - 地面: {other.name}");
-            isGrounded = true;
-        }
         
         // 敌人接触伤害
         if (other.CompareTag("Enemy") && !isInvulnerable && !isDead)
@@ -751,15 +743,15 @@ public class SimplePlayerController : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
-            
+            this.animator.SetBool("fallingOver", false);
             // 计算碰撞力度
             float impactForce = collision.relativeVelocity.magnitude;
             Debug.Log($"角色通过物理碰撞着地 - 地面: {collision.gameObject.name}, 冲击力: {impactForce:F1}");
             
             // 如果冲击力过大，可以造成坠落伤害
-            if (impactForce > 15f && !isDead)
+            if (impactForce > 50f && !isDead)
             {
-                float fallDamage = (impactForce - 15f) * 2f;
+                float fallDamage = (impactForce - 50f) * 2f;
                 Debug.Log($"坠落伤害: {fallDamage:F1}");
                 TakeDamage(fallDamage);
             }
@@ -787,22 +779,29 @@ public class SimplePlayerController : MonoBehaviour
     /// 触发器退出事件处理
     /// </summary>
     /// <param name="other">退出的碰撞体</param>
-    void OnTriggerExit2D(Collider2D other)
+    // void OnTriggerExit2D(Collider2D other)
+    // {
+    //     // 离开地面检测
+    //     if (other.CompareTag("Ground"))
+    //     {
+    //         isGrounded = false;
+    //         Debug.Log($"角色离开地面 - {other.name}");
+    //     }
+        
+    //     // 离开安全区域
+    //     // if (other.CompareTag("SafeZone"))
+    //     // {
+    //     //     Debug.Log($"离开安全区域: {other.name}");
+    //     // }
+    // }
+    void OnCollisionExit2D(Collision2D collision)
     {
-        // 离开地面检测
-        if (other.CompareTag("Ground"))
+        if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = false;
-            Debug.Log($"角色离开地面 - {other.name}");
+            Debug.Log($"角色离开地面 - {collision.gameObject.name}");
         }
-        
-        // 离开安全区域
-        // if (other.CompareTag("SafeZone"))
-        // {
-        //     Debug.Log($"离开安全区域: {other.name}");
-        // }
     }
-    
     #endregion
     
     #region 公共接口方法
@@ -1023,6 +1022,27 @@ public class SimplePlayerController : MonoBehaviour
             #endif
         }
     }
-    
+
+    public void SetSpeedMultiplier(float multiplier)
+    {
+        _speedMultiplier = 1f + multiplier; // 假设 multiplier 是一个百分比加成，例如 0.1 代表 10% 加成
+        Debug.Log($"移动速度乘数设置为: {_speedMultiplier}");
+    }
+
+    public void SetAttackMultiplier(float multiplier)
+    {
+        _attackMultiplier = 1f + multiplier; // 假设 multiplier 是一个百分比加成
+        Debug.Log($"攻击伤害乘数设置为: {_attackMultiplier}");
+    }
+
+    public  bool CanUseSkill()
+    {
+        if (isDead || isHurt || isAttacking||isSkill||!isGrounded)
+        {
+            return false;
+        }
+        return true;
+    }
+
     #endregion
 }

@@ -17,12 +17,12 @@ public class HealthBar : MonoBehaviour
 
     void OnEnable()
     {
-        GameEvents.OnPlayerTakeDamage.AddListener(TakeDamage);
+        GameEventsTest.OnPlayerTakeDamage.AddListener(TakeDamage);
     }
 
     void OnDisable()
     {
-        GameEvents.OnPlayerTakeDamage.RemoveListener(TakeDamage);
+        GameEventsTest.OnPlayerTakeDamage.RemoveListener(TakeDamage);
     }
 
     public void TakeDamage(float damage)

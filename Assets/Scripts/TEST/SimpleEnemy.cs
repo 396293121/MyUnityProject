@@ -35,19 +35,19 @@ public class SimpleEnemy : MonoBehaviour
     [LabelText("检测范围")]
     [Range(1f, 15f)]
     [Tooltip("敌人检测玩家的范围")]
-    public float detectionRange = 5f;
+    public float detectionRange = 10f;
     
     [BoxGroup("敌人配置/AI行为/检测范围")]
     [LabelText("失去目标范围")]
     [Range(5f, 20f)]
     [Tooltip("超过此范围后敌人会失去目标")]
-    public float loseTargetRange = 8f;
+    public float loseTargetRange = 12f;
     
     [BoxGroup("敌人配置/AI行为/攻击属性")]
     [LabelText("攻击范围")]
-    [Range(0.5f, 5f)]
+    [Range(0.5f, 10f)]
     [Tooltip("敌人攻击玩家的范围")]
-    public float attackRange = 1.5f;
+    public float attackRange = 5f;
     
     [BoxGroup("敌人配置/AI行为/攻击属性")]
     [LabelText("攻击伤害")]
@@ -89,7 +89,7 @@ public class SimpleEnemy : MonoBehaviour
     [LabelText("巡逻范围")]
     [Range(2f, 10f)]
     [Tooltip("敌人巡逻的范围")]
-    public float patrolRange = 4f;
+    public float patrolRange = 8f;
     
     [BoxGroup("敌人配置/AI行为/巡逻属性")]
     [LabelText("巡逻等待时间")]
@@ -498,6 +498,7 @@ public class SimpleEnemy : MonoBehaviour
                 {
                     animator.SetTrigger("Charge");
                 }
+                AudioManagerTest.Instance?.PlaySound(AudioManagerTest.Instance.enemyChargeSound);
                 break;
                 
             case EnemyState.Stun:
@@ -509,7 +510,7 @@ public class SimpleEnemy : MonoBehaviour
                 isHurt = true;
                 if (animator != null)
                 {
-                    animator.SetTrigger("Hurt");
+                    animator.SetTrigger("isHurt");
                 }
                 rb.velocity = new Vector2(0, rb.velocity.y);
                 break;
@@ -673,7 +674,7 @@ public class SimpleEnemy : MonoBehaviour
             {
                 playerController.TakeDamage(attackDamage * 1.5f); // 冲锋伤害更高
             }
-            ChangeState(EnemyState.Stun);
+          //  ChangeState(EnemyState.Stun);
         }
     }
     
@@ -850,7 +851,7 @@ public class SimpleEnemy : MonoBehaviour
         {
             animator.SetTrigger("Attack");
         }
-        
+        AudioManagerTest.Instance?.PlaySound(AudioManagerTest.Instance.enemyAttackSound);
         // 检测攻击范围内的玩家
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         if (distanceToPlayer <= attackRange)
@@ -876,7 +877,8 @@ public class SimpleEnemy : MonoBehaviour
         float actualDamage = Mathf.Min(damage, currentHealth);
         currentHealth -= actualDamage;
         currentHealth = Mathf.Max(0, currentHealth);
-        
+
+
         Debug.Log($"敌人受到伤害: {actualDamage:F1}, 剩余生命值: {currentHealth:F1}/{maxHealth:F1}");
         
         // 根据生命值决定后续行为
@@ -886,6 +888,8 @@ public class SimpleEnemy : MonoBehaviour
         }
         else
         {
+          AudioManagerTest.Instance?.PlaySound(AudioManagerTest.Instance.enemyHurtSound);
+
             ChangeState(EnemyState.Hurt);
         }
     }
@@ -896,9 +900,9 @@ public class SimpleEnemy : MonoBehaviour
     private void Die()
     {
         Debug.Log("敌人死亡!");
-        
         ChangeState(EnemyState.Dead);
-        
+                AudioManagerTest.Instance?.PlaySound(AudioManagerTest.Instance.enemyDeathSound);
+
         // 触发死亡动画
         if (animator != null)
         {
@@ -922,7 +926,7 @@ public class SimpleEnemy : MonoBehaviour
         
         // 这里可以添加掉落物品、经验值奖励等逻辑
         // 或者销毁敌人对象
-        // Destroy(gameObject);
+        Destroy(gameObject);
     }
     
     #endregion
