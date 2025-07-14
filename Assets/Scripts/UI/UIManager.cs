@@ -90,7 +90,7 @@ public class UIManager : MonoBehaviour
         UpdateCharacterUI();
         
         // 更新技能UI
-        UpdateSkillUI();
+      //  UpdateSkillUI();
         
         // 处理输入
         HandleUIInput();
@@ -156,25 +156,25 @@ public class UIManager : MonoBehaviour
         }
         
         // 技能按钮事件
-        SetupSkillButtons();
+   //     SetupSkillButtons();
     }
     
     /// <summary>
     /// 设置技能按钮
     /// </summary>
-    private void SetupSkillButtons()
-    {
-        if (skillButtons == null) return;
+    // private void SetupSkillButtons()
+    // {
+    //     if (skillButtons == null) return;
         
-        for (int i = 0; i < skillButtons.Length; i++)
-        {
-            int skillIndex = i; // 闭包变量
-            if (skillButtons[i] != null)
-            {
-                skillButtons[i].onClick.AddListener(() => UseSkill(skillIndex));
-            }
-        }
-    }
+    //     for (int i = 0; i < skillButtons.Length; i++)
+    //     {
+    //         int skillIndex = i; // 闭包变量
+    //         if (skillButtons[i] != null)
+    //         {
+    //             skillButtons[i].onClick.AddListener(() => UseSkill(skillIndex));
+    //         }
+    //     }
+    // }
     
     /// <summary>
     /// 显示UI面板
@@ -448,48 +448,48 @@ public class UIManager : MonoBehaviour
     /// <summary>
     /// 更新技能UI
     /// </summary>
-    private void UpdateSkillUI()
-    {
-        if (currentCharacter == null || skillButtons == null) return;
+    // private void UpdateSkillUI()
+    // {
+    //     if (currentCharacter == null || skillButtons == null) return;
         
-        // 根据角色类型更新技能UI
-        if (currentCharacter is Warrior warrior)
-        {
-            UpdateWarriorSkillUI(warrior);
-        }
-        else if (currentCharacter is Mage mage)
-        {
-            UpdateMageSkillUI(mage);
-        }
-        else if (currentCharacter is Archer archer)
-        {
-            UpdateArcherSkillUI(archer);
-        }
-    }
+    //     // 根据角色类型更新技能UI
+    //     if (currentCharacter is Warrior warrior)
+    //     {
+    //         UpdateWarriorSkillUI(warrior);
+    //     }
+    //     else if (currentCharacter is Mage mage)
+    //     {
+    //         UpdateMageSkillUI(mage);
+    //     }
+    //     else if (currentCharacter is Archer archer)
+    //     {
+    //         UpdateArcherSkillUI(archer);
+    //     }
+    // }
     
     /// <summary>
     /// 更新战士技能UI
     /// </summary>
-    private void UpdateWarriorSkillUI(Warrior warrior)
-    {
-        var skillStatus = warrior.GetSkillStatus();
+    // private void UpdateWarriorSkillUI(Warrior warrior)
+    // {
+    //     var skillStatus = warrior.GetSkillStatus();
         
-        // 更新技能按钮状态
-        if (skillButtons.Length > 0 && skillButtons[0] != null)
-        {
-            skillButtons[0].interactable = skillStatus.canUseHeavySlash;
-        }
+    //     // 更新技能按钮状态
+    //     if (skillButtons.Length > 0 && skillButtons[0] != null)
+    //     {
+    //         skillButtons[0].interactable = skillStatus.canUseHeavySlash;
+    //     }
         
-        if (skillButtons.Length > 1 && skillButtons[1] != null)
-        {
-            skillButtons[1].interactable = skillStatus.canUseWhirlwind;
-        }
+    //     if (skillButtons.Length > 1 && skillButtons[1] != null)
+    //     {
+    //         skillButtons[1].interactable = skillStatus.canUseWhirlwind;
+    //     }
         
-        if (skillButtons.Length > 2 && skillButtons[2] != null)
-        {
-            skillButtons[2].interactable = skillStatus.canUseBattleCry;
-        }
-    }
+    //     if (skillButtons.Length > 2 && skillButtons[2] != null)
+    //     {
+    //         skillButtons[2].interactable = skillStatus.canUseBattleCry;
+    //     }
+    // }
     
     /// <summary>
     /// 更新法师技能UI
@@ -552,49 +552,49 @@ public class UIManager : MonoBehaviour
     /// <summary>
     /// 使用技能
     /// </summary>
-    private void UseSkill(int skillIndex)
-    {
-        if (currentCharacter == null) return;
+    // private void UseSkill(int skillIndex)
+    // {
+    //     if (currentCharacter == null) return;
         
-        // 播放UI音效
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlaySFX("ui_click");
-        }
+    //     // 播放UI音效
+    //     if (AudioManager.Instance != null)
+    //     {
+    //         AudioManager.Instance.PlaySFX("ui_click");
+    //     }
         
-        // 根据角色类型执行技能
-        if (currentCharacter is Warrior warrior)
-        {
-            UseWarriorSkill(warrior, skillIndex);
-        }
-        else if (currentCharacter is Mage mage)
-        {
-            UseMageSkill(mage, skillIndex);
-        }
-        else if (currentCharacter is Archer archer)
-        {
-            UseArcherSkill(archer, skillIndex);
-        }
-    }
+    //     // 根据角色类型执行技能
+    //     if (currentCharacter is Warrior warrior)
+    //     {
+    //         UseWarriorSkill(warrior, skillIndex);
+    //     }
+    //     else if (currentCharacter is Mage mage)
+    //     {
+    //         UseMageSkill(mage, skillIndex);
+    //     }
+    //     else if (currentCharacter is Archer archer)
+    //     {
+    //         UseArcherSkill(archer, skillIndex);
+    //     }
+    // }
     
     /// <summary>
     /// 使用战士技能
     /// </summary>
-    private void UseWarriorSkill(Warrior warrior, int skillIndex)
-    {
-        switch (skillIndex)
-        {
-            case 0:
-                warrior.PerformHeavySlash();
-                break;
-            case 1:
-                warrior.PerformWhirlwind();
-                break;
-            case 2:
-                warrior.PerformBattleCry();
-                break;
-        }
-    }
+    // private void UseWarriorSkill(Warrior warrior, int skillIndex)
+    // {
+    //     switch (skillIndex)
+    //     {
+    //         case 0:
+    //             warrior.PerformHeavySlash();
+    //             break;
+    //         case 1:
+    //             warrior.PerformWhirlwind();
+    //             break;
+    //         case 2:
+    //             warrior.PerformBattleCry();
+    //             break;
+    //     }
+    // }
     
     /// <summary>
     /// 使用法师技能
@@ -755,12 +755,12 @@ public class UIManager : MonoBehaviour
     /// <summary>
     /// 显示商店UI
     /// </summary>
-    public void ShowShopUI(Shop shop)
-    {
-        // 这里应该显示商店界面
-        // 由于没有具体的商店UI面板，暂时显示消息
-        ShowMessage($"打开商店: {shop.shopName}");
-    }
+    // public void ShowShopUI(Shop shop)
+    // {
+    //     // 这里应该显示商店界面
+    //     // 由于没有具体的商店UI面板，暂时显示消息
+    //     ShowMessage($"打开商店: {shop.shopName}");
+    // }
     
     /// <summary>
     /// 隐藏商店UI

@@ -12,20 +12,20 @@ public class SimplePlayerController : MonoBehaviour
     private float _baseMoveSpeed = 5f;
     private float _speedMultiplier = 1f;
      [TabGroup("角色配置", "移动设置")]
-    [BoxGroup("角色配置/移动设置/基础移动")]
+    [FoldoutGroup("角色配置/移动设置/基础移动", expanded: true)]
     [LabelText("移动速度")]
     [ShowInInspector, ReadOnly]
     [Tooltip("角色的移动速度")]
     public float moveSpeed => _baseMoveSpeed * _speedMultiplier;
     
-    [BoxGroup("角色配置/移动设置/基础移动")]
+    [FoldoutGroup("角色配置/移动设置/基础移动")]
     [LabelText("跳跃力度")]
     [Range(5f, 30f)]
     [Tooltip("角色跳跃时施加的向上力度")]
     public float jumpForce = 10f;
     
     [TabGroup("角色配置", "战斗设置")]
-    [BoxGroup("角色配置/战斗设置/生命值")]
+    [FoldoutGroup("角色配置/战斗设置/生命值", expanded: true)]
     [LabelText("最大生命值")]
     [Range(50f, 500f)]
     [Tooltip("角色的最大生命值")]
@@ -34,43 +34,43 @@ public class SimplePlayerController : MonoBehaviour
    
     private float _baseAttackDamage = 20f;
     private float _attackMultiplier = 1f;
-     [BoxGroup("角色配置/战斗设置/攻击属性")]
+     [FoldoutGroup("角色配置/战斗设置/攻击属性", expanded: true)]
     [LabelText("攻击伤害")]
     [ShowInInspector, ReadOnly]
     [Tooltip("每次攻击造成的伤害值")]
     public float attackDamage => _baseAttackDamage * _attackMultiplier;
     
-    [BoxGroup("角色配置/战斗设置/攻击属性")]
+    [VerticalGroup("角色配置/战斗设置/攻击属性")]
     [LabelText("攻击宽度")]
     [Range(0.5f, 5f)]
     [Tooltip("攻击判定的宽度范围")]
     public float attackWidth = 2f;
     
-    [BoxGroup("角色配置/战斗设置/攻击属性")]
+    [VerticalGroup("角色配置/战斗设置/攻击属性")]
     [LabelText("攻击高度")]
     [Range(3f, 10f)]
     [Tooltip("攻击判定的高度范围")]
     public float attackHeight = 7f;
     
-    [BoxGroup("角色配置/战斗设置/攻击属性")]
+    [VerticalGroup("角色配置/战斗设置/攻击属性")]
     [LabelText("攻击距离")]
     [Range(2f, 8f)]
     [Tooltip("攻击向前延伸的距离")]
     public float attackRange = 5f;
     
-    [BoxGroup("角色配置/战斗设置/攻击属性")]
+    [VerticalGroup("角色配置/战斗设置/攻击属性")]
     [LabelText("攻击冷却时间")]
     [Range(0.1f, 5f)]
     [Tooltip("两次攻击之间的最小间隔时间")]
     public float attackCooldown = 1f;
     
-    [BoxGroup("角色配置/战斗设置/防御属性")]
+    [VerticalGroup("角色配置/战斗设置/防御属性")]
     [LabelText("无敌时间")]
     [Range(0.1f, 999f)]
     [Tooltip("受伤后的无敌保护时间")]
     public float invincibilityTime = 0.5f;
     
-    [BoxGroup("角色配置/战斗设置/防御属性")]
+    [VerticalGroup("角色配置/战斗设置/防御属性")]
     [LabelText("击退力度")]
     [Range(1f, 20f)]
     [Tooltip("攻击敌人时的击退力度")]
@@ -81,13 +81,13 @@ public class SimplePlayerController : MonoBehaviour
     #region 组件引用
     
     [TabGroup("角色配置", "组件引用")]
-    [BoxGroup("角色配置/组件引用/核心组件")]
+    [FoldoutGroup("角色配置/组件引用/核心组件", expanded: true)]
     [LabelText("刚体组件")]
     [ShowInInspector, ReadOnly]
     [Tooltip("角色的2D刚体组件")]
     private Rigidbody2D rb;
     
-    [BoxGroup("角色配置/组件引用/核心组件")]
+    [FoldoutGroup("角色配置/组件引用/核心组件")]
     [LabelText("动画控制器")]
     [ShowInInspector, ReadOnly]
     [Tooltip("角色的动画控制器组件")]
@@ -98,7 +98,7 @@ public class SimplePlayerController : MonoBehaviour
     #region 运行时状态
     
     [TabGroup("运行状态", "生命状态")]
-    [BoxGroup("运行状态/生命状态/当前状态")]
+    [FoldoutGroup("运行状态/生命状态/当前状态", expanded: true)]
     [LabelText("当前生命值")]
     [ShowInInspector, ReadOnly]
     [ProgressBar(0, "maxHealth", ColorGetter = "GetHealthBarColor")]
@@ -106,41 +106,41 @@ public class SimplePlayerController : MonoBehaviour
     private float currentHealth;
     
     [TabGroup("运行状态", "行为状态")]
-    [BoxGroup("运行状态/行为状态/移动状态")]
+    [FoldoutGroup("运行状态/行为状态/移动状态", expanded: true)]
     [LabelText("是否在地面")]
     [ShowInInspector, ReadOnly]
     [Tooltip("角色是否接触地面")]
     private bool isGrounded;
     
-    [BoxGroup("运行状态/行为状态/战斗状态")]
+    [FoldoutGroup("运行状态/行为状态/战斗状态", expanded: true)]
     [LabelText("正在攻击")]
     [ShowInInspector, ReadOnly]
     [Tooltip("角色是否正在执行攻击动作")]
     private bool isAttacking = false;
     
-    [BoxGroup("运行状态/行为状态/战斗状态")]
+    [FoldoutGroup("运行状态/行为状态/战斗状态")]
     [LabelText("受伤状态")]
     [ShowInInspector, ReadOnly]
     [Tooltip("角色是否处于受伤状态")]
     private bool isHurt = false;
-    [BoxGroup("运行状态/行为状态/战斗状态")]
+    [FoldoutGroup("运行状态/行为状态/战斗状态")]
     [LabelText("技能状态")]
     [ShowInInspector, ReadOnly]
     [Tooltip("角色是否正在执行技能")]
     private bool isSkill = false;
-    [BoxGroup("运行状态/行为状态/战斗状态")]
+    [FoldoutGroup("运行状态/行为状态/战斗状态")]
     [LabelText("死亡状态")]
     [ShowInInspector, ReadOnly]
     [Tooltip("角色是否已死亡")]
     private bool isDead = false;
     
-    [BoxGroup("运行状态/行为状态/战斗状态")]
+    [FoldoutGroup("运行状态/行为状态/战斗状态")]
     [LabelText("无敌状态")]
     [ShowInInspector, ReadOnly]
     [Tooltip("角色是否处于无敌状态")]
     private bool isInvincible = false;
     
-    [BoxGroup("运行状态/行为状态/战斗状态")]
+    [FoldoutGroup("运行状态/行为状态/战斗状态")]
     [LabelText("上次攻击时间")]
     [ShowInInspector, ReadOnly]
     [Tooltip("上次执行攻击的时间戳")]
@@ -151,7 +151,7 @@ public class SimplePlayerController : MonoBehaviour
     #region 调试和工具
     
     [TabGroup("调试工具", "状态控制")]
-    [BoxGroup("调试工具/状态控制/生命值操作")]
+    [FoldoutGroup("调试工具/状态控制/生命值操作", expanded: true)]
     [Button("完全治疗", ButtonSizes.Medium)]
     [Tooltip("将角色生命值恢复到最大值")]
     private void DebugFullHeal()
@@ -163,7 +163,7 @@ public class SimplePlayerController : MonoBehaviour
         }
     }
     
-    [BoxGroup("调试工具/状态控制/生命值操作")]
+    [FoldoutGroup("调试工具/状态控制/生命值操作")]
     [Button("受到伤害 (10点)", ButtonSizes.Medium)]
     [Tooltip("让角色受到10点伤害用于测试")]
     private void DebugTakeDamage()
@@ -175,7 +175,7 @@ public class SimplePlayerController : MonoBehaviour
     }
     
     [TabGroup("调试工具", "状态重置")]
-    [BoxGroup("调试工具/状态重置/角色重置")]
+    [FoldoutGroup("调试工具/状态重置/角色重置", expanded: true)]
     [Button("重置角色状态", ButtonSizes.Large)]
     [Tooltip("重置角色到初始状态")]
     private void DebugResetCharacter()
@@ -193,13 +193,13 @@ public class SimplePlayerController : MonoBehaviour
     }
     
     [TabGroup("调试工具", "信息显示")]
-    [BoxGroup("调试工具/信息显示/当前状态")]
+    [FoldoutGroup("调试工具/信息显示/当前状态", expanded: true)]
     [ShowInInspector, ReadOnly]
     [LabelText("生命值百分比")]
     [ProgressBar(0, 100, ColorGetter = "GetHealthBarColor")]
     private float HealthPercentage => isDead ? 0 : (currentHealth / maxHealth) * 100f;
     
-    [BoxGroup("调试工具/信息显示/当前状态")]
+    [FoldoutGroup("调试工具/信息显示/当前状态")]
     [ShowInInspector, ReadOnly]
     [LabelText("角色状态摘要")]
     private string CharacterStatusSummary => $"生命: {currentHealth:F1}/{maxHealth} | 地面: {isGrounded} | 攻击: {isAttacking} | 受伤: {isHurt} | 死亡: {isDead}";
@@ -357,12 +357,12 @@ public class SimplePlayerController : MonoBehaviour
     #region 动画配置
     
     [TabGroup("角色配置", "动画设置")]
-    [BoxGroup("角色配置/动画设置/攻击动画")]
+    [FoldoutGroup("角色配置/动画设置/攻击动画", expanded: true)]
     [LabelText("攻击动画名称")]
     [Tooltip("攻击动画在Animator中的状态名称")]
     public string attackAnimationName = "Attack";
     
-    [BoxGroup("角色配置/动画设置/攻击动画")]
+    [FoldoutGroup("角色配置/动画设置/攻击动画")]
     [LabelText("伤害触发状态")]
     [ShowInInspector, ReadOnly]
     [Tooltip("防止在同一次攻击中重复触发伤害")]

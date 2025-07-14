@@ -85,13 +85,13 @@ public class SimpleEnemy : MonoBehaviour
     [Tooltip("冲锋后眩晕状态持续时间")]
     public float stunDuration = 2f;
     
-    [BoxGroup("敌人配置/AI行为/巡逻属性")]
+    [VerticalGroup("敌人配置/AI行为/巡逻属性")]
     [LabelText("巡逻范围")]
     [Range(2f, 10f)]
     [Tooltip("敌人巡逻的范围")]
     public float patrolRange = 8f;
     
-    [BoxGroup("敌人配置/AI行为/巡逻属性")]
+    [VerticalGroup("敌人配置/AI行为/巡逻属性")]
     [LabelText("巡逻等待时间")]
     [Range(1f, 5f)]
     [Tooltip("到达巡逻点后的等待时间")]
@@ -121,25 +121,26 @@ public class SimpleEnemy : MonoBehaviour
     #region 组件引用
     
     [TabGroup("敌人配置", "组件引用")]
-    [BoxGroup("敌人配置/组件引用/核心组件")]
+    [HorizontalGroup("敌人配置/组件引用/组件设置")]
+    [VerticalGroup("敌人配置/组件引用/组件设置/核心组件")]
     [LabelText("刚体组件")]
     [ShowInInspector, ReadOnly]
     [Tooltip("敌人的2D刚体组件")]
     private Rigidbody2D rb;
     
-    [BoxGroup("敌人配置/组件引用/核心组件")]
+    [VerticalGroup("敌人配置/组件引用/组件设置/核心组件")]
     [LabelText("动画控制器")]
     [ShowInInspector, ReadOnly]
     [Tooltip("敌人的动画控制器组件")]
     private Animator animator;
     
-    [BoxGroup("敌人配置/组件引用/核心组件")]
+    [VerticalGroup("敌人配置/组件引用/组件设置/核心组件")]
     [LabelText("精灵渲染器")]
     [ShowInInspector, ReadOnly]
     [Tooltip("敌人的精灵渲染器组件")]
     private SpriteRenderer spriteRenderer;
     
-    [BoxGroup("敌人配置/组件引用/目标引用")]
+    [VerticalGroup("敌人配置/组件引用/组件设置/目标引用")]
     [LabelText("玩家目标")]
     [ShowInInspector, ReadOnly]
     [Tooltip("当前追击的玩家目标")]
@@ -150,7 +151,7 @@ public class SimpleEnemy : MonoBehaviour
     #region 运行时状态
     
     [TabGroup("运行状态", "生命状态")]
-    [BoxGroup("运行状态/生命状态/当前状态")]
+    [FoldoutGroup("运行状态/生命状态/当前状态", expanded: true)]
     [LabelText("当前生命值")]
     [ShowInInspector, ReadOnly]
     [ProgressBar(0, "maxHealth", ColorGetter = "GetHealthBarColor")]
@@ -158,61 +159,61 @@ public class SimpleEnemy : MonoBehaviour
     private float currentHealth;
     
     [TabGroup("运行状态", "AI状态")]
-    [BoxGroup("运行状态/AI状态/当前状态")]
+    [FoldoutGroup("运行状态/AI状态/当前状态", expanded: true)]
     [LabelText("当前AI状态")]
     [ShowInInspector, ReadOnly]
     [Tooltip("敌人当前的AI行为状态")]
     private EnemyState currentState = EnemyState.Idle;
     
-    [BoxGroup("运行状态/AI状态/行为状态")]
+    [FoldoutGroup("运行状态/AI状态/行为状态", expanded: false)]
     [LabelText("是否存活")]
     [ShowInInspector, ReadOnly]
     [Tooltip("敌人是否还活着")]
     private bool isAlive = true;
     
-    [BoxGroup("运行状态/AI状态/行为状态")]
+    [FoldoutGroup("运行状态/AI状态/行为状态")]
     [LabelText("正在攻击")]
     [ShowInInspector, ReadOnly]
     [Tooltip("敌人是否正在执行攻击")]
     private bool isAttacking = false;
     
-    [BoxGroup("运行状态/AI状态/行为状态")]
+    [FoldoutGroup("运行状态/AI状态/行为状态")]
     [LabelText("受伤状态")]
     [ShowInInspector, ReadOnly]
     [Tooltip("敌人是否处于受伤状态")]
     private bool isHurt = false;
     
-    [BoxGroup("运行状态/AI状态/行为状态")]
+    [FoldoutGroup("运行状态/AI状态/行为状态")]
     [LabelText("面向右侧")]
     [ShowInInspector, ReadOnly]
     [Tooltip("敌人是否面向右侧")]
     private bool facingRight = true;
     
-    [BoxGroup("运行状态/AI状态/行为状态")]
+    [FoldoutGroup("运行状态/AI状态/行为状态")]
     [LabelText("正在冲锋")]
     [ShowInInspector, ReadOnly]
     [Tooltip("敌人是否正在执行冲锋攻击")]
     private bool isCharging = false;
     
-    [BoxGroup("运行状态/AI状态/行为状态")]
+    [FoldoutGroup("运行状态/AI状态/行为状态")]
     [LabelText("眩晕状态")]
     [ShowInInspector, ReadOnly]
     [Tooltip("敌人是否处于眩晕状态")]
     private bool isStunned = false;
     
-    [BoxGroup("运行状态/AI状态/计时器")]
+    [FoldoutGroup("运行状态/AI状态/计时器", expanded: false)]
     [LabelText("状态计时器")]
     [ShowInInspector, ReadOnly]
     [Tooltip("当前状态持续时间")]
     private float stateTimer = 0f;
     
-    [BoxGroup("运行状态/AI状态/计时器")]
+    [FoldoutGroup("运行状态/AI状态/计时器")]
     [LabelText("上次攻击时间")]
     [ShowInInspector, ReadOnly]
     [Tooltip("上次执行攻击的时间戳")]
     private float lastAttackTime = 0f;
     
-    [BoxGroup("运行状态/AI状态/计时器")]
+    [FoldoutGroup("运行状态/AI状态/计时器")]
     [LabelText("上次冲锋时间")]
     [ShowInInspector, ReadOnly]
     [Tooltip("上次执行冲锋的时间戳")]
@@ -223,25 +224,25 @@ public class SimpleEnemy : MonoBehaviour
     #region 巡逻系统
     
     [TabGroup("运行状态", "巡逻状态")]
-    [BoxGroup("运行状态/巡逻状态/巡逻点")]
+    [FoldoutGroup("运行状态/巡逻状态/巡逻点", expanded: false)]
     [LabelText("初始位置")]
     [ShowInInspector, ReadOnly]
     [Tooltip("敌人的初始生成位置")]
     private Vector3 initialPosition;
     
-    [BoxGroup("运行状态/巡逻状态/巡逻点")]
+    [FoldoutGroup("运行状态/巡逻状态/巡逻点")]
     [LabelText("左巡逻点")]
     [ShowInInspector, ReadOnly]
     [Tooltip("左侧巡逻边界点")]
     private Vector3 leftPatrolPoint;
     
-    [BoxGroup("运行状态/巡逻状态/巡逻点")]
+    [FoldoutGroup("运行状态/巡逻状态/巡逻点")]
     [LabelText("右巡逻点")]
     [ShowInInspector, ReadOnly]
     [Tooltip("右侧巡逻边界点")]
     private Vector3 rightPatrolPoint;
     
-    [BoxGroup("运行状态/巡逻状态/巡逻点")]
+    [FoldoutGroup("运行状态/巡逻状态/巡逻点")]
     [LabelText("当前巡逻目标")]
     [ShowInInspector, ReadOnly]
     [Tooltip("当前要前往的巡逻目标点")]
@@ -252,7 +253,7 @@ public class SimpleEnemy : MonoBehaviour
     #region 调试和工具
     
     [TabGroup("调试工具", "状态控制")]
-    [BoxGroup("调试工具/状态控制/生命值操作")]
+    [FoldoutGroup("调试工具/状态控制/生命值操作", expanded: false)]
     [Button("完全治疗", ButtonSizes.Medium)]
     [Tooltip("将敌人生命值恢复到最大值")]
     private void DebugFullHeal()
@@ -266,7 +267,7 @@ public class SimpleEnemy : MonoBehaviour
         }
     }
     
-    [BoxGroup("调试工具/状态控制/生命值操作")]
+    [FoldoutGroup("调试工具/状态控制/生命值操作")]
     [Button("受到伤害 (20点)", ButtonSizes.Medium)]
     [Tooltip("让敌人受到20点伤害用于测试")]
     private void DebugTakeDamage()

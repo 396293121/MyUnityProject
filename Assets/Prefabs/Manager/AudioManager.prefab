@@ -68,4 +68,5 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 0ec6515ace93e204c94103fd6b38ee9d, type: 3}
   uiSounds:
   - {fileID: 8300000, guid: 86dc92f9d6d92724ba1e93dda0d94c49, type: 3}
+  - {fileID: 0}
   environmentSounds: []

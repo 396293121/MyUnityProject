@@ -294,55 +294,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b13dd269825c3842bc5785aa61530c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &774461664 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5332153218383502975, guid: e115ac7ce51441345922b19c59d1fa9a, type: 3}
-  m_PrefabInstance: {fileID: 4375463009088111406}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &774461671
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 774461664}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1674a7f310ef95b408dd27ac54db9e13, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  availableSkills:
-  - {fileID: 11400000, guid: 07e3bf528516a5743a9b449de1fb1c21, type: 2}
-  - {fileID: 11400000, guid: 35857258402495d40811263c9fcb19a8, type: 2}
-  skillSpawnPoint: {fileID: 103102272}
-  currentMana: 100
-  maxMana: 100
---- !u!114 &774461678
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 774461664}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b8157428d71e7e04c9b3cf9539abbf2a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &774461684
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 774461664}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c29cff538c195c249b69c6f2236de67b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Library: []
-  m_SpriteLibraryAsset: {fileID: 0}
 --- !u!1 &837423970
 GameObject:
   m_ObjectHideFlags: 0
@@ -861,10 +812,6 @@ PrefabInstance:
       propertyPath: attackHeight
       value: 7
       objectReference: {fileID: 0}
-    - target: {fileID: 2084112907248682885, guid: e115ac7ce51441345922b19c59d1fa9a, type: 3}
-      propertyPath: invincibilityTime
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 2293877032079825830, guid: e115ac7ce51441345922b19c59d1fa9a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.464962
@@ -921,20 +868,10 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 1234328594}
-    m_RemovedComponents:
-    - {fileID: 2021242179622106731, guid: e115ac7ce51441345922b19c59d1fa9a, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5332153218383502975, guid: e115ac7ce51441345922b19c59d1fa9a, type: 3}
-      insertIndex: 2
-      addedObject: {fileID: 774461671}
-    - targetCorrespondingSourceObject: {fileID: 5332153218383502975, guid: e115ac7ce51441345922b19c59d1fa9a, type: 3}
-      insertIndex: 3
-      addedObject: {fileID: 774461678}
-    - targetCorrespondingSourceObject: {fileID: 5332153218383502975, guid: e115ac7ce51441345922b19c59d1fa9a, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 774461684}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e115ac7ce51441345922b19c59d1fa9a, type: 3}
 --- !u!1001 &5776362281998449843
 PrefabInstance:
@@ -964,10 +901,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Enemy
       objectReference: {fileID: 0}
-    - target: {fileID: 1485609283496898506, guid: bb356399f2db90e468c51fe5d8ef2b45, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
-      objectReference: {fileID: 0}
     - target: {fileID: 1670477458504581985, guid: bb356399f2db90e468c51fe5d8ef2b45, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -976,10 +909,6 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 149255231}
-    - target: {fileID: 2988484490234454051, guid: bb356399f2db90e468c51fe5d8ef2b45, type: 3}
-      propertyPath: m_AutoTiling
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3421088613690464847, guid: bb356399f2db90e468c51fe5d8ef2b45, type: 3}
       propertyPath: m_LocalPosition.x
       value: 27.65
@@ -1019,10 +948,6 @@ PrefabInstance:
     - target: {fileID: 3421088613690464847, guid: bb356399f2db90e468c51fe5d8ef2b45, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5700898942754941914, guid: bb356399f2db90e468c51fe5d8ef2b45, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

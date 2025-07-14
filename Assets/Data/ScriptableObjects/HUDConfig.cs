@@ -1,66 +1,103 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 
 /// <summary>
 /// HUD UI配置 ScriptableObject
 /// 基于Phaser项目中的GameHudUI设计
 /// </summary>
 [CreateAssetMenu(fileName = "HUDConfig", menuName = "Game/HUD Config")]
+[ShowOdinSerializedPropertiesInInspector]
 public class HUDConfig : ScriptableObject
 {
-    [Header("HUD基础设置")]
-    [Tooltip("HUD画布预制体")]
+    [TabGroup("基础设置")]
+    [LabelText("HUD画布预制体")]
+    [Required]
+    [AssetsOnly]
+    [InlineEditor]
+    [PropertyOrder(1)]
     public GameObject hudCanvasPrefab;
     
-    [Tooltip("HUD更新频率(秒)")]
+    [TabGroup("基础设置")]
+    [LabelText("HUD更新频率")]
+    [PropertyRange(0.01f, 1f)]
+    [SuffixLabel("秒")]
+    [InfoBox("HUD界面元素的更新频率，值越小更新越频繁", InfoMessageType.Info)]
+    [PropertyOrder(2)]
     public float updateInterval = 0.1f;
     
-    [Tooltip("HUD淡入淡出时间")]
+    [TabGroup("基础设置")]
+    [LabelText("HUD淡入淡出时间")]
+    [PropertyRange(0.1f, 2f)]
+    [SuffixLabel("秒")]
+    [PropertyOrder(3)]
     public float fadeTime = 0.3f;
     
-    [Header("生命值显示")]
-    [Tooltip("生命值条配置")]
+    [TabGroup("界面元素")]
+    [LabelText("生命值条配置")]
+    [InlineProperty]
+    [PropertyOrder(4)]
     public HealthBarConfig healthBarConfig;
     
-    [Header("魔法值显示")]
-    [Tooltip("魔法值条配置")]
+    [TabGroup("界面元素")]
+    [LabelText("魔法值条配置")]
+    [InlineProperty]
+    [PropertyOrder(5)]
     public ManaBarConfig manaBarConfig;
     
-    [Header("经验值显示")]
-    [Tooltip("经验值条配置")]
+    [TabGroup("界面元素")]
+    [LabelText("经验值条配置")]
+    [InlineProperty]
+    [PropertyOrder(6)]
     public ExperienceBarConfig experienceBarConfig;
     
-    [Header("任务显示")]
-    [Tooltip("任务面板配置")]
+    [TabGroup("界面元素")]
+    [LabelText("任务面板配置")]
+    [InlineProperty]
+    [PropertyOrder(7)]
     public QuestPanelConfig questPanelConfig;
     
-    [Header("小地图显示")]
-    [Tooltip("小地图配置")]
+    [TabGroup("界面元素")]
+    [LabelText("小地图配置")]
+    [InlineProperty]
+    [PropertyOrder(8)]
     public MinimapConfig minimapConfig;
     
-    [Header("技能栏显示")]
-    [Tooltip("技能栏配置")]
+    [TabGroup("界面元素")]
+    [LabelText("技能栏配置")]
+    [InlineProperty]
+    [PropertyOrder(9)]
     public SkillBarConfig skillBarConfig;
     
-    [Header("物品栏显示")]
-    [Tooltip("快捷物品栏配置")]
+    [TabGroup("界面元素")]
+    [LabelText("快捷物品栏配置")]
+    [InlineProperty]
+    [PropertyOrder(10)]
     public QuickItemBarConfig quickItemBarConfig;
     
-    [Header("伤害数字显示")]
-    [Tooltip("伤害数字配置")]
+    [TabGroup("特效显示")]
+    [LabelText("伤害数字配置")]
+    [InlineProperty]
+    [PropertyOrder(11)]
     public DamageNumberConfig damageNumberConfig;
     
-    [Header("状态效果显示")]
-    [Tooltip("状态效果配置")]
+    [TabGroup("特效显示")]
+    [LabelText("状态效果配置")]
+    [InlineProperty]
+    [PropertyOrder(12)]
     public StatusEffectConfig statusEffectConfig;
     
-    [Header("聊天窗口")]
-    [Tooltip("聊天窗口配置")]
+    [TabGroup("交互界面")]
+    [LabelText("聊天窗口配置")]
+    [InlineProperty]
+    [PropertyOrder(13)]
     public ChatWindowConfig chatWindowConfig;
     
-    [Header("调试信息")]
-    [Tooltip("调试信息配置")]
+    [TabGroup("调试工具")]
+    [LabelText("调试信息配置")]
+    [InlineProperty]
+    [PropertyOrder(14)]
     public DebugInfoConfig debugInfoConfig;
 }
 
@@ -68,45 +105,82 @@ public class HUDConfig : ScriptableObject
 /// 生命值条配置
 /// </summary>
 [System.Serializable]
+[InlineProperty]
 public class HealthBarConfig
 {
-    [Tooltip("生命值条位置")]
+    [FoldoutGroup("位置和大小", expanded: true)]
+    [LabelText("生命值条位置")]
+    [PropertyOrder(1)]
     public Vector2 position = new Vector2(50, 50);
     
-    [Tooltip("生命值条大小")]
+    [FoldoutGroup("位置和大小")]
+    [LabelText("生命值条大小")]
+    [PropertyOrder(2)]
     public Vector2 size = new Vector2(200, 20);
     
-    [Tooltip("生命值条背景色")]
+    [FoldoutGroup("颜色设置", expanded: true)]
+    [LabelText("背景色")]
+    [PropertyOrder(3)]
     public Color backgroundColor = Color.red;
     
-    [Tooltip("生命值条前景色")]
+    [FoldoutGroup("颜色设置")]
+    [LabelText("前景色")]
+    [PropertyOrder(4)]
     public Color foregroundColor = Color.green;
     
-    [Tooltip("生命值条边框色")]
+    [FoldoutGroup("颜色设置")]
+    [LabelText("边框色")]
+    [PropertyOrder(5)]
     public Color borderColor = Color.white;
     
-    [Tooltip("显示数值文本")]
-    public bool showText = true;
-    
-    [Tooltip("文本格式")]
-    public string textFormat = "{0}/{1}";
-    
-    [Tooltip("文本颜色")]
-    public Color textColor = Color.white;
-    
-    [Tooltip("文本字体大小")]
-    public int fontSize = 14;
-    
-    [Tooltip("平滑变化")]
-    public bool smoothTransition = true;
-    
-    [Tooltip("变化速度")]
-    public float transitionSpeed = 5f;
-    
-    [Tooltip("填充颜色")]
+    [FoldoutGroup("颜色设置")]
+    [LabelText("填充颜色")]
+    [PropertyOrder(6)]
     public Color fillColor = Color.green;
     
-    [Tooltip("动画持续时间")]
+    [FoldoutGroup("文本设置", expanded: true)]
+    [LabelText("显示数值文本")]
+    [PropertyOrder(7)]
+    public bool showText = true;
+    
+    [FoldoutGroup("文本设置")]
+    [LabelText("文本格式")]
+    [InfoBox("使用 {0} 表示当前值，{1} 表示最大值", InfoMessageType.Info)]
+    [ShowIf("showText")]
+    [PropertyOrder(8)]
+    public string textFormat = "{0}/{1}";
+    
+    [FoldoutGroup("文本设置")]
+    [LabelText("文本颜色")]
+    [ShowIf("showText")]
+    [PropertyOrder(9)]
+    public Color textColor = Color.white;
+    
+    [FoldoutGroup("文本设置")]
+    [LabelText("文本字体大小")]
+    [PropertyRange(8, 32)]
+    [ShowIf("showText")]
+    [PropertyOrder(10)]
+    public int fontSize = 14;
+    
+    [FoldoutGroup("动画设置", expanded: true)]
+    [LabelText("平滑变化")]
+    [PropertyOrder(11)]
+    public bool smoothTransition = true;
+    
+    [FoldoutGroup("动画设置")]
+    [LabelText("变化速度")]
+    [PropertyRange(0.1f, 20f)]
+    [SuffixLabel("单位/秒")]
+    [ShowIf("smoothTransition")]
+    [PropertyOrder(12)]
+    public float transitionSpeed = 5f;
+    
+    [FoldoutGroup("动画设置")]
+    [LabelText("动画持续时间")]
+    [PropertyRange(0.1f, 2f)]
+    [SuffixLabel("秒")]
+    [PropertyOrder(13)]
     public float animationDuration = 0.3f;
 }
 
@@ -114,45 +188,82 @@ public class HealthBarConfig
 /// 魔法值条配置
 /// </summary>
 [System.Serializable]
+[InlineProperty]
 public class ManaBarConfig
 {
-    [Tooltip("魔法值条位置")]
+    [FoldoutGroup("位置和大小", expanded: true)]
+    [LabelText("魔法值条位置")]
+    [PropertyOrder(1)]
     public Vector2 position = new Vector2(50, 80);
     
-    [Tooltip("魔法值条大小")]
+    [FoldoutGroup("位置和大小")]
+    [LabelText("魔法值条大小")]
+    [PropertyOrder(2)]
     public Vector2 size = new Vector2(200, 15);
     
-    [Tooltip("魔法值条背景色")]
+    [FoldoutGroup("颜色设置", expanded: true)]
+    [LabelText("背景色")]
+    [PropertyOrder(3)]
     public Color backgroundColor = Color.gray;
     
-    [Tooltip("魔法值条前景色")]
+    [FoldoutGroup("颜色设置")]
+    [LabelText("前景色")]
+    [PropertyOrder(4)]
     public Color foregroundColor = Color.blue;
     
-    [Tooltip("魔法值条边框色")]
+    [FoldoutGroup("颜色设置")]
+    [LabelText("边框色")]
+    [PropertyOrder(5)]
     public Color borderColor = Color.white;
     
-    [Tooltip("显示数值文本")]
-    public bool showText = true;
-    
-    [Tooltip("文本格式")]
-    public string textFormat = "{0}/{1}";
-    
-    [Tooltip("文本颜色")]
-    public Color textColor = Color.white;
-    
-    [Tooltip("文本字体大小")]
-    public int fontSize = 12;
-    
-    [Tooltip("平滑变化")]
-    public bool smoothTransition = true;
-    
-    [Tooltip("变化速度")]
-    public float transitionSpeed = 5f;
-    
-    [Tooltip("填充颜色")]
+    [FoldoutGroup("颜色设置")]
+    [LabelText("填充颜色")]
+    [PropertyOrder(6)]
     public Color fillColor = Color.blue;
     
-    [Tooltip("动画持续时间")]
+    [FoldoutGroup("文本设置", expanded: true)]
+    [LabelText("显示数值文本")]
+    [PropertyOrder(7)]
+    public bool showText = true;
+    
+    [FoldoutGroup("文本设置")]
+    [LabelText("文本格式")]
+    [InfoBox("使用 {0} 表示当前值，{1} 表示最大值", InfoMessageType.Info)]
+    [ShowIf("showText")]
+    [PropertyOrder(8)]
+    public string textFormat = "{0}/{1}";
+    
+    [FoldoutGroup("文本设置")]
+    [LabelText("文本颜色")]
+    [ShowIf("showText")]
+    [PropertyOrder(9)]
+    public Color textColor = Color.white;
+    
+    [FoldoutGroup("文本设置")]
+    [LabelText("文本字体大小")]
+    [PropertyRange(8, 32)]
+    [ShowIf("showText")]
+    [PropertyOrder(10)]
+    public int fontSize = 12;
+    
+    [FoldoutGroup("动画设置", expanded: true)]
+    [LabelText("平滑变化")]
+    [PropertyOrder(11)]
+    public bool smoothTransition = true;
+    
+    [FoldoutGroup("动画设置")]
+    [LabelText("变化速度")]
+    [PropertyRange(0.1f, 20f)]
+    [SuffixLabel("单位/秒")]
+    [ShowIf("smoothTransition")]
+    [PropertyOrder(12)]
+    public float transitionSpeed = 5f;
+    
+    [FoldoutGroup("动画设置")]
+    [LabelText("动画持续时间")]
+    [PropertyRange(0.1f, 2f)]
+    [SuffixLabel("秒")]
+    [PropertyOrder(13)]
     public float animationDuration = 0.3f;
 }
 
@@ -160,39 +271,70 @@ public class ManaBarConfig
 /// 经验值条配置
 /// </summary>
 [System.Serializable]
+[InlineProperty]
 public class ExperienceBarConfig
 {
-    [Tooltip("经验值条位置")]
+    [FoldoutGroup("位置和大小", expanded: true)]
+    [LabelText("经验值条位置")]
+    [PropertyOrder(1)]
     public Vector2 position = new Vector2(50, 110);
     
-    [Tooltip("经验值条大小")]
+    [FoldoutGroup("位置和大小")]
+    [LabelText("经验值条大小")]
+    [PropertyOrder(2)]
     public Vector2 size = new Vector2(300, 10);
     
-    [Tooltip("经验值条背景色")]
+    [FoldoutGroup("颜色设置", expanded: true)]
+    [LabelText("背景色")]
+    [PropertyOrder(3)]
     public Color backgroundColor = Color.gray;
     
-    [Tooltip("经验值条前景色")]
+    [FoldoutGroup("颜色设置")]
+    [LabelText("前景色")]
+    [PropertyOrder(4)]
     public Color foregroundColor = Color.yellow;
     
-    [Tooltip("显示等级文本")]
-    public bool showLevelText = true;
-    
-    [Tooltip("等级文本位置")]
-    public Vector2 levelTextPosition = new Vector2(10, 110);
-    
-    [Tooltip("等级文本格式")]
-    public string levelTextFormat = "Lv.{0}";
-    
-    [Tooltip("等级文本颜色")]
-    public Color levelTextColor = Color.white;
-    
-    [Tooltip("等级文本字体大小")]
-    public int levelFontSize = 16;
-    
-    [Tooltip("填充颜色")]
+    [FoldoutGroup("颜色设置")]
+    [LabelText("填充颜色")]
+    [PropertyOrder(5)]
     public Color fillColor = Color.yellow;
     
-    [Tooltip("动画持续时间")]
+    [FoldoutGroup("等级文本", expanded: true)]
+    [LabelText("显示等级文本")]
+    [PropertyOrder(6)]
+    public bool showLevelText = true;
+    
+    [FoldoutGroup("等级文本")]
+    [LabelText("等级文本位置")]
+    [ShowIf("showLevelText")]
+    [PropertyOrder(7)]
+    public Vector2 levelTextPosition = new Vector2(10, 110);
+    
+    [FoldoutGroup("等级文本")]
+    [LabelText("等级文本格式")]
+    [InfoBox("使用 {0} 表示等级数值", InfoMessageType.Info)]
+    [ShowIf("showLevelText")]
+    [PropertyOrder(8)]
+    public string levelTextFormat = "Lv.{0}";
+    
+    [FoldoutGroup("等级文本")]
+    [LabelText("等级文本颜色")]
+    [ShowIf("showLevelText")]
+    [PropertyOrder(9)]
+    public Color levelTextColor = Color.white;
+    
+    [FoldoutGroup("等级文本")]
+    [LabelText("等级文本字体大小")]
+    [PropertyRange(8, 32)]
+    [ShowIf("showLevelText")]
+    [PropertyOrder(10)]
+    public int levelFontSize = 16;
+    
+    [FoldoutGroup("动画设置", expanded: true)]
+    [LabelText("动画持续时间")]
+    [PropertyRange(0.1f, 2f)]
+    [SuffixLabel("秒")]
+    [PropertyOrder(11)]
     public float animationDuration = 0.3f;
 }
 
@@ -200,30 +342,50 @@ public class ExperienceBarConfig
 /// 任务面板配置
 /// </summary>
 [System.Serializable]
+[InlineProperty]
 public class QuestPanelConfig
 {
-    [Tooltip("任务面板位置")]
+    [FoldoutGroup("位置和大小", expanded: true)]
+    [LabelText("任务面板位置")]
+    [PropertyOrder(1)]
     public Vector2 position = new Vector2(50, 150);
     
-    [Tooltip("任务面板大小")]
+    [FoldoutGroup("位置和大小")]
+    [LabelText("任务面板大小")]
+    [PropertyOrder(2)]
     public Vector2 size = new Vector2(300, 150);
     
-    [Tooltip("任务面板背景色")]
+    [FoldoutGroup("颜色设置", expanded: true)]
+    [LabelText("任务面板背景色")]
+    [PropertyOrder(3)]
     public Color backgroundColor = new Color(0, 0, 0, 0.7f);
     
-    [Tooltip("任务标题颜色")]
+    [FoldoutGroup("颜色设置")]
+    [LabelText("任务标题颜色")]
+    [PropertyOrder(4)]
     public Color titleColor = Color.yellow;
     
-    [Tooltip("任务描述颜色")]
+    [FoldoutGroup("颜色设置")]
+    [LabelText("任务描述颜色")]
+    [PropertyOrder(5)]
     public Color descriptionColor = Color.white;
     
-    [Tooltip("任务进度颜色")]
+    [FoldoutGroup("颜色设置")]
+    [LabelText("任务进度颜色")]
+    [PropertyOrder(6)]
     public Color progressColor = Color.green;
     
-    [Tooltip("最大显示任务数")]
+    [FoldoutGroup("显示设置", expanded: true)]
+    [LabelText("最大显示任务数")]
+    [PropertyRange(1, 10)]
+    [InfoBox("同时显示在面板上的最大任务数量", InfoMessageType.Info)]
+    [PropertyOrder(7)]
     public int maxQuestDisplay = 3;
     
-    [Tooltip("任务字体大小")]
+    [FoldoutGroup("显示设置")]
+    [LabelText("任务字体大小")]
+    [PropertyRange(8, 24)]
+    [PropertyOrder(8)]
     public int fontSize = 12;
 }
 

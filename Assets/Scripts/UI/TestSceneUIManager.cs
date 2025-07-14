@@ -13,7 +13,7 @@ public class TestSceneUIManager : MonoBehaviour
     #region 配置引用
     [Header("配置")]
     [SerializeField] private HUDConfig hudConfig;
-    [SerializeField] private TestSceneConfig sceneConfig;
+    [SerializeField] private UnifiedSceneConfig sceneConfig;
     #endregion
     
     #region UI引用

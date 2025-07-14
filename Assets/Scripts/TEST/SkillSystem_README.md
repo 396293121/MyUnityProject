@@ -2,13 +2,13 @@
 
 ## 概述
 
-本次重构将技能效果逻辑从 `SkillManager` 移动到 `SkillDataTest` 中实现，创建了一个更加模块化和可扩展的技能系统。
+本次重构将技能效果逻辑从 `SkillManager` 移动到 `skillDataConfig` 中实现，创建了一个更加模块化和可扩展的技能系统。
 
 ## 系统架构
 
 ### 核心组件
 
-1. **SkillDataTest.cs** - 技能数据配置类
+1. **skillDataConfig.cs** - 技能数据配置类
    - 包含所有技能参数配置
    - 实现具体的技能效果逻辑
    - 支持多种技能类型和目标类型
@@ -17,7 +17,7 @@
    - 处理技能输入检测
    - 管理技能冷却和法力消耗
    - 播放技能动画、特效和音效
-   - 委托技能效果执行给 SkillDataTest
+   - 委托技能效果执行给 skillDataConfig
 
 3. **BuffManager.cs** - BUFF管理器
    - 管理增益/减益效果
@@ -149,7 +149,7 @@ BUFF持续时间: 15秒
 ### 添加新的技能类型
 
 1. 在 `SkillType` 枚举中添加新类型
-2. 在 `SkillDataTest.cs` 中添加相应的配置字段
+2. 在 `skillDataConfig.cs` 中添加相应的配置字段
 3. 在 `ExecuteSkillEffect` 方法中添加新的case分支
 4. 实现具体的技能效果逻辑
 

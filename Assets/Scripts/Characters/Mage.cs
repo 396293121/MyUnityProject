@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Sirenix.OdinInspector;
 
 /// <summary>
 /// 法师职业类 - 高魔攻高魔防但生命值较低的远程魔法角色
@@ -7,9 +8,92 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class Mage : Character
 {
+    [Header("法师配置")]
+    [SerializeField, LabelText("法师配置文件")]
+    [InfoBox("配置法师的所有属性和技能参数")]
+    private MageConfig config;
+    
     [Header("法师特有属性")]
     public float spellCastRange = 8f;
     public float manaRegenRate = 2f;
+    
+    // 重写Character基类的攻击属性，提供法师特有的配置
+    public override float AttackRange => config != null ? config.attackRange : 1.5f;
+    public override float AttackHeight => config != null ? config.attackHeight : 1.8f;
+    public override float KnockbackForce => config != null ? config.knockbackForce : 3f;
+
+    
+    protected override void DealDamageToTarget(IDamageable target, Vector2 hitPoint)
+    {
+        // 法师造成魔法伤害，基于魔法攻击力
+        int damage = Mathf.RoundToInt(magicalAttack * 0.8f); // 使用80%的魔法攻击力
+        target.TakeDamage(damage, hitPoint, this);
+        
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[Mage] 法师魔法攻击造成 {damage} 点魔法伤害");
+        }
+    }
+    
+    protected override void ApplyKnockbackToTarget(Rigidbody2D targetRb, Vector2 direction)
+    {
+        // 法师的击退效果带有魔法特效
+        Vector2 knockback = direction.normalized * KnockbackForce;
+        targetRb.AddForce(knockback, ForceMode2D.Impulse);
+        
+        // 可以在这里添加魔法击退特效
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[Mage] 法师魔法击退，力度: {KnockbackForce}");
+        }
+    }
+    
+    /// <summary>
+    /// 法师基础攻击方法
+    /// </summary>
+    /// <returns>是否成功执行攻击</returns>
+    public bool PerformBasicAttack()
+    {
+        // 检查攻击冷却
+        if (!CanAttackNow || !isAlive)
+        {
+            return false;
+        }
+        
+        // 更新上次攻击时间
+        lastAttackTime = Time.time;
+        
+        // 执行攻击逻辑
+        DetectAndDamageEnemies(() => {
+            if (GameManager.Instance != null && GameManager.Instance.debugMode)
+            {
+                Debug.Log($"[Mage] 基础魔法攻击命中，伤害: {magicalAttack}");
+            }
+        });
+        
+        return true;
+    }
+    
+    // 法师攻击冷却
+    [LabelText("基础攻击冷却时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float attackCooldown => config != null ? config.attackCooldown : 0.3f;
+    
+    [LabelText("上次攻击时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    private float lastAttackTime;
+    
+    [LabelText("攻击冷却剩余时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    private float AttackCooldownRemaining => Mathf.Max(0f, (lastAttackTime + attackCooldown) - Time.time);
+    
+    [LabelText("可以攻击")]
+    [ReadOnly]
+    [ShowInInspector]
+    private bool CanAttackNow => Time.time >= lastAttackTime + attackCooldown;
     
     [Header("法师技能冷却")]
     public float fireballCooldown = 3f;
@@ -37,10 +121,14 @@ public class Mage : Character
         base.Awake();
         
         // 法师特有属性设置
-        strength = 5;       // 低力量
-        agility = 10;       // 中等敏捷
-        stamina = 8;        // 较低体力
-        intelligence = 15;  // 高智力
+        strength = config != null ? config.strength : 5;
+        agility = config != null ? config.agility : 10;
+        stamina = config != null ? config.stamina : 8;
+        intelligence = config != null ? config.intelligence : 15;
+        
+        // 更新法师特有属性
+        spellCastRange = config != null ? config.spellCastRange : 8f;
+        manaRegenRate = config != null ? config.manaRegenRate : 2f;
         
         // 重新计算衍生属性
         CalculateDerivedStats();
@@ -49,6 +137,21 @@ public class Mage : Character
         {
             Debug.Log($"[Mage] 法师创建完成 - 魔法攻击力: {magicalAttack}, 魔法防御力: {magicDefense}");
         }
+    }
+    
+    public override void InitializeWithConfig(string characterType)
+    {
+        var config = ConfigManager.Instance?.GetCharacterConfig(characterType);
+        if (config != null)
+        {
+            maxHealth = config.health;
+            maxMana = config.mana;
+            currentHealth = maxHealth;
+            currentMana = maxMana;
+        }
+        
+        // 应用法师特有属性
+        CalculateDerivedStats();
     }
     
     public override void CalculateDerivedStats()
@@ -85,7 +188,8 @@ public class Mage : Character
         manaRegenTimer += Time.deltaTime;
         if (manaRegenTimer >= 1f) // 每秒回复
         {
-            RestoreMana(Mathf.RoundToInt(manaRegenRate));
+            float regenRate = config != null ? config.manaRegenRate : manaRegenRate;
+            RestoreMana(Mathf.RoundToInt(regenRate));
             manaRegenTimer = 0f;
         }
     }
@@ -112,7 +216,7 @@ public class Mage : Character
     {
         if (!canUseFireball || !canAttack || !isAlive) return false;
         
-        int manaCost = 15;
+        int manaCost = config != null ? config.fireballManaCost : 15;
         if (currentMana < manaCost) return false;
         
         canUseFireball = false;
@@ -148,12 +252,13 @@ public class Mage : Character
     {
         if (!canUseLightningBolt || !canAttack || !isAlive || target == null) return false;
         
-        int manaCost = 25;
+        int manaCost = config != null ? config.lightningBoltManaCost : 25;
         if (currentMana < manaCost) return false;
         
         // 检查距离
         float distance = Vector2.Distance(transform.position, target.position);
-        if (distance > spellCastRange) return false;
+        float castRange = config != null ? config.spellCastRange : spellCastRange;
+        if (distance > castRange) return false;
         
         canUseLightningBolt = false;
         canAttack = false;
@@ -188,7 +293,7 @@ public class Mage : Character
     {
         if (!canUseHeal || !isAlive) return false;
         
-        int manaCost = 20;
+        int manaCost = config != null ? config.healManaCost : 20;
         if (currentMana < manaCost) return false;
         
         canUseHeal = false;
@@ -223,12 +328,13 @@ public class Mage : Character
     {
         if (!canUseTeleport || !isAlive) return false;
         
-        int manaCost = 30;
+        int manaCost = config != null ? config.teleportManaCost : 30;
         if (currentMana < manaCost) return false;
         
         // 检查传送距离
         float distance = Vector2.Distance(transform.position, targetPosition);
-        if (distance > spellCastRange) return false;
+        float maxDistance = config != null ? config.teleportMaxDistance : spellCastRange;
+        if (distance > maxDistance) return false;
         
         canUseTeleport = false;
         
@@ -261,7 +367,8 @@ public class Mage : Character
     private System.Collections.IEnumerator CreateFireball(Vector2 targetPosition)
     {
         // 等待施法动画
-        yield return new WaitForSeconds(0.5f);
+        float castTime = config != null ? config.fireballCastTime : 0.5f;
+        yield return new WaitForSeconds(castTime);
         
         if (fireballPrefab != null)
         {
@@ -272,13 +379,15 @@ public class Mage : Character
             var fireballComponent = fireball.GetComponent<Fireball>();
             if (fireballComponent != null)
             {
-                int damage = Mathf.RoundToInt(magicalAttack * 1.2f);
+                float damageMultiplier = config != null ? config.fireballDamageMultiplier : 1.2f;
+                int damage = Mathf.RoundToInt(magicalAttack * damageMultiplier);
                 fireballComponent.Initialize(targetPosition, damage, this);
             }
         }
         
         // 恢复攻击能力
-        yield return new WaitForSeconds(0.2f);
+        float recoveryTime = config != null ? config.normalAttackRecoveryTime : 0.2f;
+        yield return new WaitForSeconds(recoveryTime);
         canAttack = true;
     }
     
@@ -288,7 +397,8 @@ public class Mage : Character
     private System.Collections.IEnumerator ExecuteLightningBolt(Transform target)
     {
         // 等待施法动画
-        yield return new WaitForSeconds(0.3f);
+        float castTime = config != null ? config.lightningBoltCastTime : 0.3f;
+        yield return new WaitForSeconds(castTime);
         
         if (target != null)
         {
@@ -300,7 +410,8 @@ public class Mage : Character
             }
             
             // 计算伤害并应用
-            int damage = Mathf.RoundToInt(magicalAttack * 1.5f);
+            float damageMultiplier = config != null ? config.lightningBoltDamageMultiplier : 1.5f;
+            int damage = Mathf.RoundToInt(magicalAttack * damageMultiplier);
             var enemy = target.GetComponent<Enemy>();
             if (enemy != null)
             {
@@ -309,7 +420,8 @@ public class Mage : Character
         }
         
         // 恢复攻击能力
-        yield return new WaitForSeconds(0.2f);
+        float recoveryTime = config != null ? config.normalAttackRecoveryTime : 0.2f;
+        yield return new WaitForSeconds(recoveryTime);
         canAttack = true;
     }
     
@@ -319,17 +431,21 @@ public class Mage : Character
     private System.Collections.IEnumerator ExecuteHeal()
     {
         // 等待施法动画
-        yield return new WaitForSeconds(0.4f);
+        float castTime = config != null ? config.healCastTime : 0.4f;
+        yield return new WaitForSeconds(castTime);
         
         // 创建治疗效果
         if (healEffectPrefab != null)
         {
             GameObject healEffect = Instantiate(healEffectPrefab, transform.position, Quaternion.identity);
-            Destroy(healEffect, 2f); // 2秒后销毁效果
+            float effectDuration = config != null ? config.healEffectDuration : 2f;
+            Destroy(healEffect, effectDuration);
         }
         
         // 计算治疗量并恢复生命值
-        int healAmount = Mathf.RoundToInt(magicalAttack * 0.8f + intelligence * 2);
+        float healMultiplier = config != null ? config.healMultiplier : 0.8f;
+        float intelligenceBonus = config != null ? config.intelligenceHealBonus : 2f;
+        int healAmount = Mathf.RoundToInt(magicalAttack * healMultiplier + intelligence * intelligenceBonus);
         Heal(healAmount);
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
@@ -351,7 +467,8 @@ public class Mage : Character
         }
         
         // 等待传送动画
-        yield return new WaitForSeconds(0.5f);
+        float castTime = config != null ? config.teleportCastTime : 0.5f;
+        yield return new WaitForSeconds(castTime);
         
         // 执行传送
         transform.position = targetPosition;
@@ -369,7 +486,8 @@ public class Mage : Character
     /// </summary>
     private System.Collections.IEnumerator FireballCooldown()
     {
-        yield return new WaitForSeconds(fireballCooldown);
+        float cooldown = config != null ? config.fireballCooldown : fireballCooldown;
+        yield return new WaitForSeconds(cooldown);
         canUseFireball = true;
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
@@ -383,7 +501,8 @@ public class Mage : Character
     /// </summary>
     private System.Collections.IEnumerator LightningBoltCooldown()
     {
-        yield return new WaitForSeconds(lightningBoltCooldown);
+        float cooldown = config != null ? config.lightningBoltCooldown : lightningBoltCooldown;
+        yield return new WaitForSeconds(cooldown);
         canUseLightningBolt = true;
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
@@ -397,7 +516,8 @@ public class Mage : Character
     /// </summary>
     private System.Collections.IEnumerator HealCooldown()
     {
-        yield return new WaitForSeconds(healCooldown);
+        float cooldown = config != null ? config.healCooldown : healCooldown;
+        yield return new WaitForSeconds(cooldown);
         canUseHeal = true;
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
@@ -411,7 +531,8 @@ public class Mage : Character
     /// </summary>
     private System.Collections.IEnumerator TeleportCooldown()
     {
-        yield return new WaitForSeconds(teleportCooldown);
+        float cooldown = config != null ? config.teleportCooldown : teleportCooldown;
+        yield return new WaitForSeconds(cooldown);
         canUseTeleport = true;
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)

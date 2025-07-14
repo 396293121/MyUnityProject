@@ -24,9 +24,9 @@ public class SkillSlotUI : MonoBehaviour
     [BoxGroup("状态信息")]
     [ShowInInspector, ReadOnly]
     [LabelText("当前技能")]
-    private SkillDataTest currentSkill;
+    private skillDataConfig currentSkill;
     
-    public void SetSkill(SkillDataTest skill)
+    public void SetSkill(skillDataConfig skill)
     {
         currentSkill = skill;
         

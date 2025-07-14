@@ -111,7 +111,7 @@ public class SkillExamples : MonoBehaviour
     private void PrintSkillSystemArchitecture()
     {
         Debug.Log("=== 技能系统架构说明 ===");
-        Debug.Log("1. SkillDataTest: 技能数据配置，包含所有技能参数和效果逻辑");
+        Debug.Log("1. skillDataConfig: 技能数据配置，包含所有技能参数和效果逻辑");
         Debug.Log("2. SkillManager: 技能管理器，处理技能输入、冷却、法力消耗等");
         Debug.Log("3. BuffManager: BUFF管理器，处理增益效果的应用和移除");
         Debug.Log("4. 技能类型支持: 单体攻击、范围伤害、BUFF、治疗、召唤");

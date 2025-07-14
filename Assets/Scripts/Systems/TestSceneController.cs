@@ -3,83 +3,481 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Sirenix.OdinInspector;
 
 /// <summary>
 /// 增强版测试场景控制器
 /// 基于Phaser项目TestScene.js完全重构
 /// 使用ScriptableObject配置驱动，实现高可维护性和可配置性
 /// </summary>
+[ShowOdinSerializedPropertiesInInspector]
 public class TestSceneController : MonoBehaviour
 {
     #region 配置引用
-    [Header("ScriptableObject 配置")]
-    [SerializeField] private TestSceneConfig sceneConfig;
-    [SerializeField] private EnemySystemConfig enemySystemConfig;
-    [SerializeField] private HUDConfig hudConfig;
-    [SerializeField] private InputSystemConfig inputConfig;
+    [TabGroup("配置", "统一配置")]
+    [FoldoutGroup("配置/统一配置/ScriptableObject配置", expanded: true)]
+    [LabelText("统一场景配置")]
+    [Required("必须指定统一场景配置文件")]
+    [AssetsOnly]
+    [SerializeField] private UnifiedSceneConfig unifiedConfig;
     
-    [Header("场景引用")]
-    [SerializeField] private Transform playerSpawnPoint;
-    [SerializeField] private Transform[] enemySpawnPoints;
+    [TabGroup("配置", "场景引用")]
+    [FoldoutGroup("配置/场景引用/核心组件", expanded: true)]
+    [LabelText("主摄像机")]
+    [Required("必须指定主摄像机")]
     [SerializeField] private Camera mainCamera;
+    
+    [FoldoutGroup("配置/场景引用/核心组件")]
+    [LabelText("地图容器")]
+    [InfoBox("地图预制体的父对象，如果为空则使用当前对象")]
     [SerializeField] private GameObject mapContainer;
     
-    [Header("预制体引用")]
-    [SerializeField] private GameObject warriorPrefab;
-    [SerializeField] private GameObject magePrefab;
-    [SerializeField] private GameObject archerPrefab;
-    [SerializeField] private GameObject wildBoarPrefab;
-    
-    [Header("UI引用")]
-    [SerializeField] private GameObject gameHudUI;
-    [SerializeField] private GameObject pauseMenuUI;
-    
-    [Header("调试设置")]
+    [TabGroup("配置", "调试设置")]
+    [FoldoutGroup("配置/调试设置/调试选项", expanded: true)]
+    [LabelText("调试模式")]
+    [InfoBox("启用后会在控制台输出详细的调试信息")]
     [SerializeField] private bool debugMode = false;
+    
+    [FoldoutGroup("配置/调试设置/调试选项", expanded: true)]
+    [LabelText("显示调试UI")]
+    [InfoBox("在游戏中显示调试信息界面")]
     [SerializeField] private bool showDebugUI = false;
+    
+    [FoldoutGroup("配置/调试设置/调试选项")]
+    [LabelText("启用音效")]
+    [InfoBox("控制是否播放音效")]
     [SerializeField] private bool enableAudioEffects = true;
     #endregion
     
     #region 私有字段
-    // 游戏对象引用
+    [TabGroup("状态", "游戏对象")]
+    [FoldoutGroup("状态/游戏对象/实例引用", expanded: true)]
+    [LabelText("当前玩家")]
+    [ReadOnly]
+    [ShowInInspector]
     private GameObject currentPlayer;
+    
+    [FoldoutGroup("状态/游戏对象/实例引用")]
+    [LabelText("活跃敌人列表")]
+    [ReadOnly]
+    [ShowInInspector]
+    [ListDrawerSettings(ShowIndexLabels = true, ListElementLabelName = "name")]
     private List<GameObject> activeEnemies = new List<GameObject>();
+    
+    [FoldoutGroup("状态/游戏对象/实例引用")]
+    [LabelText("所有敌人列表")]
+    [ReadOnly]
+    [ShowInInspector]
+    [ListDrawerSettings(ShowIndexLabels = true, ListElementLabelName = "name")]
     private List<GameObject> enemies = new List<GameObject>();
+    
+    [FoldoutGroup("状态/游戏对象/实例引用")]
+    [LabelText("敌人控制器列表")]
+    [ReadOnly]
+    [ShowInInspector]
+    [ListDrawerSettings(ShowIndexLabels = true)]
     private List<Enemy> enemyControllers = new List<Enemy>();
+    
+    [FoldoutGroup("状态/游戏对象/实例引用")]
+    [LabelText("当前地图")]
+    [ReadOnly]
+    [ShowInInspector]
     private GameObject currentMap;
     
-    // 系统管理器
+    [TabGroup("状态", "系统管理器")]
+    [FoldoutGroup("状态/系统管理器/核心管理器", expanded: true)]
+    [LabelText("敌人系统管理器")]
+    [ReadOnly]
+    [ShowInInspector]
     private TestSceneEnemySystem enemySystem;
-    private TestSceneUIManager uiManager;
-    private TestSceneInputManager inputManager;
-    private TestSceneAudioManager audioManager;
     
-    // 组件引用
+    [FoldoutGroup("状态/系统管理器/核心管理器")]
+    [LabelText("UI管理器")]
+    [ReadOnly]
+    [ShowInInspector]
+    private TestSceneUIManager uiManager;
+    
+    
+    [TabGroup("状态", "组件引用")]
+    [FoldoutGroup("状态/组件引用/控制器组件", expanded: true)]
+    [LabelText("玩家控制器")]
+    [ReadOnly]
+    [ShowInInspector]
     private PlayerController playerController;
+    
+    [FoldoutGroup("状态/组件引用/控制器组件")]
+    [LabelText("玩家角色组件")]
+    [ReadOnly]
+    [ShowInInspector]
     private Character playerCharacter;
+    
+    [FoldoutGroup("状态/组件引用/控制器组件")]
+    [LabelText("摄像机跟随组件")]
+    [ReadOnly]
+    [ShowInInspector]
     private CameraFollow cameraFollow;
     
-    // 场景状态
+    [TabGroup("状态", "场景状态")]
+    [FoldoutGroup("状态/场景状态/初始化状态", expanded: true)]
+    [LabelText("场景已初始化")]
+    [ReadOnly]
+    [ShowInInspector]
     private bool isSceneInitialized = false;
+    
+    [FoldoutGroup("状态/场景状态/游戏状态", expanded: true)]
+    [LabelText("游戏暂停")]
+    [ReadOnly]
+    [ShowInInspector]
     private bool isGamePaused = false;
+    
+    [FoldoutGroup("状态/场景状态/游戏状态")]
+    [LabelText("玩家死亡")]
+    [ReadOnly]
+    [ShowInInspector]
     private bool isPlayerDead = false;
+    
+    [FoldoutGroup("状态/场景状态/时间统计", expanded: true)]
+    [LabelText("场景开始时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    [SuffixLabel("秒")]
     private float sceneStartTime;
     
-    // 选择的角色类型
+    [TabGroup("状态", "角色设置")]
+    [FoldoutGroup("状态/角色设置/角色选择", expanded: true)]
+    [LabelText("选择的角色类型")]
+    [ReadOnly]
+    [ShowInInspector]
+    [InfoBox("从PlayerPrefs中读取的角色类型")]
     private string selectedCharacterType;
     
-    // 事件系统
+    [TabGroup("状态", "事件系统")]
+    [FoldoutGroup("状态/事件系统/事件总线", expanded: true)]
+    [LabelText("测试场景事件总线")]
+    [ReadOnly]
+    [ShowInInspector]
     private TestSceneEventBus eventBus;
     
-    // 调试信息
+    [TabGroup("状态", "调试信息")]
+    [FoldoutGroup("状态/调试信息/性能统计", expanded: true)]
+    [LabelText("调试更新计时器")]
+    [ReadOnly]
+    [ShowInInspector]
+    [SuffixLabel("秒")]
+    [ProgressBar(0, 1, ColorGetter = "GetDebugTimerColor")]
     private float debugUpdateTimer = 0f;
+    
+    [FoldoutGroup("状态/调试信息/性能统计")]
+    [LabelText("帧计数")]
+    [ReadOnly]
+    [ShowInInspector]
     private int frameCount = 0;
+    
+    [FoldoutGroup("状态/调试信息/性能统计")]
+    [LabelText("当前FPS")]
+    [ReadOnly]
+    [ShowInInspector]
+    [SuffixLabel("帧/秒")]
+    [PropertyRange(0, 120)]
     private float fps = 0f;
+    #endregion
+    
+    #region Odin Inspector 控制面板
+    [TabGroup("控制面板", "场景管理")]
+    [FoldoutGroup("控制面板/场景管理/场景控制", expanded: true)]
+    [Button("重新初始化场景", ButtonSizes.Medium)]
+    [GUIColor(0.8f, 1f, 0.8f)]
+    [EnableIf("isSceneInitialized")]
+    private void ReinitializeScene()
+    {
+        if (Application.isPlaying)
+        {
+            StartCoroutine(ReinitializeSceneCoroutine());
+        }
+    }
+    
+    [FoldoutGroup("控制面板/场景管理/场景控制")]
+    [Button("清理场景", ButtonSizes.Medium)]
+    [GUIColor(1f, 0.8f, 0.8f)]
+    [EnableIf("isSceneInitialized")]
+    private void ForceCleanupScene()
+    {
+        if (Application.isPlaying)
+        {
+            CleanupTestScene();
+        }
+    }
+    
+    [FoldoutGroup("控制面板/场景管理/场景控制")]
+    [Button("切换暂停状态", ButtonSizes.Medium)]
+    [GUIColor(0.8f, 0.8f, 1f)]
+    [EnableIf("isSceneInitialized")]
+    private void ForceTogglePause()
+    {
+        if (Application.isPlaying)
+        {
+            TogglePause();
+        }
+    }
+    
+    [TabGroup("控制面板", "敌人管理")]
+    [FoldoutGroup("控制面板/敌人管理/敌人控制", expanded: true)]
+    [Button("生成野猪", ButtonSizes.Medium)]
+    [GUIColor(1f, 0.9f, 0.7f)]
+    [EnableIf("CanSpawnEnemy")]
+    private void SpawnWildBoar()
+    {
+        if (Application.isPlaying && currentPlayer != null)
+        {
+            Vector3 spawnPos = currentPlayer.transform.position + Vector3.right * 3f;
+            CreateEnemyAtPosition("wild_boar", spawnPos);
+        }
+    }
+    
+    [FoldoutGroup("控制面板/敌人管理/敌人控制")]
+    [Button("清除所有敌人", ButtonSizes.Medium)]
+    [GUIColor(1f, 0.7f, 0.7f)]
+    [EnableIf("HasActiveEnemies")]
+    private void ClearAllEnemies()
+    {
+        if (Application.isPlaying)
+        {
+            enemySystem?.ClearAllEnemies();
+            foreach (var enemy in enemies.ToList())
+            {
+                if (enemy != null)
+                {
+                    DestroyImmediate(enemy);
+                }
+            }
+            enemies.Clear();
+            enemyControllers.Clear();
+            activeEnemies.Clear();
+        }
+    }
+    
+    [TabGroup("控制面板", "调试工具")]
+    [FoldoutGroup("控制面板/调试工具/调试控制", expanded: true)]
+    [Button("切换调试模式", ButtonSizes.Medium)]
+    [GUIColor(0.9f, 0.9f, 0.9f)]
+    private void ToggleDebugMode()
+    {
+        debugMode = !debugMode;
+        Debug.Log($"[TestSceneController] 调试模式: {(debugMode ? "开启" : "关闭")}");
+    }
+    
+    [FoldoutGroup("控制面板/调试工具/调试控制")]
+    [Button("切换调试UI", ButtonSizes.Medium)]
+    [GUIColor(0.9f, 0.9f, 0.9f)]
+    [EnableIf("debugMode")]
+    private void ToggleDebugUI()
+    {
+        showDebugUI = !showDebugUI;
+    }
+    
+    [FoldoutGroup("控制面板/调试工具/调试控制")]
+    [Button("输出场景信息", ButtonSizes.Medium)]
+    [GUIColor(0.7f, 0.9f, 1f)]
+    private void LogSceneInfo()
+    {
+        Debug.Log($"[场景信息] 玩家: {(currentPlayer != null ? currentPlayer.name : "无")}");
+        Debug.Log($"[场景信息] 敌人数量: {enemies.Count}");
+        Debug.Log($"[场景信息] 场景状态: {(isSceneInitialized ? "已初始化" : "未初始化")}");
+        Debug.Log($"[场景信息] 游戏状态: {(isGamePaused ? "暂停" : "运行中")}");
+    }
+    #endregion
+    
+    #region Odin Inspector 属性访问器
+    [TabGroup("实时状态", "场景状态")]
+    [FoldoutGroup("实时状态/场景状态/基本信息", expanded: true)]
+    [LabelText("场景运行时间")]
+    [ShowInInspector]
+    [ReadOnly]
+    [SuffixLabel("秒")]
+    [ProgressBar(0, 300, ColorGetter = "GetSceneTimeColor")]
+    private float SceneRunTime => isSceneInitialized ? Time.time - sceneStartTime : 0f;
+    
+    [FoldoutGroup("实时状态/场景状态/基本信息")]
+    [LabelText("当前FPS")]
+    [ShowInInspector]
+    [ReadOnly]
+    [SuffixLabel("帧/秒")]
+    [ProgressBar(0, 120, ColorGetter = "GetFPSColor")]
+    private float CurrentFPS => fps;
+    
+    [FoldoutGroup("实时状态/场景状态/基本信息")]
+    [LabelText("时间缩放")]
+    [ShowInInspector]
+    [ReadOnly]
+    [PropertyRange(0, 2)]
+    [ProgressBar(0, 2, ColorGetter = "GetTimeScaleColor")]
+    private float TimeScale => Time.timeScale;
+    
+    [TabGroup("实时状态", "游戏对象统计")]
+    [FoldoutGroup("实时状态/游戏对象统计/数量统计", expanded: true)]
+    [LabelText("活跃敌人数量")]
+    [ShowInInspector]
+    [ReadOnly]
+    [PropertyRange(0, 20)]
+    [ProgressBar(0, 20, ColorGetter = "GetEnemyCountColor")]
+    private int ActiveEnemyCount => activeEnemies.Count(e => e != null);
+    
+    [FoldoutGroup("实时状态/游戏对象统计/数量统计")]
+    [LabelText("总敌人数量")]
+    [ShowInInspector]
+    [ReadOnly]
+    [PropertyRange(0, 20)]
+    private int TotalEnemyCount => enemies.Count;
+    
+    [FoldoutGroup("实时状态/游戏对象统计/数量统计")]
+    [LabelText("敌人控制器数量")]
+    [ShowInInspector]
+    [ReadOnly]
+    [PropertyRange(0, 20)]
+    private int EnemyControllerCount => enemyControllers.Count(e => e != null);
+    
+    [TabGroup("实时状态", "玩家信息")]
+    [FoldoutGroup("实时状态/玩家信息/角色状态", expanded: true)]
+    [LabelText("玩家是否存在")]
+    [ShowInInspector]
+    [ReadOnly]
+    private bool HasPlayer => currentPlayer != null;
+    
+    [FoldoutGroup("实时状态/玩家信息/角色状态")]
+    [LabelText("玩家位置")]
+    [ShowInInspector]
+    [ReadOnly]
+    [ShowIf("HasPlayer")]
+    private Vector3 PlayerPosition => currentPlayer != null ? currentPlayer.transform.position : Vector3.zero;
+    
+    [FoldoutGroup("实时状态/玩家信息/角色状态")]
+    [LabelText("玩家生命值")]
+    [ShowInInspector]
+    [ReadOnly]
+    [ShowIf("HasPlayer")]
+    [ProgressBar(0, 100, ColorGetter = "GetPlayerHealthColor")]
+    private float PlayerHealth
+    {
+        get
+        {
+            if (currentPlayer != null)
+            {
+                var character = currentPlayer.GetComponent<Character>();
+                return character != null ? character.currentHealth : 0f;
+            }
+            return 0f;
+        }
+    }
+    
+    [FoldoutGroup("实时状态/玩家信息/角色状态")]
+    [LabelText("玩家魔法值")]
+    [ShowInInspector]
+    [ReadOnly]
+    [ShowIf("HasPlayer")]
+    [ProgressBar(0, 100, ColorGetter = "GetPlayerManaColor")]
+    private float PlayerMana
+    {
+        get
+        {
+            if (currentPlayer != null)
+            {
+                var character = currentPlayer.GetComponent<Character>();
+                return character != null ? character.currentMana : 0f;
+            }
+            return 0f;
+        }
+    }
+    #endregion
+    
+    #region Odin Inspector 辅助方法
+    private bool CanSpawnEnemy => isSceneInitialized && currentPlayer != null && !isGamePaused;
+    private bool HasActiveEnemies => activeEnemies.Count > 0 || enemies.Count > 0;
+    
+    private Color GetSceneTimeColor()
+    {
+        float time = SceneRunTime;
+        if (time < 60f) return Color.green;
+        if (time < 180f) return Color.yellow;
+        return Color.red;
+    }
+    
+    private Color GetFPSColor()
+    {
+        if (fps >= 60f) return Color.green;
+        if (fps >= 30f) return Color.yellow;
+        return Color.red;
+    }
+    
+    private Color GetTimeScaleColor()
+    {
+        if (Mathf.Approximately(Time.timeScale, 1f)) return Color.green;
+        if (Time.timeScale > 0f) return Color.yellow;
+        return Color.red;
+    }
+    
+    private Color GetEnemyCountColor()
+    {
+        int count = ActiveEnemyCount;
+        if (count == 0) return Color.gray;
+        if (count <= 3) return Color.green;
+        if (count <= 8) return Color.yellow;
+        return Color.red;
+    }
+    
+    private Color GetPlayerHealthColor()
+    {
+        float healthPercent = 0f;
+        if (currentPlayer != null)
+        {
+            var character = currentPlayer.GetComponent<Character>();
+            if (character != null && character.maxHealth > 0)
+            {
+                healthPercent = character.currentHealth / character.maxHealth;
+            }
+        }
+        
+        if (healthPercent > 0.6f) return Color.green;
+        if (healthPercent > 0.3f) return Color.yellow;
+        return Color.red;
+    }
+    
+    private Color GetPlayerManaColor()
+    {
+        float manaPercent = 0f;
+        if (currentPlayer != null)
+        {
+            var character = currentPlayer.GetComponent<Character>();
+            if (character != null && character.maxMana > 0)
+            {
+                manaPercent = character.currentMana / character.maxMana;
+            }
+        }
+        
+        if (manaPercent > 0.6f) return Color.cyan;
+        if (manaPercent > 0.3f) return Color.blue;
+        return Color.magenta;
+    }
+    
+    private Color GetDebugTimerColor()
+    {
+        return Color.Lerp(Color.green, Color.yellow, debugUpdateTimer);
+    }
+    
+    private IEnumerator ReinitializeSceneCoroutine()
+    {
+        CleanupTestScene();
+        yield return new WaitForSeconds(0.5f);
+        isSceneInitialized = false;
+        yield return StartCoroutine(InitializeTestSceneAsync());
+    }
+    // 添加单例引用
+public static TestSceneController Instance { get; private set; }
     #endregion
     
     #region Unity生命周期
     private void Awake()
     {
+          Instance = this;
         // 验证配置
         ValidateConfigurations();
         
@@ -93,6 +491,10 @@ public class TestSceneController : MonoBehaviour
     private void Start()
     {
         StartCoroutine(InitializeTestSceneAsync());
+          if (InputManager.Instance != null)
+    {
+        InputManager.Instance.OnPausePressed += TogglePause;
+    }
     }
     
     private void Update()
@@ -102,8 +504,6 @@ public class TestSceneController : MonoBehaviour
         // 更新FPS计算
         UpdateFPSCalculation();
         
-        // 更新输入系统
-        inputManager?.UpdateInput();
         
         // 更新敌人系统
         enemySystem?.UpdateEnemySystem(Time.deltaTime);
@@ -111,14 +511,11 @@ public class TestSceneController : MonoBehaviour
         // 更新UI系统
         uiManager?.UpdateUI();
         
-        // 更新音频系统
-        UpdateAudioSystem();
-        
         // 更新调试信息
         UpdateDebugInfo();
         
         // 检查游戏结束条件
-        CheckGameEndConditions();
+     //   CheckGameEndConditions();
     }
     
     private void LateUpdate()
@@ -133,17 +530,31 @@ public class TestSceneController : MonoBehaviour
     private void OnDestroy()
     {
         CleanupTestScene();
+            if (InputManager.Instance != null)
+    {
+        InputManager.Instance.OnPausePressed -= TogglePause;
+    }
+    }
+    public void OnPlayerDied()
+{
+    Debug.Log("[TestSceneController] 玩家死亡，游戏结束");
+      // 停止游戏
+    isGamePaused = true;
+    Time.timeScale = 0f;
+    // 显示游戏结束界面
+    if (UIManager.Instance != null)
+    {
+     //   UIManager.Instance.ShowGameOverScreen();
     }
     
+    // 可以添加其他游戏结束逻辑
+}
     /// <summary>
     /// 清理测试场景
     /// </summary>
     private void CleanupTestScene()
     {
         Debug.Log("[TestSceneController] 开始清理测试场景...");
-        
-        // 注销事件监听器
-        UnregisterEventListeners();
         
         // 清理敌人系统
         enemySystem?.ClearAllEnemies();
@@ -154,15 +565,6 @@ public class TestSceneController : MonoBehaviour
             uiManager.SetHUDVisible(false);
         }
         
-        // 清理输入管理器
-        inputManager?.SetInputLocked(true);
-        
-        // 清理音频管理器
-        if (audioManager != null)
-        {
-            audioManager.StopMusic(0.5f);
-            audioManager.StopAmbientSound(0.5f);
-        }
         
         // 停止所有协程
         StopAllCoroutines();
@@ -170,28 +572,7 @@ public class TestSceneController : MonoBehaviour
         Debug.Log("[TestSceneController] 测试场景清理完成");
     }
     
-    /// <summary>
-    /// 注销事件监听器
-    /// </summary>
-    private void UnregisterEventListeners()
-    {
-        // 清理敌人事件监听
-        foreach (var enemy in activeEnemies)
-        {
-            if (enemy != null)
-            {
-                var enemyController = enemy.GetComponent<Enemy>();
-                if (enemyController != null)
-                {
-                    enemyController.OnDeath -= OnEnemyDeath;
-                    enemyController.OnAttack -= OnEnemyAttack;
-                }
-            }
-        }
-        
-        // 清理事件总线
-        eventBus?.ClearAllListeners();
-    }
+
     #endregion
     
     #region 初始化方法
@@ -200,31 +581,13 @@ public class TestSceneController : MonoBehaviour
     /// </summary>
     private void ValidateConfigurations()
     {
-        if (sceneConfig == null)
+        if (unifiedConfig == null)
         {
-            Debug.LogError("[TestSceneController] TestSceneConfig 未配置！");
+            Debug.LogError("[TestSceneController] UnifiedSceneConfig 未配置！");
             return;
         }
         
-        if (enemySystemConfig == null)
-        {
-            Debug.LogError("[TestSceneController] EnemySystemConfig 未配置！");
-            return;
-        }
-        
-        if (hudConfig == null)
-        {
-            Debug.LogError("[TestSceneController] HUDConfig 未配置！");
-            return;
-        }
-        
-        if (inputConfig == null)
-        {
-            Debug.LogError("[TestSceneController] InputSystemConfig 未配置！");
-            return;
-        }
-        
-        Debug.Log("[TestSceneController] 所有配置验证通过");
+        Debug.Log("[TestSceneController] 统一配置验证通过");
     }
     
     /// <summary>
@@ -235,18 +598,13 @@ public class TestSceneController : MonoBehaviour
         if (isSceneInitialized) yield break;
         
         Debug.Log("[TestSceneController] 开始异步初始化测试场景");
-        
+        AudioManager.Instance.PlayMusic("menu_music",0.6f,true);
         // 获取选择的角色类型
         selectedCharacterType = PlayerPrefs.GetString("SelectedCharacter", "warrior");
         
         // 步骤1: 初始化地图
         yield return StartCoroutine(InitializeMapAsync());
         
-        // 步骤2: 初始化音频系统
-        yield return StartCoroutine(InitializeAudioSystemAsync());
-        
-        // 步骤3: 初始化输入系统
-        yield return StartCoroutine(InitializeInputSystemAsync());
         
         // 步骤4: 创建玩家
         yield return StartCoroutine(CreatePlayerAsync());
@@ -263,15 +621,12 @@ public class TestSceneController : MonoBehaviour
         // 步骤8: 设置游戏状态
         SetupGameState();
         
-        // 步骤9: 注册事件监听
-        RegisterEventListeners();
-        
         isSceneInitialized = true;
         
         Debug.Log("[TestSceneController] 测试场景异步初始化完成");
         
         // 触发场景初始化完成事件
-        eventBus?.TriggerEvent("SceneInitialized", new { sceneName = sceneConfig.sceneName });
+        eventBus?.TriggerEvent("SceneInitialized", new { sceneName = unifiedConfig.sceneName });
     }
     
     /// <summary>
@@ -281,42 +636,23 @@ public class TestSceneController : MonoBehaviour
     {
         Debug.Log("[TestSceneController] 初始化地图...");
         
-        if (sceneConfig.mapPrefab != null)
+        if (unifiedConfig.mapPrefab != null)
         {
-            currentMap = Instantiate(sceneConfig.mapPrefab, mapContainer != null ? mapContainer.transform : transform);
+            currentMap = Instantiate(unifiedConfig.mapPrefab, mapContainer != null ? mapContainer.transform : transform);
             currentMap.name = "TestScene_Map";
         }
         
         // 设置背景色
         if (mainCamera != null)
         {
-            mainCamera.backgroundColor = sceneConfig.backgroundColor;
+            mainCamera.backgroundColor = unifiedConfig.backgroundColor;
         }
         
         yield return null;
         Debug.Log("[TestSceneController] 地图初始化完成");
     }
     
-    /// <summary>
-    /// 异步初始化输入系统
-    /// </summary>
-    private IEnumerator InitializeInputSystemAsync()
-    {
-        Debug.Log("[TestSceneController] 初始化输入系统...");
-        
-        if (inputManager == null)
-        {
-            GameObject inputManagerObj = new GameObject("TestSceneInputManager");
-            inputManagerObj.transform.SetParent(transform);
-            inputManager = inputManagerObj.AddComponent<TestSceneInputManager>();
-        }
-        
-        inputManager.Initialize(inputConfig, eventBus);
-        
-        yield return null;
-        Debug.Log("[TestSceneController] 输入系统初始化完成");
-    }
-    
+
     /// <summary>
     /// 异步创建玩家
     /// </summary>
@@ -324,7 +660,7 @@ public class TestSceneController : MonoBehaviour
     {
         Debug.Log("[TestSceneController] 创建玩家...");
         
-        CreatePlayer();
+      //  CreatePlayer();
         
         yield return null;
         Debug.Log("[TestSceneController] 玩家创建完成");
@@ -339,10 +675,23 @@ public class TestSceneController : MonoBehaviour
         
         if (enemySystem == null)
         {
-            enemySystem = new TestSceneEnemySystem(enemySystemConfig, eventBus);
+            // 使用UnifiedSceneConfig中的敌人系统配置
+            var enemyConfig = unifiedConfig.enemySystemConfig;
+            if (enemyConfig == null)
+            {
+                Debug.LogWarning("[TestSceneController] UnifiedSceneConfig中未配置敌人系统，使用默认配置");
+                enemyConfig = CreateTempEnemySystemConfig();
+            }
+            enemySystem = new TestSceneEnemySystem(enemyConfig, eventBus);
         }
         
         enemySystem.SetPlayerTransform(currentPlayer?.transform);
+        
+        // 设置敌人波次配置
+        if (unifiedConfig.enemyWaves != null)
+        {
+            enemySystem.SetEnemyWaves(unifiedConfig.enemyWaves);
+        }
         
         // 创建敌人
         CreateEnemies();
@@ -365,7 +714,9 @@ public class TestSceneController : MonoBehaviour
             uiManager = uiManagerObj.AddComponent<TestSceneUIManager>();
         }
         
-        uiManager.Initialize(hudConfig, eventBus);
+        // 创建临时的HUD配置
+        var tempHudConfig = CreateTempHudConfig();
+        uiManager.Initialize(tempHudConfig, eventBus);
         
         if (currentPlayer != null)
         {
@@ -410,33 +761,7 @@ public class TestSceneController : MonoBehaviour
         }
     }
     
-    /// <summary>
-    /// 注册事件监听器
-    /// </summary>
-    private void RegisterEventListeners()
-    {
-        // 注册玩家事件
-        if (currentPlayer != null)
-        {
-            var character = currentPlayer.GetComponent<Character>();
-            if (character != null)
-            {
-                character.OnHealthChanged += (health) => eventBus?.TriggerPlayerHealthChanged(health, character.maxHealth);
-                character.OnManaChanged += (mana) => eventBus?.TriggerPlayerManaChanged(mana, character.maxMana);
-            }
-        }
-        
-        // 注册敌人事件
-        foreach (var enemyController in enemyControllers)
-        {
-            if (enemyController != null)
-            {
-                enemyController.OnDeath += OnEnemyDeath;
-                enemyController.OnAttack += OnEnemyAttack;
-            }
-        }
-    }
-    
+
     /// <summary>
     /// 更新FPS计算
     /// </summary>
@@ -474,8 +799,6 @@ public class TestSceneController : MonoBehaviour
             var character = currentPlayer.GetComponent<Character>();
             if (character != null && character.currentHealth <= 0 && !isPlayerDead)
             {
-                isPlayerDead = true;
-                OnPlayerDeath();
             }
         }
         
@@ -486,85 +809,18 @@ public class TestSceneController : MonoBehaviour
         }
     }
     
-    /// <summary>
-    /// 玩家死亡处理
-    /// </summary>
-    private void OnPlayerDeath()
-    {
-        Debug.Log("[TestSceneController] 玩家死亡");
-        
-        eventBus?.TriggerPlayerDeath();
-        
-        // 可以在这里添加死亡处理逻辑
-    }
+
     #endregion
     
-    /// <summary>
-    /// 更新音频系统
-    /// </summary>
-    private void UpdateAudioSystem()
-    {
-        if (audioManager == null) return;
-        
-        // 音频管理器会自动处理更新逻辑
-        // 这里可以添加特定的音频状态检查或控制逻辑
-        
-        // 检查游戏暂停状态对音频的影响
-        if (isGamePaused)
-        {
-            // 根据游戏状态调整音频
-            audioManager.PauseMusic();
-        }
-        else
-        {
-            audioManager.ResumeMusic();
-        }
-    }
-    
-    /// <summary>
-    /// 初始化音频系统
-    /// </summary>
-    private IEnumerator InitializeAudioSystemAsync()
-    {
-        Debug.Log("[TestSceneController] 初始化音频系统...");
-        
-        // 创建音频管理器
-        if (audioManager == null)
-        {
-            GameObject audioManagerObj = new GameObject("TestSceneAudioManager");
-            audioManagerObj.transform.SetParent(transform);
-            audioManager = audioManagerObj.AddComponent<TestSceneAudioManager>();
-        }
-        
-        // 初始化音频管理器
-        try
-        {
-            audioManager.Initialize(sceneConfig, eventBus);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"[TestSceneController] 音频系统初始化失败: {e.Message}");
-            yield break;
-        }
-        
-        yield return new WaitForSeconds(0.1f);
-        
-        // 开始播放背景音乐和环境音
-        if (sceneConfig.backgroundMusic != null)
-        {
-            audioManager.PlayMusic(sceneConfig.backgroundMusic.name);
-        }
-        
-        Debug.Log("[TestSceneController] 音频系统初始化完成");
-    }
-    
+
+  
     /// <summary>
     /// 创建玩家
     /// </summary>
     void CreatePlayer()
     {
         // 确定生成位置
-        Vector3 spawnPosition = playerSpawnPoint != null ? playerSpawnPoint.position : Vector3.zero;
+        Vector3 spawnPosition = unifiedConfig.GetPlayerSpawnPosition();
         
         // 根据选择的角色类型创建玩家
         GameObject playerPrefab = GetPlayerPrefab(selectedCharacterType);
@@ -579,9 +835,15 @@ public class TestSceneController : MonoBehaviour
             {
                 playerController = currentPlayer.AddComponent<PlayerController>();
             }
-            
-            // 配置玩家属性
-            ConfigurePlayer();
+              playerCharacter = currentPlayer.GetComponent<Character>();
+        
+        // 让角色自己初始化属性
+        if (playerCharacter != null)
+        {
+            playerCharacter.InitializeWithConfig(selectedCharacterType);
+        }
+            // 配置玩家属性 在角色脚本配置
+        //    ConfigurePlayer();
             
             if (debugMode)
             {
@@ -599,68 +861,59 @@ public class TestSceneController : MonoBehaviour
     /// </summary>
     GameObject GetPlayerPrefab(string characterType)
     {
-        switch (characterType.ToLower())
-        {
-            case "warrior":
-                return warriorPrefab;
-            case "mage":
-                return magePrefab;
-            case "archer":
-                return archerPrefab;
-            default:
-                return warriorPrefab; // 默认返回战士
-        }
+        return unifiedConfig.GetCharacterPrefab(characterType) ?? unifiedConfig.GetCharacterPrefab(unifiedConfig.defaultCharacterType);
     }
     
     /// <summary>
     /// 配置玩家属性
     /// </summary>
-    void ConfigurePlayer()
-    {
-        if (playerController == null) return;
+    // void ConfigurePlayer()
+    // {
+    //     if (playerController == null) return;
         
-        // 从配置文件获取角色属性
-        var characterConfig = ConfigManager.Instance?.GetCharacterConfig(selectedCharacterType);
-        if (characterConfig != null)
-        {
-            // 设置角色属性（这里需要根据实际的PlayerController接口调整）
-            var character = playerController.GetComponent<Character>();
-            if (character != null)
-            {
-                character.maxHealth = characterConfig.health;
-                character.maxMana = characterConfig.mana;
-                character.currentHealth = characterConfig.health;
-                character.currentMana = characterConfig.mana;
-            }
+    //     // 从配置文件获取角色属性
+    //     var characterConfig = ConfigManager.Instance?.GetCharacterConfig(selectedCharacterType);
+    //     if (characterConfig != null)
+    //     {
+    //         // 设置角色属性（这里需要根据实际的PlayerController接口调整）
+    //         var character = playerController.GetComponent<Character>();
+    //         if (character != null)
+    //         {
+    //             character.maxHealth = characterConfig.health;
+    //             character.maxMana = characterConfig.mana;
+    //             character.currentHealth = characterConfig.health;
+    //             character.currentMana = characterConfig.mana;
+    //         }
             
-            // 设置移动速度等属性
-            var rigidbody = currentPlayer.GetComponent<Rigidbody2D>();
-            if (rigidbody != null)
-            {
-                // 可以在这里设置物理属性
-            }
-        }
-    }
+    //         // 设置移动速度等属性
+    //         var rigidbody = currentPlayer.GetComponent<Rigidbody2D>();
+    //         if (rigidbody != null)
+    //         {
+    //             // 可以在这里设置物理属性
+    //         }
+    //     }
+    // }
     
     /// <summary>
     /// 创建敌人
     /// </summary>
     void CreateEnemies()
     {
-        if (enemySpawnPoints == null || enemySpawnPoints.Length == 0)
+        // 使用统一配置中的敌人生成配置
+        if (unifiedConfig.enemySpawns != null && unifiedConfig.enemySpawns.Count > 0)
         {
-            // 如果没有指定生成点，创建一个默认的野猪
-            CreateDefaultEnemy();
-            return;
-        }
-        
-        // 在每个生成点创建敌人
-        foreach (var spawnPoint in enemySpawnPoints)
-        {
-            if (spawnPoint != null)
+            foreach (var enemySpawn in unifiedConfig.enemySpawns)
             {
-                CreateEnemyAtPosition("wild_boar", spawnPoint.position);
+                if (enemySpawn.autoSpawn)
+                {
+                    StartCoroutine(SpawnEnemyWithDelay(enemySpawn));
+                }
             }
+        }
+        else
+        {
+            // 如果没有配置敌人生成，创建一个默认的敌人
+            CreateDefaultEnemy();
         }
         
         if (debugMode)
@@ -680,141 +933,45 @@ public class TestSceneController : MonoBehaviour
             enemyPosition = currentPlayer.transform.position + Vector3.right * 5f;
         }
         
-        CreateEnemyAtPosition("wild_boar", enemyPosition);
+        var defaultEnemyType = unifiedConfig.enemyPrefabs.Count > 0 ? unifiedConfig.enemyPrefabs[0].enemyType : "wild_boar";
+        CreateEnemyAtPosition(defaultEnemyType, enemyPosition);
     }
     
     /// <summary>
     /// 在指定位置创建敌人
     /// </summary>
-    void CreateEnemyAtPosition(string enemyType, Vector3 position)
+  void CreateEnemyAtPosition(string enemyType, Vector3 position)
+{
+    GameObject enemyPrefab = GetEnemyPrefab(enemyType);
+    if (enemyPrefab != null)
     {
-        GameObject enemyPrefab = GetEnemyPrefab(enemyType);
-        if (enemyPrefab != null)
+        GameObject enemy = Instantiate(enemyPrefab, position, Quaternion.identity);
+        enemy.name = $"Enemy_{enemyType}_{enemies.Count}";
+        
+        // 只添加到列表，不配置属性
+        enemies.Add(enemy);
+        
+        // 设置事件监听
+        Enemy enemyController = enemy.GetComponent<Enemy>();
+        if (enemyController != null)
         {
-            GameObject enemy = Instantiate(enemyPrefab, position, Quaternion.identity);
-            enemy.name = $"Enemy_{enemyType}_{enemies.Count}";
-            
-            // 获取敌人控制器
-            Enemy enemyController = enemy.GetComponent<Enemy>();
-            if (enemyController == null)
-            {
-                enemyController = enemy.AddComponent<WildBoar>();
-            }
-            
-            // 配置敌人属性
-            ConfigureEnemy(enemyController, enemyType);
-            
-            // 添加到列表
-            enemies.Add(enemy);
             enemyControllers.Add(enemyController);
-            
-            // 设置敌人事件
-            SetupEnemyEvents(enemyController);
-            
-            if (debugMode)
-            {
-                Debug.Log($"[TestSceneController] 创建敌人: {enemyType} at {position}");
-            }
+         //   SetupEnemyEvents(enemyController);
         }
     }
-    
+}
     /// <summary>
     /// 获取敌人预制体
     /// </summary>
     GameObject GetEnemyPrefab(string enemyType)
     {
-        switch (enemyType.ToLower())
-        {
-            case "wild_boar":
-                return wildBoarPrefab;
-            default:
-                return wildBoarPrefab;
-        }
+        return unifiedConfig.GetEnemyPrefab(enemyType);
     }
     
-    /// <summary>
-    /// 配置敌人属性
-    /// </summary>
-    void ConfigureEnemy(Enemy enemyController, string enemyType)
-    {
-        if (enemyController == null) return;
-        
-        // 从配置文件获取敌人属性
-        var enemyConfig = ConfigManager.Instance?.GetEnemyConfig(enemyType);
-        if (enemyConfig != null)
-        {
-            enemyController.maxHealth = enemyConfig.stats.health;
-            enemyController.currentHealth = enemyConfig.stats.health;
-            enemyController.attackDamage = enemyConfig.stats.attack;
-            enemyController.moveSpeed = enemyConfig.stats.speed;
-            enemyController.attackRange = enemyConfig.behavior.attackRange;
-            enemyController.detectionRange = enemyConfig.behavior.detectionRadius;
-        }
-    }
-    
-    /// <summary>
-    /// 设置敌人事件
-    /// </summary>
-    void SetupEnemyEvents(Enemy enemyController)
-    {
-        if (enemyController == null) return;
-        
-        // 设置敌人事件
-        enemyController.OnDeath += OnEnemyDeath;
-        
-        // 设置敌人攻击事件
-        enemyController.OnAttack += OnEnemyAttack;
-    }
-    
-    /// <summary>
-    /// 敌人死亡事件处理
-    /// </summary>
-    void OnEnemyDeath(Enemy deadEnemy)
-    {
-        Debug.Log("[TestSceneController] 敌人死亡");
-        
-        // 从列表中移除死亡的敌人
-        if (deadEnemy != null)
-        {
-            var enemyGameObject = deadEnemy.gameObject;
-            enemies.Remove(enemyGameObject);
-            enemyControllers.Remove(deadEnemy);
-            activeEnemies.Remove(enemyGameObject);
-        }
-        
-        // 播放死亡音效
-        if (enableAudioEffects && AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlaySFX("enemy_death", 0.7f);
-        }
-        
-        // 触发事件
-        eventBus?.TriggerEnemyDeath(deadEnemy);
-        
-        // 检查是否所有敌人都被消灭
-        if (enemies.Count == 0)
-        {
-            OnAllEnemiesDefeated();
-        }
-    }
-    
-    /// <summary>
-    /// 敌人攻击事件处理
-    /// </summary>
-    void OnEnemyAttack(Enemy attackingEnemy)
-    {
-        Debug.Log("[TestSceneController] 敌人攻击");
-        
-        // 播放攻击音效
-        if (enableAudioEffects && AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlaySFX("enemy_attack", 0.6f);
-        }
-        
-        // 触发事件
-        eventBus?.TriggerEnemyAttack(attackingEnemy);
-    }
-    
+
+
+
+
     /// <summary>
     /// 所有敌人被消灭
     /// </summary>
@@ -836,16 +993,11 @@ public class TestSceneController : MonoBehaviour
     /// </summary>
     void InitializeUI()
     {
-        // 激活游戏HUD
-        if (gameHudUI != null)
+        // UI初始化通过UIManager处理
+        if (uiManager != null)
         {
-            gameHudUI.SetActive(true);
-        }
-        
-        // 隐藏暂停菜单
-        if (pauseMenuUI != null)
-        {
-            pauseMenuUI.SetActive(false);
+            // uiManager.ShowHUD();
+            // uiManager.HidePauseMenu();
         }
         
         // 注册UI到UIManager
@@ -882,24 +1034,7 @@ public class TestSceneController : MonoBehaviour
     /// <summary>
     /// 处理输入
     /// </summary>
-    void HandleInput()
-    {
-        // 暂停游戏
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            TogglePause();
-        }
-        
-        // 调试功能
-        if (debugMode)
-        {
-            if (Input.GetKeyDown(KeyCode.F1))
-            {
-                showDebugUI = !showDebugUI;
-            }
-        }
-    }
-    
+
     /// <summary>
     /// 切换暂停状态
     /// </summary>
@@ -910,13 +1045,13 @@ public class TestSceneController : MonoBehaviour
         if (isGamePaused)
         {
             Time.timeScale = 0f;
-            if (pauseMenuUI != null) pauseMenuUI.SetActive(true);
+            // 暂停菜单通过UI管理器处理
             if (GameManager.Instance != null) GameManager.Instance.ChangeGameState(GameState.Paused);
         }
         else
         {
             Time.timeScale = 1f;
-            if (pauseMenuUI != null) pauseMenuUI.SetActive(false);
+            // 暂停菜单通过UI管理器处理
             if (GameManager.Instance != null) GameManager.Instance.ChangeGameState(GameState.Playing);
         }
     }
@@ -1010,6 +1145,91 @@ public class TestSceneController : MonoBehaviour
         }
         
         GUILayout.EndArea();
+    }
+    
+    /// <summary>
+    /// 延迟生成敌人
+    /// </summary>
+    private IEnumerator SpawnEnemyWithDelay(EnemySpawnConfig enemySpawn)
+    {
+        yield return new WaitForSeconds(enemySpawn.spawnDelay);
+        
+        for (int i = 0; i < enemySpawn.spawnCount; i++)
+        {
+            Vector3 spawnPosition = enemySpawn.spawnPosition;
+            if (enemySpawn.randomizePosition)
+            {
+                spawnPosition += new Vector3(
+                    Random.Range(-enemySpawn.spawnRadius, enemySpawn.spawnRadius),
+                    0,
+                    Random.Range(-enemySpawn.spawnRadius, enemySpawn.spawnRadius)
+                );
+            }
+            
+            CreateEnemyAtPosition(enemySpawn.enemyType, spawnPosition);
+            
+            if (i < enemySpawn.spawnCount - 1)
+            {
+                yield return new WaitForSeconds(0.5f); // 每个敌人之间的间隔
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 创建临时的敌人系统配置
+    /// </summary>
+    private EnemySystemConfig CreateTempEnemySystemConfig()
+    {
+        var config = ScriptableObject.CreateInstance<EnemySystemConfig>();
+        
+        // 设置基础配置
+        config.maxEnemyCount = 10;
+        config.enemyUpdateInterval = 0.1f;
+        config.aiUpdateInterval = 0.2f;
+        
+        // 创建野猪配置
+        config.wildBoarConfig = new WildBoarConfig
+        {
+            health = 50,
+            moveSpeed = 2f,
+            attackDamage = 15,
+            attackRange = 1.5f,
+            detectionRange = 5f,
+            chargeSpeed = 8f,
+            chargeDistance = 6f,
+            chargeCooldown = 3f,
+            chargePreparationTime = 0.5f,
+            patrolSpeed = 1f,
+            patrolWaitTime = 2f,
+            patrolRadius = 3f
+        };
+        
+        // 设置碰撞层
+        config.collisionLayers = -1;
+        config.platformLayers = -1;
+        config.playerLayers = -1;
+        
+        return config;
+    }
+    
+    /// <summary>
+    /// 创建临时的HUD配置
+    /// </summary>
+    private HUDConfig CreateTempHudConfig()
+    {
+        // 这里需要根据实际的HUDConfig结构来创建
+        // 暂时返回null，需要根据实际情况实现
+        return null;
+    }
+    
+    /// <summary>
+    /// 创建临时的场景配置
+    /// </summary>
+    private UnifiedSceneConfig CreateTempSceneConfig()
+    {
+        // 这里需要根据实际的SceneConfig结构来创建
+        // 暂时返回null，需要根据实际情况实现
+        return null;
     }
     
     // OnDestroy方法已在第133行定义，此处移除重复定义

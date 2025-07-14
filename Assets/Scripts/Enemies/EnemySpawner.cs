@@ -2,53 +2,165 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Sirenix.OdinInspector;
 
 /// <summary>
 /// 敌人生成器 - 负责动态生成和管理敌人
 /// 从原Phaser项目的敌人生成系统迁移而来
+/// 支持Odin Inspector可视化编辑
 /// </summary>
+[ShowOdinSerializedPropertiesInInspector]
 public class EnemySpawner : MonoBehaviour
 {
-    [Header("生成设置")]
+    [TabGroup("生成器配置", "基础设置")]
+    [FoldoutGroup("生成器配置/基础设置/敌人配置", expanded: true)]
+    [LabelText("敌人生成列表")]
+    [ListDrawerSettings(ShowIndexLabels = true, ListElementLabelName = "enemyPrefab", DraggableItems = true)]
     public List<EnemySpawnData> enemySpawnList = new List<EnemySpawnData>();
-    public int maxEnemies = 10;              // 最大敌人数量
-    public float spawnInterval = 3f;         // 生成间隔
-    public float spawnRadius = 10f;          // 生成半径
-    public LayerMask obstacleLayerMask = 1;  // 障碍物图层
     
-    [Header("生成区域")]
+    [FoldoutGroup("生成器配置/基础设置/敌人配置")]
+    [LabelText("最大敌人数量")]
+    [PropertyRange(1, 100)]
+    [InfoBox("同时存在的最大敌人数量")]
+    public int maxEnemies = 10;
+    
+    [FoldoutGroup("生成器配置/基础设置/敌人配置")]
+    [LabelText("生成间隔")]
+    [PropertyRange(0.1f, 30f)]
+    [SuffixLabel("秒")]
+    public float spawnInterval = 3f;
+    
+    [FoldoutGroup("生成器配置/基础设置/区域设置", expanded: true)]
+    [LabelText("生成半径")]
+    [PropertyRange(1f, 50f)]
+    [SuffixLabel("米")]
+    [ShowIf("@areaType == SpawnAreaType.Circle")]
+    public float spawnRadius = 10f;
+    
+    [FoldoutGroup("生成器配置/基础设置/区域设置")]
+    [LabelText("障碍物图层")]
+    public LayerMask obstacleLayerMask = 1;
+    
+    [FoldoutGroup("生成器配置/基础设置/区域设置")]
+    [LabelText("生成区域类型")]
+    [EnumToggleButtons]
     public SpawnAreaType areaType = SpawnAreaType.Circle;
-    public Vector2 areaSize = new Vector2(10f, 10f); // 矩形区域大小
-    public List<Transform> spawnPoints = new List<Transform>(); // 指定生成点
     
-    [Header("玩家检测")]
-    public float playerDetectionRange = 15f; // 玩家检测范围
-    public bool spawnOnlyWhenPlayerNear = true; // 只在玩家附近生成
+    [FoldoutGroup("生成器配置/基础设置/区域设置")]
+    [LabelText("矩形区域大小")]
+    [ShowIf("@areaType == SpawnAreaType.Rectangle")]
+    public Vector2 areaSize = new Vector2(10f, 10f);
     
-    [Header("波次设置")]
-    public bool useWaveSystem = false;       // 使用波次系统
+    [FoldoutGroup("生成器配置/基础设置/区域设置")]
+    [LabelText("指定生成点")]
+    [ShowIf("@areaType == SpawnAreaType.Points")]
+    [ListDrawerSettings(ShowIndexLabels = true, DraggableItems = true)]
+    public List<Transform> spawnPoints = new List<Transform>();
+    
+    [TabGroup("生成器配置", "玩家检测")]
+    [FoldoutGroup("生成器配置/玩家检测/检测设置", expanded: true)]
+    [LabelText("玩家检测范围")]
+    [PropertyRange(5f, 100f)]
+    [SuffixLabel("米")]
+    public float playerDetectionRange = 15f;
+    
+    [FoldoutGroup("生成器配置/玩家检测/检测设置")]
+    [LabelText("只在玩家附近生成")]
+    [InfoBox("启用后只有玩家在检测范围内时才会生成敌人")]
+    public bool spawnOnlyWhenPlayerNear = true;
+    
+    [TabGroup("生成器配置", "波次系统")]
+    [FoldoutGroup("生成器配置/波次系统/波次设置", expanded: true)]
+    [LabelText("使用波次系统")]
+    [InfoBox("启用波次系统后将按照预设波次生成敌人")]
+    public bool useWaveSystem = false;
+    
+    [FoldoutGroup("生成器配置/波次系统/波次设置")]
+    [LabelText("波次列表")]
+    [ShowIf("useWaveSystem")]
+    [ListDrawerSettings(ShowIndexLabels = true, ListElementLabelName = "waveName", DraggableItems = true)]
     public List<WaveData> waves = new List<WaveData>();
-    public float timeBetweenWaves = 10f;     // 波次间隔
     
-    [Header("调试设置")]
+    [FoldoutGroup("生成器配置/波次系统/波次设置")]
+    [LabelText("波次间隔时间")]
+    [ShowIf("useWaveSystem")]
+    [PropertyRange(1f, 60f)]
+    [SuffixLabel("秒")]
+    public float timeBetweenWaves = 10f;
+    
+    [TabGroup("生成器配置", "调试设置")]
+    [FoldoutGroup("生成器配置/调试设置/可视化", expanded: true)]
+    [LabelText("显示调试线框")]
     public bool showDebugGizmos = true;
+    
+    [FoldoutGroup("生成器配置/调试设置/可视化")]
+    [LabelText("线框颜色")]
+    [ShowIf("showDebugGizmos")]
     public Color gizmoColor = Color.red;
     
-    // 私有变量
+    [TabGroup("生成器配置", "运行状态")]
+    [FoldoutGroup("生成器配置/运行状态/敌人管理", expanded: true)]
+    [LabelText("已生成敌人列表")]
+    [ReadOnly]
+    [ListDrawerSettings(ShowIndexLabels = true)]
+    [ShowInInspector]
     private List<GameObject> spawnedEnemies = new List<GameObject>();
+    
+    [FoldoutGroup("生成器配置/运行状态/敌人管理")]
+    [LabelText("玩家Transform")]
+    [ReadOnly]
+    [ShowInInspector]
     private Transform playerTransform;
+    
+    [FoldoutGroup("生成器配置/运行状态/生成控制", expanded: true)]
+    [LabelText("生成协程")]
+    [ReadOnly]
+    [ShowInInspector]
     private Coroutine spawnCoroutine;
+    
+    [FoldoutGroup("生成器配置/运行状态/生成控制")]
+    [LabelText("正在生成")]
+    [ReadOnly]
+    [ShowInInspector]
     private bool isSpawning = false;
     
-    // 波次系统
+    [FoldoutGroup("生成器配置/运行状态/波次状态", expanded: true)]
+    [LabelText("当前波次")]
+    [ReadOnly]
+    [ShowInInspector]
     private int currentWave = 0;
+    
+    [FoldoutGroup("生成器配置/运行状态/波次状态")]
+    [LabelText("波次进行中")]
+    [ReadOnly]
+    [ShowInInspector]
     private bool waveInProgress = false;
+    
+    [FoldoutGroup("生成器配置/运行状态/波次状态")]
+    [LabelText("本波已生成敌人数")]
+    [ReadOnly]
+    [ShowInInspector]
     private int enemiesSpawnedInWave = 0;
     
-    // 事件
+    [TabGroup("生成器配置", "事件系统")]
+    [FoldoutGroup("生成器配置/事件系统/敌人事件", expanded: true)]
+    [LabelText("敌人生成事件")]
+    [InfoBox("敌人生成时触发")]
     public System.Action<GameObject> OnEnemySpawned;
+    
+    [FoldoutGroup("生成器配置/事件系统/敌人事件")]
+    [LabelText("敌人销毁事件")]
+    [InfoBox("敌人被销毁时触发")]
     public System.Action<GameObject> OnEnemyDestroyed;
+    
+    [FoldoutGroup("生成器配置/事件系统/波次事件", expanded: true)]
+    [LabelText("波次开始事件")]
+    [InfoBox("新波次开始时触发")]
     public System.Action<int> OnWaveStarted;
+    
+    [FoldoutGroup("生成器配置/事件系统/波次事件")]
+    [LabelText("波次完成事件")]
+    [InfoBox("波次完成时触发")]
     public System.Action<int> OnWaveCompleted;
     
     private void Start()
@@ -442,6 +554,46 @@ public class EnemySpawner : MonoBehaviour
         }
     }
     
+    [FoldoutGroup("生成器配置/控制面板", expanded: false)]
+    [HorizontalGroup("生成器配置/控制面板/控制设置")]
+    [VerticalGroup("生成器配置/控制面板/控制设置/生成控制")]
+    [Button("开始生成", ButtonSizes.Medium)]
+    [GUIColor(0.4f, 0.8f, 1f)]
+    [ShowIf("@!isSpawning")]
+    private void StartSpawningButton() => StartSpawning();
+    
+    [VerticalGroup("生成器配置/控制面板/控制设置/生成控制")]
+    [Button("停止生成", ButtonSizes.Medium)]
+    [GUIColor(1f, 0.6f, 0.4f)]
+    [ShowIf("isSpawning")]
+    private void StopSpawningButton() => StopSpawning();
+    
+    [VerticalGroup("生成器配置/控制面板/控制设置/敌人管理")]
+    [Button("清除所有敌人", ButtonSizes.Medium)]
+    [GUIColor(1f, 0.4f, 0.4f)]
+    private void ClearAllEnemiesButton() => ClearAllEnemies();
+    
+    [VerticalGroup("生成器配置/控制面板/控制设置/敌人管理")]
+    [Button("重置生成器", ButtonSizes.Medium)]
+    [GUIColor(0.8f, 0.4f, 1f)]
+    private void ResetSpawnerButton() => ResetSpawner();
+    
+    [VerticalGroup("生成器配置/控制面板/控制设置/敌人管理")]
+    [Button("生成一个敌人", ButtonSizes.Medium)]
+    [GUIColor(0.4f, 1f, 0.4f)]
+    private void SpawnOneEnemyButton() => SpawnRandomEnemy();
+    
+    [VerticalGroup("生成器配置/控制面板/控制设置/信息显示")]
+    [ShowInInspector, ReadOnly, LabelText("当前敌人数量")]
+    [PropertyOrder(100)]
+    public int CurrentEnemyCount => spawnedEnemies.Count;
+    
+    [VerticalGroup("生成器配置/控制面板/控制设置/信息显示")]
+    [ShowInInspector, ReadOnly, LabelText("当前波次进度")]
+    [PropertyOrder(101)]
+    [ShowIf("useWaveSystem")]
+    public string WaveProgress => useWaveSystem ? $"{currentWave + 1}/{waves.Count}" : "未使用波次系统";
+    
     /// <summary>
     /// 清除所有敌人
     /// </summary>
@@ -519,22 +671,49 @@ public class EnemySpawner : MonoBehaviour
 /// </summary>
 public enum SpawnAreaType
 {
-    Circle,
-    Rectangle,
-    Points
+    [LabelText("圆形区域")] Circle,
+    [LabelText("矩形区域")] Rectangle,
+    [LabelText("指定点位")] Points
 }
 
 /// <summary>
 /// 敌人生成数据
 /// </summary>
 [System.Serializable]
+[InlineProperty]
 public class EnemySpawnData
 {
+    [HorizontalGroup("敌人数据")]
+    [VerticalGroup("敌人数据/敌人配置")]
+    [LabelText("敌人预制体")]
+    [Required("必须指定敌人预制体")]
+    [AssetsOnly]
     public GameObject enemyPrefab;
+    
+    [VerticalGroup("敌人数据/敌人配置")]
+    [LabelText("生成权重")]
+    [PropertyRange(0.1f, 10f)]
+    [InfoBox("权重越高，生成概率越大")]
     public float spawnWeight = 1f;
+    
+    [VerticalGroup("敌人数据/等级设置")]
+    [LabelText("等级范围")]
+    [MinMaxSlider(1, 100, true)]
     public Vector2Int levelRange = new Vector2Int(1, 1);
+    
+    [VerticalGroup("敌人数据/属性修饰符")]
+    [LabelText("生命值倍数")]
+    [PropertyRange(0.1f, 5f)]
     public float healthMultiplier = 1f;
+    
+    [VerticalGroup("敌人数据/属性修饰符")]
+    [LabelText("伤害倍数")]
+    [PropertyRange(0.1f, 5f)]
     public float damageMultiplier = 1f;
+    
+    [VerticalGroup("敌人数据/属性修饰符")]
+    [LabelText("速度倍数")]
+    [PropertyRange(0.1f, 3f)]
     public float speedMultiplier = 1f;
 }
 
@@ -542,10 +721,29 @@ public class EnemySpawnData
 /// 波次数据
 /// </summary>
 [System.Serializable]
+[InlineProperty]
 public class WaveData
 {
+    [HorizontalGroup("波次数据")]
+    [VerticalGroup("波次数据/波次信息")]
+    [LabelText("波次名称")]
+    [InfoBox("用于标识和显示的波次名称")]
     public string waveName;
+    
+    [VerticalGroup("波次数据/波次信息")]
+    [LabelText("敌人总数")]
+    [PropertyRange(1, 100)]
     public int enemyCount;
+    
+    [VerticalGroup("波次数据/波次信息")]
+    [LabelText("生成间隔")]
+    [PropertyRange(0.1f, 10f)]
+    [SuffixLabel("秒")]
     public float spawnInterval = 1f;
+    
+    [VerticalGroup("波次数据/敌人配置")]
+    [LabelText("波次敌人列表")]
+    [ListDrawerSettings(ShowIndexLabels = true, DraggableItems = true)]
+    [InfoBox("如果为空，将使用全局敌人生成列表")]
     public List<EnemySpawnData> waveEnemies = new List<EnemySpawnData>();
 }

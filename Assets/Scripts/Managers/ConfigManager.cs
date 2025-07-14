@@ -22,9 +22,12 @@ public class ConfigManager : MonoBehaviour
     // 缓存的配置
     private Dictionary<string, SceneConfigData> sceneConfigs;
     private Dictionary<string, CharacterConfigData> characterConfigs;
-    private Dictionary<string, EnemyConfigData> enemyConfigs;
+    // EnemySystemConfig 配置管理
     private Dictionary<string, AudioClipData> audioConfigs;
     private Dictionary<string, UIConfigData> uiConfigs;
+    
+    // 新的统一配置系统
+    private EnemySystemConfig enemySystemConfig;
     
     void Awake()
     {
@@ -145,27 +148,7 @@ public class ConfigManager : MonoBehaviour
             }
         };
         
-        // 初始化敌人配置
-        enemyConfigs = new Dictionary<string, EnemyConfigData>
-        {
-            ["wild_boar"] = new EnemyConfigData
-            {
-                id = "wild_boar",
-                name = "野猪",
-                description = "一只凶猛的野猪",
-                type = "normal",
-                level = 1,
-                stats = new EnemyStats
-                {
-                    health = 80,
-                    attack = 15,
-                    defense = 0,
-                    speed = 3.0f,
-                    exp = 10
-                },
-                abilities = new List<string> { "charge" }
-            }
-        };
+        // 旧的enemyConfigs初始化已移除，现在使用EnemySystemConfig
         
         // 初始化音频配置
         audioConfigs = new Dictionary<string, AudioClipData>
@@ -237,9 +220,38 @@ public class ConfigManager : MonoBehaviour
         return characterConfigs.ContainsKey(characterType) ? characterConfigs[characterType] : null;
     }
     
-    public EnemyConfigData GetEnemyConfig(string enemyType)
+    // 使用 GetEnemySystemConfig 获取敌人系统配置
+    
+    /// <summary>
+    /// 获取敌人系统配置（新的统一配置）
+    /// </summary>
+    public EnemySystemConfig GetEnemySystemConfig()
     {
-        return enemyConfigs.ContainsKey(enemyType) ? enemyConfigs[enemyType] : null;
+        if (enemySystemConfig == null)
+        {
+            // 尝试从Resources加载
+            enemySystemConfig = Resources.Load<EnemySystemConfig>("EnemySystemConfig");
+            
+            if (enemySystemConfig == null && debugMode)
+            {
+                Debug.LogWarning("[ConfigManager] 未找到EnemySystemConfig，请确保配置文件在Resources文件夹中");
+            }
+        }
+        
+        return enemySystemConfig;
+    }
+    
+    /// <summary>
+    /// 设置敌人系统配置
+    /// </summary>
+    public void SetEnemySystemConfig(EnemySystemConfig config)
+    {
+        enemySystemConfig = config;
+        
+        if (debugMode)
+        {
+            Debug.Log("[ConfigManager] 敌人系统配置已更新");
+        }
     }
     
     public AudioClipData GetAudioConfig(string audioKey)

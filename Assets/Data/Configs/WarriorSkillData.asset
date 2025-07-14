@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4b5691720e4ce140b3b50c2b7909664, type: 3}
+  m_Name: WarriorSkillData
+  m_EditorClassIdentifier: 
+  skillName: "\u91CD\u65A9"
+  skillIcon: {fileID: 0}
+  description: "\u9020\u6210150%\u653B\u51FB\u529B\u7684\u5F3A\u529B\u4E00\u51FB\uFF0C\u5E76\u51FB\u9000\u654C\u4EBA"
+  damage: 0
+  cooldown: 5
+  manaCost: 20
+  range: 3
+  skillEffect: {fileID: 0}
+  skillSound: {fileID: 0}
+  animationTrigger: heavySlashTrigger
+  animationDuration: 1.2
+  skillType: 2
+  targetType: 0
+  coneAngle: 90
+  coneRadius: 5
+  boxWidth: 3
+  boxLength: 2.5
+  isCircularAOE: 1
+  aoeWidth: 5
+  aoeHeight: 5
+  buffDuration: 10
+  attackBonus: 0
+  speedBonus: 0
+  healAmount: 50
+  summonPrefab: {fileID: 0}
+  summonDuration: 30
+  showHitbox: 1
+  hitboxColor: {r: 1, g: 0, b: 0, a: 1}
+  hitboxAlpha: 0.3

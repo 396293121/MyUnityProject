@@ -1,40 +1,74 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Sirenix.OdinInspector;
 
 /// <summary>
 /// 战士职业类 - 高攻高物防但速度较慢的近战角色
 /// 从原Phaser项目的Warrior.js迁移而来
 /// </summary>
+[ShowOdinSerializedPropertiesInInspector]
 public class Warrior : Character
 {
-    [Header("战士特有属性")]
-    public float chargeSpeed = 10f;
-    public float chargeDuration = 1f;
-    public float chargeDistance = 5f;
+    [TitleGroup("战士职业配置", "高攻高防的近战战士", TitleAlignments.Centered)]
+    [FoldoutGroup("战士职业配置/职业设置", expanded: true)]
+    [LabelText("战士配置文件")]
+    [Required]
+    [InfoBox("战士职业的所有数值配置，通过ScriptableObject管理")]
+    public WarriorConfig config;
     
-    [Header("战士技能冷却")]
-    public float heavySlashCooldown = 5f;
-    public float whirlwindCooldown = 8f;
-    public float battleCryCooldown = 15f;
+
     
-    // 技能状态
-    private bool canUseHeavySlash = true;
-    private bool canUseWhirlwind = true;
-    private bool canUseBattleCry = true;
+
     
-    // 战吼效果
-    private bool battleCryActive = false;
-    private float originalAttack;
+    [FoldoutGroup("战士职业配置/攻击冷却", expanded: false)]
+    [LabelText("基础攻击冷却时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float attackCooldown => config != null ? config.attackCooldown : 0.8f;
     
+    [FoldoutGroup("战士职业配置/攻击冷却")]
+    [LabelText("上次攻击时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    private float lastAttackTime;
+    
+    [FoldoutGroup("战士职业配置/攻击冷却")]
+    [LabelText("攻击冷却剩余时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    private float AttackCooldownRemaining => Mathf.Max(0f, (lastAttackTime + attackCooldown) - Time.time);
+    
+    [FoldoutGroup("战士职业配置/攻击冷却")]
+    [LabelText("可以攻击")]
+    [ReadOnly]
+    [ShowInInspector]
+    private bool CanAttackNow => Time.time >= lastAttackTime + attackCooldown;
+    
+    [TitleGroup("战士实时状态", "当前技能状态和效果", TitleAlignments.Centered)]
+
+    
+
+    
+
+    
+
+    [Header("是否显示调试Gizmos")]
+    public bool showDebugGizmos=true;
+    
+    // 重写Character基类的攻击属性，提供战士特有的配置
+    public override float AttackRange => config != null ? config.attackRange : 2.5f;        // 战士攻击范围稍大
+    public override float AttackHeight => config != null ? config.attackHeight : 2.5f;       // 战士攻击高度稍大
+    public override float KnockbackForce => config != null ? config.knockbackForce : 8f;       // 战士击退力度更强
+
     protected override void Awake()
     {
         base.Awake();
         
         // 战士特有属性设置
-        strength = 15;      // 高力量
-        agility = 8;        // 较低敏捷
-        stamina = 12;       // 高体力
-        intelligence = 5;   // 低智力
+        strength = config != null ? config.strength : 15;      // 高力量
+        agility = config != null ? config.agility : 8;        // 较低敏捷
+        stamina = config != null ? config.stamina : 12;       // 高体力
+        intelligence = config != null ? config.intelligence : 5;   // 低智力
         
         // 重新计算衍生属性
         CalculateDerivedStats();
@@ -59,262 +93,148 @@ public class Warrior : Character
     {
         base.Update();
         
-        // 处理战士特有的输入
-        HandleWarriorInput();
+    }
+    public override void InitializeWithConfig(string characterType)
+{
+    var config = ConfigManager.Instance?.GetCharacterConfig(characterType);
+    if (config != null)
+    {
+        maxHealth = config.health;
+        maxMana = config.mana;
+        currentHealth = maxHealth;
+        currentMana = maxMana;
     }
     
-    /// <summary>
-    /// 处理战士特有输入
-    /// </summary>
-    private void HandleWarriorInput()
-    {
-        if (!canMove || !isAlive) return;
-        
-        // 检查技能输入
-        if (InputManager.Instance != null)
-        {
-            // 这里可以添加战士特有的输入处理
-            // 例如：重斩、旋风斩、战吼等技能的快捷键
-        }
-    }
-    
-    /// <summary>
-    /// 重斩技能 - 造成150%攻击力的强力一击
-    /// </summary>
-    public bool PerformHeavySlash()
-    {
-        if (!canUseHeavySlash || !canAttack || !isAlive) return false;
-        
-        canUseHeavySlash = false;
-        canAttack = false;
-        
-        // 播放重斩动画
-        if (animator != null)
-        {
-            animator.SetTrigger("HeavySlash");
-        }
-        
-        // 计算伤害
-        int damage = Mathf.RoundToInt(physicalAttack * 1.5f);
-        
-        // 执行攻击判定（需要在动画的关键帧调用）
-        StartCoroutine(ExecuteHeavySlashAttack(damage));
-        
-        // 开始冷却
-        StartCoroutine(HeavySlashCooldown());
-        
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log($"[Warrior] 使用重斩技能，伤害: {damage}");
-        }
-        
-        return true;
-    }
-    
-    /// <summary>
-    /// 旋风斩技能 - 对周围敌人造成120%攻击力的范围伤害
-    /// </summary>
-    public bool PerformWhirlwind()
-    {
-        if (!canUseWhirlwind || !canAttack || !isAlive) return false;
-        
-        canUseWhirlwind = false;
-        canAttack = false;
-        
-        // 播放旋风斩动画
-        if (animator != null)
-        {
-            animator.SetTrigger("Whirlwind");
-        }
-        
-        // 计算伤害
-        int damage = Mathf.RoundToInt(physicalAttack * 1.2f);
-        
-        // 执行范围攻击判定
-        StartCoroutine(ExecuteWhirlwindAttack(damage));
-        
-        // 开始冷却
-        StartCoroutine(WhirlwindCooldown());
-        
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log($"[Warrior] 使用旋风斩技能，范围伤害: {damage}");
-        }
-        
-        return true;
-    }
-    
-    /// <summary>
-    /// 战吼技能 - 提高20%攻击力，持续10秒
-    /// </summary>
-    public bool PerformBattleCry()
-    {
-        if (!canUseBattleCry || !isAlive || battleCryActive) return false;
-        
-        canUseBattleCry = false;
-        
-        // 播放战吼动画
-        if (animator != null)
-        {
-            animator.SetTrigger("BattleCry");
-        }
-        
-        // 应用战吼效果
-        StartCoroutine(ApplyBattleCryEffect());
-        
-        // 开始冷却
-        StartCoroutine(BattleCryCooldown());
-        
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log("[Warrior] 使用战吼技能，攻击力提升20%");
-        }
-        
-        return true;
-    }
-    
-    /// <summary>
-    /// 执行重斩攻击判定
-    /// </summary>
-    private System.Collections.IEnumerator ExecuteHeavySlashAttack(int damage)
-    {
-        // 等待动画到达关键帧（通常是动画的50%处）
-        yield return new WaitForSeconds(0.3f);
-        
-        // 创建攻击范围检测
-        Vector2 attackPosition = (Vector2)transform.position + (spriteRenderer.flipX ? Vector2.left : Vector2.right) * 1.5f;
-        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPosition, 1.2f, LayerMask.GetMask("Enemy"));
-        
-        foreach (Collider2D enemy in hitEnemies)
-        {
-            // 对敌人造成伤害
-            var enemyComponent = enemy.GetComponent<Enemy>();
-            if (enemyComponent != null)
-            {
-                enemyComponent.TakeDamage(damage);
-            }
-        }
-        
-        // 恢复攻击能力
-        yield return new WaitForSeconds(0.2f);
-        canAttack = true;
-    }
-    
-    /// <summary>
-    /// 执行旋风斩攻击判定
-    /// </summary>
-    private System.Collections.IEnumerator ExecuteWhirlwindAttack(int damage)
-    {
-        // 等待动画到达关键帧
-        yield return new WaitForSeconds(0.4f);
-        
-        // 创建范围攻击检测
-        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(transform.position, 2f, LayerMask.GetMask("Enemy"));
-        
-        foreach (Collider2D enemy in hitEnemies)
-        {
-            // 对敌人造成伤害
-            var enemyComponent = enemy.GetComponent<Enemy>();
-            if (enemyComponent != null)
-            {
-                enemyComponent.TakeDamage(damage);
-            }
-        }
-        
-        // 恢复攻击能力
-        yield return new WaitForSeconds(0.3f);
-        canAttack = true;
-    }
-    
-    /// <summary>
-    /// 应用战吼效果
-    /// </summary>
-    private System.Collections.IEnumerator ApplyBattleCryEffect()
-    {
-        battleCryActive = true;
-        originalAttack = physicalAttack;
-        
-        // 提升攻击力20%
-        physicalAttack = Mathf.RoundToInt(originalAttack * 1.2f);
-        
-        // 持续10秒
-        yield return new WaitForSeconds(10f);
-        
-        // 恢复原始攻击力
-        physicalAttack = Mathf.RoundToInt(originalAttack);
-        battleCryActive = false;
-        
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log("[Warrior] 战吼效果结束");
-        }
-    }
-    
-    /// <summary>
-    /// 重斩技能冷却
-    /// </summary>
-    private System.Collections.IEnumerator HeavySlashCooldown()
-    {
-        yield return new WaitForSeconds(heavySlashCooldown);
-        canUseHeavySlash = true;
-        
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log("[Warrior] 重斩技能冷却完成");
-        }
-    }
-    
-    /// <summary>
-    /// 旋风斩技能冷却
-    /// </summary>
-    private System.Collections.IEnumerator WhirlwindCooldown()
-    {
-        yield return new WaitForSeconds(whirlwindCooldown);
-        canUseWhirlwind = true;
-        
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log("[Warrior] 旋风斩技能冷却完成");
-        }
-    }
-    
-    /// <summary>
-    /// 战吼技能冷却
-    /// </summary>
-    private System.Collections.IEnumerator BattleCryCooldown()
-    {
-        yield return new WaitForSeconds(battleCryCooldown);
-        canUseBattleCry = true;
-        
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log("[Warrior] 战吼技能冷却完成");
-        }
-    }
-    
-    /// <summary>
-    /// 获取技能状态信息
-    /// </summary>
-    public WarriorSkillStatus GetSkillStatus()
-    {
-        return new WarriorSkillStatus
-        {
-            canUseHeavySlash = this.canUseHeavySlash,
-            canUseWhirlwind = this.canUseWhirlwind,
-            canUseBattleCry = this.canUseBattleCry,
-            battleCryActive = this.battleCryActive
-        };
-    }
+    // 应用战士特有属性
+    CalculateDerivedStats();
 }
 
-/// <summary>
-/// 战士技能状态结构
-/// </summary>
-[System.Serializable]
-public struct WarriorSkillStatus
-{
-    public bool canUseHeavySlash;
-    public bool canUseWhirlwind;
-    public bool canUseBattleCry;
-    public bool battleCryActive;
+
+    
+    /// <summary>
+    /// 重写Character基类的DealDamageToTarget方法，战士造成更高伤害
+    /// </summary>
+    /// <param name="target">目标碰撞体</param>
+    public void DealDamageToTarget(Collider2D target)
+    {
+        var enemy = target.GetComponent<Enemy>();
+        if (enemy != null)
+        {
+            // 战士造成额外10%伤害
+            int damage = Mathf.RoundToInt(physicalAttack * 1.1f);
+            enemy.TakeDamage(damage);
+            Debug.Log($"战士攻击造成伤害: {damage} (基础伤害: {physicalAttack})");
+        }
+    }
+    
+    /// <summary>
+    /// 战士基础攻击方法
+    /// </summary>
+    /// <returns>是否成功执行攻击</returns>
+    public bool PerformBasicAttack()
+    {
+        // 检查攻击冷却|| isUsingSkill
+        if (!CanAttackNow || !isAlive )
+        {
+            return false;
+        }
+        
+        // 更新上次攻击时间
+        lastAttackTime = Time.time;
+        
+        // 执行攻击逻辑
+        DetectAndDamageEnemies(() => {
+            if (GameManager.Instance != null && GameManager.Instance.debugMode)
+            {
+                Debug.Log($"[Warrior] 基础攻击命中，伤害: {physicalAttack}");
+            }
+        });
+        
+        return true;
+    }
+    
+    /// <summary>
+    /// 重写Character基类的ApplyKnockbackToTarget方法，战士击退效果更强
+    /// </summary>
+    /// <param name="target">被击退的目标</param>
+    public void ApplyKnockbackToTarget(Collider2D target)
+    {
+        Rigidbody2D targetRb = target.GetComponent<Rigidbody2D>();
+        if (targetRb != null)
+        {
+            // 计算击退方向（从角色指向目标）
+            Vector2 knockbackDirection = (target.transform.position - transform.position).normalized;
+            
+            // 战士的击退力度更强，并且有向上的分量
+            Vector2 knockbackForce = knockbackDirection * KnockbackForce + Vector2.up * 2f;
+            targetRb.AddForce(knockbackForce, ForceMode2D.Impulse);
+            
+            Debug.Log($"战士对 {target.name} 应用强力击退: {KnockbackForce}");
+        }
+    }
+
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+
+    
+    /// <summary>
+    /// 调试可视化
+    /// </summary>
+    void OnDrawGizmosSelected()
+    {
+        if (showDebugGizmos)
+        {
+            // 基础攻击范围
+            Gizmos.color = canAttack ? Color.green : Color.red;
+            Vector2 attackDirection = transform.localScale.x > 0 ? Vector2.right : Vector2.left;
+            Vector2 basicAttackCenter = (Vector2)attackPoint.position + attackDirection * (AttackRange / 2);
+            Vector3 basicAttackSize = new Vector3(AttackRange, AttackHeight, 0);
+            Gizmos.DrawWireCube(basicAttackCenter, basicAttackSize);
+            
+
+            
+
+            
+            // 角色朝向
+            Gizmos.color = Color.white;
+            Vector3 facingDirection = transform.localScale.x > 0 ? Vector3.right : Vector3.left;
+            Gizmos.DrawRay(transform.position, facingDirection * 0.8f);
+            
+
+            
+            // 交互范围
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(transform.position, interactionRange);
+        }
+    }
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
 }

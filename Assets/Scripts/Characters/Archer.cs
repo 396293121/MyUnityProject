@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Sirenix.OdinInspector;
 
 /// <summary>
 /// 射手职业类 - 高敏捷高速度的远程物理攻击角色
@@ -7,21 +8,197 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class Archer : Character
 {
-    [Header("射手特有属性")]
-    public float shootRange = 10f;
-    public float arrowSpeed = 15f;
-    public int maxArrows = 30;
-    public float reloadTime = 2f;
+    [TitleGroup("射手职业配置", "远程攻击的敏捷射手", TitleAlignments.Centered)]
+    [FoldoutGroup("射手职业配置/职业设置", expanded: true)]
+    [LabelText("射手配置文件")]
+    [Required]
+    [InfoBox("射手职业的所有数值配置，通过ScriptableObject管理")]
+    public ArcherConfig config;
     
-    [Header("射手技能冷却")]
-    public float multiShotCooldown = 6f;
-    public float piercingShotCooldown = 8f;
-    public float rapidFireCooldown = 12f;
-    public float explosiveArrowCooldown = 15f;
+    // 射手特有属性（只读，从配置文件获取）
+    [FoldoutGroup("射手职业配置/射击属性", expanded: false)]
+    [HorizontalGroup("射手职业配置/射击属性/参数")]
+    [VerticalGroup("射手职业配置/射击属性/参数/左列")]
+    [LabelText("射击范围")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float shootRange => config != null ? config.shootRange : 10f;
     
-    [Header("技能预制件")]
+    [VerticalGroup("射手职业配置/射击属性/参数/左列")]
+    [LabelText("箭矢速度")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float arrowSpeed => config != null ? config.arrowSpeed : 15f;
+    
+    [VerticalGroup("射手职业配置/射击属性/参数/右列")]
+    [LabelText("最大箭矢数")]
+    [ReadOnly]
+    [ShowInInspector]
+    public int maxArrows => config != null ? config.maxArrows : 30;
+    
+    [VerticalGroup("射手职业配置/射击属性/参数/右列")]
+    [LabelText("装填时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float reloadTime => config != null ? config.reloadTime : 2f;
+    
+    // 重写Character基类的攻击属性，提供射手特有的配置
+    public override float AttackRange => config != null ? config.attackRange : 2f;
+    public override float AttackHeight => config != null ? config.attackHeight : 2f;
+    public override float KnockbackForce => config != null ? config.knockbackForce : 5f;
+    
+
+    
+    protected override void DealDamageToTarget(IDamageable target, Vector2 hitPoint)
+    {
+        // 射手造成物理伤害，基于敏捷度
+        int damage = Mathf.RoundToInt(physicalAttack * 0.9f); // 使用90%的物理攻击力
+        target.TakeDamage(damage, hitPoint, this);
+        
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[Archer] 射手精准攻击造成 {damage} 点物理伤害");
+        }
+    }
+    
+    protected override void ApplyKnockbackToTarget(Rigidbody2D targetRb, Vector2 direction)
+    {
+        // 射手的击退效果更加精准，主要是水平方向
+        Vector2 knockback = new Vector2(direction.normalized.x * KnockbackForce, direction.normalized.y * KnockbackForce * 0.5f);
+        targetRb.AddForce(knockback, ForceMode2D.Impulse);
+        
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[Archer] 射手精准击退，力度: {KnockbackForce}");
+        }
+    }
+    
+    [FoldoutGroup("射手职业配置/攻击冷却", expanded: false)]
+    [LabelText("基础攻击冷却时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float attackCooldown => config != null ? config.attackCooldown : 0.4f;
+    
+    [FoldoutGroup("射手职业配置/攻击冷却")]
+    [LabelText("上次攻击时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    private float lastAttackTime;
+    
+    [FoldoutGroup("射手职业配置/攻击冷却")]
+    [LabelText("攻击冷却剩余时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    private float AttackCooldownRemaining => Mathf.Max(0f, (lastAttackTime + attackCooldown) - Time.time);
+    
+    [FoldoutGroup("射手职业配置/攻击冷却")]
+    [LabelText("可以攻击")]
+    [ReadOnly]
+    [ShowInInspector]
+    private bool CanAttackNow => Time.time >= lastAttackTime + attackCooldown;
+    
+    /// <summary>
+    /// 射手基础攻击方法
+    /// </summary>
+    /// <returns>是否成功执行攻击</returns>
+    public bool PerformBasicAttack()
+    {
+        // 检查攻击冷却和箭矢数量
+        if (!CanAttackNow || !isAlive || currentArrows <= 0 || isReloading)
+        {
+            return false;
+        }
+        
+        // 更新上次攻击时间
+        lastAttackTime = Time.time;
+        
+        // 消耗箭矢
+        currentArrows--;
+        
+        // 执行攻击逻辑
+        DetectAndDamageEnemies(() => {
+            if (GameManager.Instance != null && GameManager.Instance.debugMode)
+            {
+                Debug.Log($"[Archer] 基础射击命中，伤害: {physicalAttack}, 剩余箭矢: {currentArrows}");
+            }
+        });
+        
+        // 检查是否需要装填
+        if (currentArrows <= 0)
+        {
+            StartCoroutine(nameof(ReloadArrows));
+        }
+        
+        return true;
+    }
+    
+    /// <summary>
+    /// 装填箭矢
+    /// </summary>
+    private System.Collections.IEnumerator ReloadArrows()
+    {
+        isReloading = true;
+        
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[Archer] 开始装填箭矢，装填时间: {reloadTime}秒");
+        }
+        
+        yield return new WaitForSeconds(reloadTime);
+        
+        currentArrows = maxArrows;
+        isReloading = false;
+        
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[Archer] 箭矢装填完成，当前箭矢: {currentArrows}");
+        }
+    }
+    
+    [FoldoutGroup("射手职业配置/技能冷却", expanded: false)]
+    [HorizontalGroup("射手职业配置/技能冷却/时间")]
+    [VerticalGroup("射手职业配置/技能冷却/时间/左列")]
+    [LabelText("多重射击冷却")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float multiShotCooldown => config != null ? config.multiShotCooldown : 6f;
+    
+    [VerticalGroup("射手职业配置/技能冷却/时间/左列")]
+    [LabelText("穿透射击冷却")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float piercingShotCooldown => config != null ? config.piercingShotCooldown : 8f;
+    
+    [VerticalGroup("射手职业配置/技能冷却/时间/右列")]
+    [LabelText("快速射击冷却")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float rapidFireCooldown => config != null ? config.rapidFireCooldown : 12f;
+    
+    [VerticalGroup("射手职业配置/技能冷却/时间/右列")]
+    [LabelText("爆炸箭冷却")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float explosiveArrowCooldown => config != null ? config.explosiveArrowCooldown : 15f;
+    
+    [FoldoutGroup("射手职业配置/技能预制件", expanded: false)]
+    [HorizontalGroup("射手职业配置/技能预制件/箭矢")]
+    [VerticalGroup("射手职业配置/技能预制件/箭矢/左列")]
+    [LabelText("普通箭矢预制件")]
+    [Required]
+    [InfoBox("普通射击使用的箭矢预制件")]
     public GameObject arrowPrefab;
+    
+    [VerticalGroup("射手职业配置/技能预制件/箭矢/右列")]
+    [LabelText("穿透箭矢预制件")]
+    [Required]
+    [InfoBox("穿透射击使用的箭矢预制件")]
     public GameObject piercingArrowPrefab;
+    
+    [FoldoutGroup("射手职业配置/技能预制件")]
+    [LabelText("爆炸箭矢预制件")]
+    [Required]
+    [InfoBox("爆炸箭技能使用的箭矢预制件")]
     public GameObject explosiveArrowPrefab;
     
     // 箭矢系统
@@ -42,11 +219,22 @@ public class Archer : Character
     {
         base.Awake();
         
-        // 射手特有属性设置
-        strength = 10;      // 中等力量
-        agility = 15;       // 高敏捷
-        stamina = 10;       // 中等体力
-        intelligence = 8;   // 较低智力
+        // 从配置文件设置射手特有属性
+        if (config != null)
+        {
+            strength = config.strength;
+            agility = config.agility;
+            stamina = config.stamina;
+            intelligence = config.intelligence;
+        }
+        else
+        {
+            // 默认值作为后备
+            strength = 10;      // 中等力量
+            agility = 15;       // 高敏捷
+            stamina = 10;       // 中等体力
+            intelligence = 8;   // 较低智力
+        }
         
         // 初始化箭矢数量
         currentArrows = maxArrows;
@@ -58,6 +246,21 @@ public class Archer : Character
         {
             Debug.Log($"[Archer] 射手创建完成 - 攻击力: {physicalAttack}, 速度: {speed}, 箭矢: {currentArrows}/{maxArrows}");
         }
+    }
+    
+    public override void InitializeWithConfig(string characterType)
+    {
+        var config = ConfigManager.Instance?.GetCharacterConfig(characterType);
+        if (config != null)
+        {
+            maxHealth = config.health;
+            maxMana = config.mana;
+            currentHealth = maxHealth;
+            currentMana = maxMana;
+        }
+        
+        // 应用射手特有属性
+        CalculateDerivedStats();
     }
     
     public override void CalculateDerivedStats()
@@ -115,7 +318,7 @@ public class Archer : Character
         // 检查是否需要装填
         if (currentArrows <= 0)
         {
-            StartCoroutine(ReloadArrows());
+            StartCoroutine(nameof(ReloadArrows));
         }
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
@@ -152,7 +355,7 @@ public class Archer : Character
         // 检查是否需要装填
         if (currentArrows <= 0)
         {
-            StartCoroutine(ReloadArrows());
+            StartCoroutine(nameof(ReloadArrows));
         }
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
@@ -181,7 +384,8 @@ public class Archer : Character
         }
         
         // 创建穿透箭矢
-        int damage = Mathf.RoundToInt(physicalAttack * 1.3f);
+        float damageMultiplier = config != null ? config.piercingShotDamageMultiplier : 1.3f;
+        int damage = Mathf.RoundToInt(physicalAttack * damageMultiplier);
         StartCoroutine(CreateArrow(targetPosition, piercingArrowPrefab, damage));
         
         // 开始冷却
@@ -190,7 +394,7 @@ public class Archer : Character
         // 检查是否需要装填
         if (currentArrows <= 0)
         {
-            StartCoroutine(ReloadArrows());
+            StartCoroutine(nameof(ReloadArrows));
         }
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
@@ -248,7 +452,8 @@ public class Archer : Character
         }
         
         // 创建爆炸箭矢
-        int damage = Mathf.RoundToInt(physicalAttack * 1.5f);
+        float damageMultiplier = config != null ? config.explosiveArrowDamageMultiplier : 1.5f;
+        int damage = Mathf.RoundToInt(physicalAttack * damageMultiplier);
         StartCoroutine(CreateArrow(targetPosition, explosiveArrowPrefab, damage));
         
         // 开始冷却
@@ -257,7 +462,7 @@ public class Archer : Character
         // 检查是否需要装填
         if (currentArrows <= 0)
         {
-            StartCoroutine(ReloadArrows());
+            StartCoroutine(nameof(ReloadArrows));
         }
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
@@ -275,7 +480,7 @@ public class Archer : Character
     {
         if (isReloading || currentArrows >= maxArrows) return false;
         
-        StartCoroutine(ReloadArrows());
+StartCoroutine(nameof(ReloadArrows));
         return true;
     }
     
@@ -285,7 +490,8 @@ public class Archer : Character
     private System.Collections.IEnumerator CreateArrow(Vector2 targetPosition, GameObject arrowPrefab, int damage)
     {
         // 等待射击动画
-        yield return new WaitForSeconds(0.2f);
+        float animationTime = config != null ? config.normalShootAnimationTime : 0.2f;
+        yield return new WaitForSeconds(animationTime);
         
         if (arrowPrefab != null)
         {
@@ -302,7 +508,9 @@ public class Archer : Character
         }
         
         // 恢复攻击能力（考虑快速射击效果）
-        float attackDelay = rapidFireActive ? 0.1f : 0.3f;
+        float rapidFireDelay = config != null ? config.rapidFireAttackDelay : 0.1f;
+        float normalDelay = config != null ? config.normalAttackRecoveryTime : 0.3f;
+        float attackDelay = rapidFireActive ? rapidFireDelay : normalDelay;
         yield return new WaitForSeconds(attackDelay);
         canAttack = true;
     }
@@ -313,18 +521,24 @@ public class Archer : Character
     private System.Collections.IEnumerator CreateMultipleArrows(Vector2 targetPosition)
     {
         // 等待射击动画
-        yield return new WaitForSeconds(0.3f);
+        float animationTime = config != null ? config.multiShotAnimationTime : 0.3f;
+        yield return new WaitForSeconds(animationTime);
         
         if (arrowPrefab != null)
         {
-            // 计算三个方向
+            // 计算方向和箭矢数量
             Vector2 direction = (targetPosition - (Vector2)transform.position).normalized;
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            int arrowCount = config != null ? config.multiShotArrowCount : 3;
+            float angleDiff = config != null ? config.multiShotAngleDiff : 15f;
             
-            // 创建三支箭矢，角度稍有不同
-            for (int i = -1; i <= 1; i++)
+            // 创建多支箭矢，角度稍有不同
+            int halfCount = arrowCount / 2;
+            for (int i = -halfCount; i <= halfCount; i++)
             {
-                float arrowAngle = angle + (i * 15f); // 每支箭相差15度
+                if (arrowCount % 2 == 0 && i == 0) continue; // 偶数箭矢时跳过中心
+                
+                float arrowAngle = angle + (i * angleDiff);
                 Vector2 arrowDirection = new Vector2(Mathf.Cos(arrowAngle * Mathf.Deg2Rad), Mathf.Sin(arrowAngle * Mathf.Deg2Rad));
                 Vector2 arrowTarget = (Vector2)transform.position + arrowDirection * shootRange;
                 
@@ -339,14 +553,15 @@ public class Archer : Character
         }
         
         // 恢复攻击能力
-        yield return new WaitForSeconds(0.4f);
+        float recoveryTime = config != null ? config.multiShotRecoveryTime : 0.4f;
+        yield return new WaitForSeconds(recoveryTime);
         canAttack = true;
     }
     
     /// <summary>
     /// 装填箭矢
     /// </summary>
-    private System.Collections.IEnumerator ReloadArrows()
+    private System.Collections.IEnumerator DoReloadArrows()
     {
         isReloading = true;
         canAttack = false;
@@ -389,8 +604,9 @@ public class Archer : Character
             animator.speed = 1.5f;
         }
         
-        // 持续8秒
-        yield return new WaitForSeconds(8f);
+        // 持续时间从配置获取
+        float duration = config != null ? config.rapidFireDuration : 8f;
+        yield return new WaitForSeconds(duration);
         
         // 恢复正常速度
         if (animator != null)

@@ -10,11 +10,13 @@ GameObject:
   m_Component:
   - component: {fileID: 2293877032079825830}
   - component: {fileID: 2084112907248682885}
+  - component: {fileID: 8629922963531760575}
+  - component: {fileID: 4341857737818121737}
   - component: {fileID: 7109428010291904151}
   - component: {fileID: 1234094422006537599}
   - component: {fileID: 3954200196351654381}
   - component: {fileID: 5219955795635038263}
-  - component: {fileID: 2021242179622106731}
+  - component: {fileID: 6192113962601377326}
   m_Layer: 10
   m_Name: warrior_test_anim
   m_TagString: Player
@@ -51,10 +53,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   jumpForce: 10
-  maxHealth: 76.8254
+  maxHealth: 100
   attackWidth: 2
-  attackHeight: 1
-  attackRange: 1.5
+  attackHeight: 7
+  attackRange: 5
   attackCooldown: 1
   invincibilityTime: 1
   knockbackForce: 5
@@ -65,6 +67,36 @@ MonoBehaviour:
   attackRangeColor: {r: 1, g: 0, b: 0, a: 1}
   groundDetectionColor: {r: 0, g: 1, b: 0, a: 1}
   movementDirectionColor: {r: 0, g: 0, b: 1, a: 1}
+--- !u!114 &8629922963531760575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5332153218383502975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1674a7f310ef95b408dd27ac54db9e13, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  availableSkills:
+  - {fileID: 11400000, guid: 07e3bf528516a5743a9b449de1fb1c21, type: 2}
+  - {fileID: 11400000, guid: 35857258402495d40811263c9fcb19a8, type: 2}
+  skillSpawnPoint: {fileID: 2293877032079825830}
+  currentMana: 100
+  maxMana: 100
+--- !u!114 &4341857737818121737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5332153218383502975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8157428d71e7e04c9b3cf9539abbf2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!212 &7109428010291904151
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -147,7 +179,7 @@ BoxCollider2D:
   m_GameObject: {fileID: 5332153218383502975}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 7d71c1c5ba704b346872900d122a2aad, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -173,7 +205,7 @@ BoxCollider2D:
   m_Offset: {x: -0.1838255, y: -1.450192}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0}
     oldSize: {x: 14.2, y: 9.6}
     newSize: {x: 14.2, y: 9.6}
     adaptiveTilingThreshold: 0.5
@@ -198,7 +230,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 3
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -210,51 +242,20 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
---- !u!61 &2021242179622106731
-BoxCollider2D:
+--- !u!114 &6192113962601377326
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5332153218383502975}
   m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: -0.1838255, y: -1.450192}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 14.2, y: 9.6}
-    newSize: {x: 14.2, y: 9.6}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  serializedVersion: 2
-  m_Size: {x: 3.7014294, y: 6.6996164}
-  m_EdgeRadius: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c29cff538c195c249b69c6f2236de67b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Library: []
+  m_SpriteLibraryAsset: {fileID: 0}
 --- !u!1 &6009178029295044069
 GameObject:
   m_ObjectHideFlags: 0

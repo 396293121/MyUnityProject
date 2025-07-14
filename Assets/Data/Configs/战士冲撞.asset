@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88d4516ea41d539408c492ba3473857f, type: 3}
+  m_Name: "\u6218\u58EB\u51B2\u649E"
+  m_EditorClassIdentifier: 
+  skillName: "\u51B2\u649E"
+  skillIcon: {fileID: 0}
+  description: "\u6280\u80FD\u63CF\u8FF0"
+  damage: 48
+  cooldown: 4
+  manaCost: 20
+  range: 6
+  skillEffect: {fileID: 0}
+  skillSound: {fileID: 0}
+  animationTrigger: chargeTrigger
+  animationDuration: 1
+  skillType: 3
+  targetType: 0
+  coneAngle: 90
+  coneRadius: 5
+  boxForward: 3
+  boxBackward: 1
+  boxLeft: 2
+  boxRight: 2
+  isCircularAOE: 0
+  aoeUp: 1.8
+  aoeDown: 3.2
+  aoeLeft: 5.6
+  aoeRight: 0.7
+  buffDuration: 10
+  attackBonus: 0
+  speedBonus: 0
+  healAmount: 50
+  summonPrefab: {fileID: 0}
+  summonDuration: 30
+  isMove: 1
+  moveDistance: 10
+  moveDuration: 0.8
+  moveType: 0
+  moveCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  invincibleDuringMove: 0
+  stopOnCollision: 0
+  showHitbox: 1
+  hitboxColor: {r: 0.09420016, g: 0.092579246, b: 0.9496855, a: 1}
+  hitboxAlpha: 0.3

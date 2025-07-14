@@ -7,10 +7,9 @@ using System.Linq;
 /// 测试场景敌人系统
 /// 基于Phaser项目中的敌人管理逻辑
 /// </summary>
-public class TestSceneEnemySystem
+public class TestSceneEnemySystem : MonoBehaviour
 {
     #region 私有字段
-    private EnemySystemConfig config;
     private TestSceneEventBus eventBus;
     private Transform playerTransform;
     private LayerMask platformLayers;
@@ -28,6 +27,7 @@ public class TestSceneEnemySystem
     public int ActiveEnemyCount => activeEnemies.Count(e => e != null && e.activeInHierarchy);
     public bool HasActiveEnemies => ActiveEnemyCount > 0;
     public List<Enemy> GetActiveEnemyControllers() => enemyControllers.Where(e => e != null && e.gameObject.activeInHierarchy).ToList();
+    public EnemySystemConfig config { get; private set; }
     #endregion
     
     #region 构造函数
@@ -49,12 +49,20 @@ public class TestSceneEnemySystem
     /// </summary>
     private void InitializeWaveConfigs()
     {
-        // EnemySystemConfig中没有enemyWaves，这个功能可能需要从其他地方获取
-        // 或者暂时注释掉，等待正确的配置结构
-        /*
-        if (config?.enemyWaves != null)
+        // 波次配置现在从UnifiedSceneConfig中获取
+        // 这个方法将在SetEnemyWaves中被调用
+    }
+    
+    /// <summary>
+    /// 设置敌人波次配置
+    /// </summary>
+    public void SetEnemyWaves(List<EnemyWaveConfig> enemyWaves)
+    {
+        waveConfigs.Clear();
+        
+        if (enemyWaves != null)
         {
-            foreach (var wave in config.enemyWaves)
+            foreach (var wave in enemyWaves)
             {
                 if (!string.IsNullOrEmpty(wave.waveName))
                 {
@@ -62,7 +70,8 @@ public class TestSceneEnemySystem
                 }
             }
         }
-        */
+        
+        Debug.Log($"[TestSceneEnemySystem] 已加载 {waveConfigs.Count} 个敌人波次配置");
     }
     
     /// <summary>
@@ -187,17 +196,33 @@ public class TestSceneEnemySystem
     
     /// <summary>
     /// 配置敌人属性
+    /// 使用EnemySystemConfig统一配置
     /// </summary>
     private void ConfigureEnemy(Enemy enemyController, EnemySpawnConfig spawnConfig)
     {
-        if (spawnConfig.enemyConfig != null)
+        // 使用EnemySystemConfig配置敌人属性
+        if (config != null)
         {
-            enemyController.maxHealth = spawnConfig.enemyConfig.health;
-            enemyController.currentHealth = spawnConfig.enemyConfig.health;
-            enemyController.attackDamage = spawnConfig.enemyConfig.damage;
-            enemyController.moveSpeed = spawnConfig.enemyConfig.speed;
-            enemyController.attackRange = spawnConfig.enemyConfig.attackRange;
-            enemyController.detectionRange = spawnConfig.enemyConfig.detectionRange;
+            // 根据敌人类型获取对应配置
+            if (spawnConfig.enemyType.ToLower() == "wild_boar" && config.wildBoarConfig != null)
+            {
+                var wildBoarConfig = config.wildBoarConfig;
+                enemyController.maxHealth = wildBoarConfig.health;
+                enemyController.currentHealth = wildBoarConfig.health;
+                enemyController.attackDamage = wildBoarConfig.attackDamage;
+                enemyController.moveSpeed = wildBoarConfig.moveSpeed;
+                enemyController.attackRange = wildBoarConfig.attackRange;
+                enemyController.detectionRange = wildBoarConfig.detectionRange;
+            }
+            else
+            {
+                // 使用默认配置或其他敌人类型配置
+                Debug.LogWarning($"[TestSceneEnemySystem] 未找到敌人类型 {spawnConfig.enemyType} 的配置，使用默认值");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[TestSceneEnemySystem] EnemySystemConfig为空，无法配置敌人属性");
         }
         
         // 设置玩家目标
@@ -246,85 +271,34 @@ public class TestSceneEnemySystem
     {
         if (!isSystemActive) return;
         
-        // 更新敌人状态
-        if (Time.time - lastUpdateTime >= config.enemyUpdateInterval)
-        {
-            UpdateEnemies();
-            lastUpdateTime = Time.time;
-        }
+        // 只处理系统级别的管理任务，敌人个体更新由各自的Update方法处理
         
-        // 更新敌人AI
+        // 更新敌人AI目标（较低频率）
         if (Time.time - lastAIUpdateTime >= config.aiUpdateInterval)
         {
-            UpdateEnemyAI();
+            UpdateEnemyTargets();
             lastAIUpdateTime = Time.time;
         }
-        
-        // 处理特殊行为
-        HandleSpecialBehaviors();
         
         // 清理死亡的敌人
         CleanupDeadEnemies();
     }
     
     /// <summary>
-    /// 更新敌人状态
+    /// 更新敌人目标（系统级别管理）
     /// </summary>
-    private void UpdateEnemies()
+    private void UpdateEnemyTargets()
     {
+        // 只负责设置玩家目标，具体AI逻辑由各敌人自己的Update方法处理
+        if (playerTransform == null) return;
+        
         foreach (var enemy in enemyControllers.ToList())
         {
             if (enemy != null && enemy.gameObject.activeInHierarchy)
             {
-                // 更新敌人逻辑
-                enemy.UpdateEnemy();
+                enemy.SetTarget(playerTransform);
             }
         }
-    }
-    
-    /// <summary>
-    /// 更新敌人AI
-    /// </summary>
-    private void UpdateEnemyAI()
-    {
-        foreach (var enemy in enemyControllers.ToList())
-        {
-            if (enemy != null && enemy.gameObject.activeInHierarchy)
-            {
-                // 更新AI逻辑
-                if (playerTransform != null)
-                {
-                    enemy.SetTarget(playerTransform);
-                }
-            }
-        }
-    }
-    
-    /// <summary>
-    /// 处理特殊行为
-    /// </summary>
-    private void HandleSpecialBehaviors()
-    {
-        foreach (var enemy in enemyControllers.ToList())
-        {
-            if (enemy != null && enemy.gameObject.activeInHierarchy)
-            {
-                // 处理野猪特殊行为
-                if (enemy is WildBoar wildBoar)
-                {
-                    HandleWildBoarBehavior(wildBoar);
-                }
-            }
-        }
-    }
-    
-    /// <summary>
-    /// 处理野猪特殊行为
-    /// </summary>
-    private void HandleWildBoarBehavior(WildBoar wildBoar)
-    {
-        // 实现野猪的冲锋等特殊行为
-        // 这里需要根据WildBoar类的具体实现来调整
     }
     
     /// <summary>

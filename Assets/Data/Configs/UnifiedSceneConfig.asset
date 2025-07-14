@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e92b8847b512e4449872ae5262611572, type: 3}
+  m_Name: UnifiedSceneConfig
+  m_EditorClassIdentifier: 
+  sceneName: "\u6D4B\u8BD5"
+  sceneDescription: "\u6D4B\u8BD5\u573A\u666F"
+  ScenesType: 0
+  backgroundColor: {r: 0.19215688, g: 0.3019608, b: 0.47450984, a: 1}
+  mapPrefab: {fileID: 8076007621738116656, guid: 81ea8720e8107324d8d8fb361dbd2259, type: 3}
+  characterPrefabs:
+  - characterType: warrior
+    prefab: {fileID: 5332153218383502975, guid: 0af60e9c735588e4b8aaa4a0ea67de4e, type: 3}
+    characterName: "\u6218\u58EB"
+    description: 
+  defaultCharacterType: warrior
+  playerSpawnTag: {fileID: 0}
+  enemyPrefabs:
+  - enemyType: wild_boar
+    prefab: {fileID: 1485609283496898506, guid: bb356399f2db90e468c51fe5d8ef2b45, type: 3}
+    enemyName: "\u91CE\u732A"
+    description: 
+  enemySpawnTag: EnemySpawn
+  enemySpawns:
+  - enemyType: wild_boar
+    enemyPrefab: {fileID: 1485609283496898506, guid: bb356399f2db90e468c51fe5d8ef2b45, type: 3}
+    spawnPosition: {x: 42.58, y: 11, z: 0}
+    spawnDelay: 0
+    spawnCount: 5
+    randomizePosition: 0
+    spawnRadius: 2
+    autoSpawn: 1
+    autoGeneratePatrolPoints: 1
+    patrolRadius: 5
+    patrolPoints: []
+  enemyWaves: []
+  enemySystemConfig: {fileID: 11400000, guid: f7f06f39a749eda46b300dadd76cfbee, type: 2}
+  hudUIPrefab: {fileID: 0}
+  pauseMenuPrefab: {fileID: 0}
+  gameOverUIPrefab: {fileID: 0}
+  hudConfig:
+    showHealth: 1
+    showMana: 1
+    showExperience: 1
+    showMinimap: 0
+    showSkillCooldown: 1
+  inputConfig:
+    inputBufferTime: 0.1
+    enableGamepadSupport: 1
+    gamepadDeadzone: 0.2
+  backgroundMusic: {fileID: 8300000, guid: c3dd2ed36b0902a42ae4ad7a3249ebb4, type: 3}
+  ambientSound: {fileID: 0}
+  audioConfig:
+    masterVolume: 1
+    musicVolume: 0.8
+    sfxVolume: 1
+    voiceVolume: 1
+  soundEffects:
+  - soundName: 
+    audioClip: {fileID: 0}
+    volume: 1
+    loop: 0
+    pitch: 1
+    cooldownTime: 0.1
+  cameraConfig:
+    followSpeed: 5
+    offset: {x: 0, y: 2, z: -10}
+    useBounds: 0
+    cameraBounds:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+  questConfigs: []
+  dialogueConfigs: []
+  itemConfigs: []
+  enableDebugMode: 0
+  showDebugUI: 0
+  debugLogLevel: 3
