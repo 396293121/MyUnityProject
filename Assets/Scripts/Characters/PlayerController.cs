@@ -63,11 +63,6 @@ public class PlayerController : MonoBehaviour, IInputListener
     [LabelText("可交互物体图层")]
     public LayerMask interactableLayerMask = 1; // 可交互物体图层
     
-    [TabGroup("配置", "调试设置")]
-    [FoldoutGroup("配置/调试设置/可视化", expanded: false)]
-    [LabelText("显示调试辅助线")]
-    [InfoBox("在Scene视图中显示各种调试辅助线：\n- 地面检测：绿色（在地面）/红色（不在地面）\n- 攻击范围：黄色（可攻击）/红色（正在攻击）\n- 攻击点：青色\n- 交互范围：蓝色\n- 角色朝向指示器：白色\n- 速度向量：洋红色")]
-    public bool showDebugGizmos = true;      // 显示调试辅助线
     
     [TabGroup("状态", "组件引用")]
     [FoldoutGroup("状态/组件引用/核心组件", expanded: false)]
@@ -530,9 +525,9 @@ public class PlayerController : MonoBehaviour, IInputListener
     private void Flip()
     {
         facingRight = !facingRight;
-        if (spriteRenderer != null)
+        if (transform != null)
         {
-            spriteRenderer.flipX = !facingRight;
+            transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
         }
     }
     
@@ -617,7 +612,9 @@ public class PlayerController : MonoBehaviour, IInputListener
         if (!damageTriggered && isAttacking)
         {
             damageTriggered = true;
-            audioConfig.PlaySound("attackHit");
+             playerCharacter.DetectAndDamageEnemies(()=>{
+                audioConfig.PlaySound("attackHit");
+             });
             Debug.Log("攻击动画伤害帧触发 - Animation Event");
         }
     }
@@ -984,27 +981,7 @@ public class PlayerController : MonoBehaviour, IInputListener
             cameraShake.Shake(0.2f, 0.1f);
         }
     }
-    
-    [TabGroup("控制面板", "能力控制")]
-    [BoxGroup("控制面板/能力控制/移动控制")]
-    [Button("启用移动")]
-    [GUIColor(0.4f, 0.8f, 1f)]
-    private void EnableMovement() => SetCanMove(true);
-    
-    [BoxGroup("控制面板/能力控制/移动控制")]
-    [Button("禁用移动")]
-    [GUIColor(1f, 0.6f, 0.6f)]
-    private void DisableMovement() => SetCanMove(false);
-    
-    [BoxGroup("控制面板/能力控制/攻击控制")]
-    [Button("启用攻击")]
-    [GUIColor(0.4f, 0.8f, 1f)]
-    private void EnableAttack() => SetCanAttack(true);
-    
-    [BoxGroup("控制面板/能力控制/攻击控制")]
-    [Button("禁用攻击")]
-    [GUIColor(1f, 0.6f, 0.6f)]
-    private void DisableAttack() => SetCanAttack(false);
+
     
     [TabGroup("控制面板", "状态信息")]
     [BoxGroup("控制面板/状态信息/实时状态")]
@@ -1058,26 +1035,7 @@ public class PlayerController : MonoBehaviour, IInputListener
         return Color.red;
     }
     
-    /// <summary>
-    /// 设置移动能力 - 已弃用，状态由状态机管理
-    /// </summary>
-    [System.Obsolete("状态由状态机管理，请使用状态机的ForceChangeState方法")]
-    public void SetCanMove(bool canMove)
-    {
-        // 状态由状态机管理，此方法已弃用
-        Debug.LogWarning("SetCanMove已弃用，状态由状态机管理");
-    }
-    
-    /// <summary>
-    /// 设置攻击能力 - 已弃用，状态由状态机管理
-    /// </summary>
-    [System.Obsolete("状态由状态机管理，请使用状态机的ForceChangeState方法")]
-    public void SetCanAttack(bool canAttack)
-    {
-        // 状态由状态机管理，此方法已弃用
-        Debug.LogWarning("SetCanAttack已弃用，状态由状态机管理");
-    }
-    
+ 
     /// <summary>
     /// 获取玩家角色
     /// </summary>

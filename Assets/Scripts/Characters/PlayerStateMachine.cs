@@ -420,7 +420,7 @@ public class PlayerStateMachine : MonoBehaviour
                 stateTransitionHistory.RemoveAt(0);
             }
             
-            Debug.Log($"[PlayerStateMachine] {transitionLog}");
+          //  Debug.Log($"[PlayerStateMachine] {transitionLog}");
         }
     }
     
@@ -473,7 +473,7 @@ public class PlayerStateMachine : MonoBehaviour
                 // 技能状态：根据技能类型限制行动
                 if (playerController != null)
                 {
-                    playerController.canMove = false;
+                  //  playerController.canMove = false;
                     playerController.canAttack = false;
                 }
                 break;

@@ -125,12 +125,7 @@ public class WildBoar : Enemy
     [ShowInInspector]
     private EnemyState currentAIState = EnemyState.Idle;
     
-    [FoldoutGroup("野猪配置/AI状态机/状态控制")]
-    [LabelText("状态计时器")]
-    [ReadOnly]
-    [ProgressBar(0, 10)]
-    [ShowInInspector]
-    private float stateTimer = 0f;
+
     
     [FoldoutGroup("野猪配置/AI状态机/巡逻设置", expanded: true)]
     [LabelText("巡逻速度")]
@@ -168,16 +163,32 @@ public class WildBoar : Enemy
     [SuffixLabel("秒")]
     public float stunDuration = 2f;
     
-    [FoldoutGroup("野猪配置/AI状态机/眩晕状态", expanded: true)]
+    [FoldoutGroup("野猪配置/状态监控/眩晕状态", expanded: true)]
     [LabelText("正在眩晕")]
     [ReadOnly]
     [ShowInInspector]
     private bool isStunned = false;
     
+    // 公共属性访问器，供状态机使用
+    public bool IsCharging => isCharging;
+    public bool IsStunned => isStunned;
+    public bool IsEnraged => isEnraged;
+    public bool CanCharge => canCharge;
+    public float ChargeTimer => chargeTimer;
+    public float ChargeCooldownTime => chargeCooldown;
+    public float LastChargeTime => lastChargeTime;
+    
     public override void Awake()
     {
         this.enemyType = "WildBoar";
         base.Awake();
+        
+        // 初始化状态机引用
+        // stateMachine = GetComponent<EnemyStateMachine>();
+        // if (stateMachine == null)
+        // {
+        //     Debug.LogWarning($"[WildBoar] {gameObject.name} 未找到EnemyStateMachine组件");
+        // }
         
         // 从系统配置初始化属性
         InitializeFromSystemConfig();
@@ -247,39 +258,20 @@ public class WildBoar : Enemy
         
         if (IsDead) return;
         
-        // 更新状态计时器
-        stateTimer += Time.deltaTime;
+        // 更新野猪特有的动画参数
+        UpdateAnimation();
         
-        // 更新动画参数
-        UpdateAnimatorParameters();
+        // 状态机会处理大部分逻辑，这里只保留必要的野猪特有逻辑
+        // 移除了重复的状态检测，交给状态机的PerformWildBoarStateCheck处理
         
-        // 执行当前状态逻辑
-        ExecuteCurrentState();
-        
-        // 处理冲撞逻辑
-        HandleChargeLogic();
-        
-        // 检查狂暴状态
-        CheckEnrageState();
-        
-        // 检测玩家
-        DetectPlayer();
-    }
-    
-    /// <summary>
-    /// 更新动画控制器的参数
-    /// </summary>
-    private void UpdateAnimatorParameters()
-    {
-        if (animator != null)
+        // 只在冲撞状态下执行冲撞移动逻辑
+        if (isCharging)
         {
-            animator.SetFloat("Speed", Mathf.Abs(rb.velocity.x));
-            animator.SetBool("IsAttacking", currentState == EnemyState.Attack);
-            animator.SetBool("IsAlive", !IsDead);
-            animator.SetBool("IsCharging", isCharging);
-            animator.SetBool("IsStunned", isStunned);
+            ExecuteCharge();
         }
     }
+    
+
     
     /// <summary>
     /// 处理冲撞逻辑
@@ -310,9 +302,9 @@ public class WildBoar : Enemy
         // 检查冷却时间
         if (Time.time - lastChargeTime < chargeCooldown) return;
         
-        // 检查距离
+        // 检查距离 - 在检测范围内但不在攻击范围内时触发冲撞
         float distanceToTarget = Vector2.Distance(transform.position, player.position);
-        if (distanceToTarget >= 3f && distanceToTarget <= chargeDistance)
+        if (distanceToTarget > attackRange && distanceToTarget <= chargeDistance)
         {
             StartCharge();
         }
@@ -320,6 +312,7 @@ public class WildBoar : Enemy
     
     /// <summary>
     /// 开始冲撞
+    /// 优化：改进与状态机的集成
     /// </summary>
     private void StartCharge()
     {
@@ -330,13 +323,19 @@ public class WildBoar : Enemy
         chargeTimer = 0f;
         lastChargeTime = Time.time;
         
+        // 通知状态机冲撞状态变化
+        if (stateMachine != null)
+        {
+            stateMachine.NotifyChargeStateChanged();
+        }
+        
         // 计算冲撞方向
         chargeDirection = (player.position - transform.position).normalized;
         
-        // 播放冲撞动画
+        // 播放冲撞动画 - 根据Unity动画控制器参数
         if (animator != null)
         {
-            animator.SetTrigger("Charge");
+            animator.SetTrigger("Charge"); // 与动画控制器中的Charge参数一致
             animator.SetBool("IsCharging", true);
         }
         
@@ -349,43 +348,48 @@ public class WildBoar : Enemy
     /// <summary>
     /// 执行冲撞
     /// </summary>
-    private void ExecuteCharge()
-    {
-        chargeTimer += Time.deltaTime;
+    // private void ExecuteCharge()
+    // {
+    //     chargeTimer += Time.deltaTime;
         
-        if (chargeTimer >= chargeDuration)
-        {
-            // 冲撞结束
-            EndCharge();
-            return;
-        }
+    //     if (chargeTimer >= chargeDuration)
+    //     {
+    //         // 冲撞结束
+    //         EndCharge();
+    //         return;
+    //     }
         
-        // 冲撞移动
-        var rb = GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            rb.velocity = chargeDirection * chargeSpeed;
-        }
+    //      // 冲撞移动
+    //     if (rb2D != null)
+    //     {
+    //         rb2D.velocity = chargeDirection * chargeSpeed;
+    //     }
         
-        // 翻转精灵
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.flipX = chargeDirection.x < 0;
-        }
-    }
+    //     // 翻转精灵
+    //     if (spriteRenderer != null)
+    //     {
+    //         spriteRenderer.flipX = chargeDirection.x < 0;
+    //     }
+    // }
     
     /// <summary>
     /// 结束冲撞
+    /// 优化：改进与状态机的集成
     /// </summary>
     private void EndCharge()
     {
         isCharging = false;
         
-        // 停止移动
-        var rb = GetComponent<Rigidbody2D>();
-        if (rb != null)
+        // 通知状态机冲撞状态变化
+        if (stateMachine != null)
         {
-            rb.velocity = Vector2.zero;
+            stateMachine.NotifyChargeStateChanged();
+        }
+        
+        // 停止移动
+        if (rb2D != null)
+        {
+            rb2D.velocity = Vector2.zero;
         }
         
         // 更新动画
@@ -443,11 +447,11 @@ public class WildBoar : Enemy
         moveSpeed = originalSpeed * enrageSpeedMultiplier;
         attackDamage = Mathf.RoundToInt(originalAttack * enrageDamageMultiplier);
         
-        // 播放狂暴动画
+        // 播放狂暴动画 - 注意：动画控制器中没有Enrage触发器，使用布尔参数
         if (animator != null)
         {
-            animator.SetTrigger("Enrage");
-            animator.SetBool("IsEnraged", true);
+            // animator.SetTrigger("Enrage"); // 动画控制器中没有此触发器，已移除
+            animator.SetBool("IsEnraged", true); // 使用布尔参数表示狂暴状态
         }
         
         // 改变颜色表示狂暴状态
@@ -458,243 +462,32 @@ public class WildBoar : Enemy
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
-            Debug.Log($"[WildBoar] {gameObject.name} 进入狂暴状态 - 速度: {speed}, 攻击力: {physicalAttack}");
+            Debug.Log($"[WildBoar] {gameObject.name} 进入狂暴状态 - 速度: {moveSpeed}, 攻击力: {attackDamage}");
         }
+    }
+    
+    /// <summary>
+    /// 更新动画参数 - 野猪特有的动画更新
+    /// </summary>
+    private void UpdateAnimation()
+    {
+        if (animator == null) return;
+        
+        // 更新野猪特有的动画参数
+        animator.SetBool("IsCharging", isCharging);
+        animator.SetBool("IsStunned", isStunned);
+        animator.SetBool("IsEnraged", isEnraged);
+        
+        // 检查狂暴状态
+        CheckEnrageState();
     }
     
 
     
     #region AI状态机系统
     
-    /// <summary>
-    /// 改变敌人AI状态
-    /// </summary>
-    /// <param name="newState">新的状态</param>
-    private void ChangeState(EnemyState newState)
-    {
-        if (currentAIState == newState) return;
-        
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log($"[WildBoar] 状态改变: {currentAIState} -> {newState}");
-        }
-        
-        // 退出当前状态
-        ExitCurrentState();
-        
-        // 设置新状态
-        currentAIState = newState;
-        currentState = newState; // 同步基类状态
-        stateTimer = 0f;
-        
-        // 进入新状态
-        EnterNewState();
-    }
-    
-    /// <summary>
-    /// 退出当前状态的清理工作
-    /// </summary>
-    private void ExitCurrentState()
-    {
-        switch (currentAIState)
-        {
-            case EnemyState.Chase:
-                break;
-            case EnemyState.Attack:
-                break;
-            case EnemyState.Stun:
-                isStunned = false;
-                break;
-        }
-    }
-    
-    /// <summary>
-    /// 进入新状态的初始化工作
-    /// </summary>
-    private void EnterNewState()
-    {
-        switch (currentAIState)
-        {
-            case EnemyState.Idle:
-                rb.velocity = new Vector2(0, rb.velocity.y);
-                break;
-                
-            case EnemyState.Patrol:
-                SetRandomPatrolTarget();
-                break;
-                
-            case EnemyState.Chase:
-                break;
-                
-            case EnemyState.Attack:
-                rb.velocity = new Vector2(0, rb.velocity.y);
-                if (animator != null)
-                {
-                    animator.SetTrigger("Attack");
-                }
-                break;
-                
-            case EnemyState.Stun:
-                isStunned = true;
-                rb.velocity = new Vector2(0, rb.velocity.y);
-                if (animator != null)
-                {
-                    animator.SetTrigger("Stun");
-                }
-                break;
-                
-            case EnemyState.Dead:
-                rb.velocity = Vector2.zero;
-                rb.isKinematic = true;
-                if (animator != null)
-                {
-                    animator.SetTrigger("Death");
-                }
-                break;
-        }
-    }
-    
-    /// <summary>
-    /// 执行当前状态的逻辑
-    /// </summary>
-    private void ExecuteCurrentState()
-    {
-        switch (currentAIState)
-        {
-            case EnemyState.Idle:
-                ExecuteIdleState();
-                break;
-                
-            case EnemyState.Patrol:
-                ExecutePatrolState();
-                break;
-                
-            case EnemyState.Chase:
-                ExecuteChaseState();
-                break;
-                
-            case EnemyState.Attack:
-                ExecuteAttackState();
-                break;
-                
-            case EnemyState.Stun:
-                ExecuteStunState();
-                break;
-                
-            case EnemyState.Dead:
-                // 死亡状态无需执行逻辑
-                break;
-        }
-    }
-    
-    #endregion
-    
-    #region AI状态执行方法
-    
-    /// <summary>
-    /// 执行空闲状态逻辑
-    /// </summary>
-    private void ExecuteIdleState()
-    {
-        // 停止移动
-        rb.velocity = new Vector2(0, rb.velocity.y);
-        
-        // 空闲一段时间后开始巡逻
-        if (stateTimer > patrolWaitTime)
-        {
-            ChangeState(EnemyState.Patrol);
-        }
-    }
-    
-    /// <summary>
-    /// 执行巡逻状态逻辑
-    /// </summary>
-    private void ExecutePatrolState()
-    {
-        // 向巡逻目标移动
-        Vector2 direction = (currentPatrolTarget - (Vector2)transform.position).normalized;
-        rb.velocity = new Vector2(direction.x * patrolSpeed, rb.velocity.y);
-        
-        // 更新朝向
-        UpdateFacing(direction.x);
-        
-        // 到达巡逻目标后设置新目标
-        if (Vector2.Distance(transform.position, currentPatrolTarget) < 0.5f)
-        {
-            SetRandomPatrolTarget();
-            ChangeState(EnemyState.Idle);
-        }
-    }
-    
-    /// <summary>
-    /// 执行追击状态逻辑
-    /// </summary>
-    private void ExecuteChaseState()
-    {
-        if (player == null) 
-        {
-            ChangeState(EnemyState.Patrol);
-            return;
-        }
-        
-        // 计算到玩家的距离
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-        
-        // 如果玩家太远，回到巡逻状态
-        if (distanceToPlayer > detectionRange * 1.5f)
-        {
-            ChangeState(EnemyState.Patrol);
-            return;
-        }
-        
-        // 如果足够接近，尝试攻击
-        if (distanceToPlayer <= attackRange && canAttack)
-        {
-            ChangeState(EnemyState.Attack);
-            return;
-        }
-        
-        // 向玩家移动
-        Vector2 direction = (player.position - transform.position).normalized;
-        float currentMoveSpeed = isEnraged ? moveSpeed * enrageSpeedMultiplier : moveSpeed;
-        rb.velocity = new Vector2(direction.x * currentMoveSpeed, rb.velocity.y);
-        
-        // 更新朝向
-        UpdateFacing(direction.x);
-    }
-    
-    /// <summary>
-    /// 执行攻击状态逻辑
-    /// </summary>
-    private void ExecuteAttackState()
-    {
-        // 执行攻击
-        if (stateTimer < 0.1f) // 攻击开始时执行一次
-        {
-            PerformAttack();
-        }
-        
-        // 攻击状态持续一定时间后结束
-        if (stateTimer > 1f)
-        {
-            ChangeState(EnemyState.Chase);
-        }
-    }
-    
-    /// <summary>
-    /// 执行眩晕状态逻辑
-    /// </summary>
-    private void ExecuteStunState()
-    {
-        // 眩晕状态下无法移动
-        rb.velocity = new Vector2(0, rb.velocity.y);
-        
-        // 眩晕时间结束
-        if (stateTimer > stunDuration)
-        {
-            ChangeState(EnemyState.Idle);
-        }
-    }
+    // 注意：以下状态机相关方法已被EnemyStateMachine接管，保留用于兼容性
+    // 实际状态管理由EnemyStateMachine处理
     
     /// <summary>
     /// 设置随机巡逻目标
@@ -717,21 +510,8 @@ public class WildBoar : Enemy
         }
     }
     
-    /// <summary>
-    /// 检测玩家
-    /// </summary>
-    private void DetectPlayer()
-    {
-        if (player == null || currentAIState == EnemyState.Dead) return;
-        
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-        
-        // 如果检测到玩家且当前不在追击状态
-        if (distanceToPlayer <= detectionRange && currentAIState != EnemyState.Chase && currentAIState != EnemyState.Attack)
-        {
-            ChangeState(EnemyState.Chase);
-        }
-    }
+    // 注意：DetectPlayer方法已被EnemyStateMachine接管，保留用于兼容性
+    // 实际玩家检测由EnemyStateMachine处理
     
     #endregion
     
@@ -745,10 +525,11 @@ public class WildBoar : Enemy
         // 如果正在冲撞，使用冲撞伤害
         int damage = isCharging ? chargeDamage : (int)attackDamage;
         
-        // 播放攻击动画
+        // 播放攻击动画 - 根据Unity动画控制器参数
         if (animator != null)
         {
-            animator.SetTrigger(isCharging ? "ChargeAttack" : "Attack");
+            // 动画控制器中只有Attack触发器，没有ChargeAttack
+            animator.SetTrigger("Attack"); // 统一使用Attack触发器
         }
         
         // 对玩家造成伤害
@@ -768,6 +549,180 @@ public class WildBoar : Enemy
         {
             Debug.Log($"[WildBoar] {gameObject.name} 攻击玩家，伤害: {damage} (冲撞: {isCharging})");
         }
+    }
+
+    /// <summary>
+    /// 重写执行攻击行为 - 野猪版本
+    /// </summary>
+    public override void ExecuteAttack()
+    {
+        if (!canAttack || isDead) return;
+        
+        // 检查攻击冷却
+        if (Time.time - lastAttackTime < attackCooldown) return;
+        
+        // 调用野猪的攻击方法
+        PerformAttack();
+        
+        // 更新最后攻击时间
+        lastAttackTime = Time.time;
+
+        // 触发攻击事件
+     //   OnAttack?.Invoke(this);
+    }
+
+    /// <summary>
+    /// 重写执行追击行为 - 野猪版本，包含冲撞逻辑
+    /// </summary>
+    public override void ExecuteChase()
+    {
+        if (!canMove || isDead) return;
+        
+        // 如果正在冲撞，让冲撞逻辑处理移动
+        if (isCharging) return;
+        
+        Transform player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        if (player == null) return;
+        
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+        
+        // 检查是否应该开始冲撞
+        if (canCharge && distanceToPlayer <= chargeDistance && distanceToPlayer > attackRange)
+        {
+            ExecuteCharge();
+            return;
+        }
+        
+        // 普通追击移动
+        Vector2 directionToPlayer = (player.position - transform.position).normalized;
+        MoveInDirection(directionToPlayer);
+    }
+
+    /// <summary>
+    /// 重写执行巡逻行为 - 野猪版本
+    /// </summary>
+    public override void ExecutePatrol()
+    {
+        if (!canMove || isDead || isCharging) return;
+        
+        // 野猪的巡逻逻辑
+        Vector2 patrolDirection = GetWildBoarPatrolDirection();
+        if (patrolDirection != Vector2.zero)
+        {
+            // 使用巡逻速度进行移动
+            MoveInDirectionWithSpeed(patrolDirection, patrolSpeed);
+        }
+    }
+
+    /// <summary>
+    /// 使用指定速度向指定方向移动
+    /// </summary>
+    private void MoveInDirectionWithSpeed(Vector2 direction, float speed)
+    {
+        if (!canMove || isDead) return;
+        
+        if (rb2D != null)
+        {
+            // 使用指定速度进行移动
+            Vector2 targetVelocity = direction.normalized * speed;
+            rb2D.velocity = targetVelocity;
+        }
+        else
+        {
+            // 如果没有Rigidbody2D，使用transform移动作为后备
+            Vector3 movement = direction.normalized * speed * Time.fixedDeltaTime;
+            transform.position += movement;
+        }
+        
+        // 翻转精灵
+        if (spriteRenderer != null && direction.x != 0)
+        {
+            spriteRenderer.flipX = direction.x < 0;
+        }
+    }
+
+    /// <summary>
+    /// 重写停止移动 - 野猪版本，处理冲撞状态
+    /// </summary>
+    public override void StopMovement()
+    {
+        // 如果正在冲撞，不要强制停止
+        if (isCharging) return;
+        
+        base.StopMovement();
+    }
+
+    /// <summary>
+    /// 执行冲撞
+    /// </summary>
+    public void ExecuteCharge()
+    {
+        if (!canCharge || isCharging || isDead) return;
+        
+        Transform player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        if (player == null) return;
+        
+        // 开始冲撞
+        isCharging = true;
+        canCharge = false;
+        
+        // 计算冲撞方向并设置为类成员变量
+        chargeDirection = (player.position - transform.position).normalized;
+        
+        // 设置冲撞速度
+        if (rb2D != null)
+        {
+            rb2D.velocity = chargeDirection * chargeSpeed;
+        }
+        
+        // 播放冲撞动画
+        if (animator != null)
+        {
+            animator.SetBool("IsCharging", true);
+        }
+        
+        // 通知状态机冲撞状态变化
+        if (stateMachine != null)
+        {
+            stateMachine.NotifyChargeStateChanged();
+        }
+        
+        // 设置冲撞持续时间
+        StartCoroutine(ChargeTimerCoroutine());
+        
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[WildBoar] {gameObject.name} 开始冲撞，方向: {chargeDirection}");
+        }
+    }
+
+    /// <summary>
+    /// 冲撞计时器协程
+    /// </summary>
+    private IEnumerator ChargeTimerCoroutine()
+    {
+        yield return new WaitForSeconds(chargeDuration);
+        
+        // 冲撞时间结束，停止冲撞
+        if (isCharging)
+        {
+            EndCharge();
+        }
+    }
+
+    /// <summary>
+    /// 获取野猪巡逻方向
+    /// </summary>
+    private Vector2 GetWildBoarPatrolDirection()
+    {
+        // 野猪的巡逻逻辑 - 更随机和自然
+        if (Vector2.Distance(transform.position, currentPatrolTarget) < 0.5f)
+        {
+            SetRandomPatrolTarget();
+        }
+        
+        Vector2 direction = (currentPatrolTarget - (Vector2)transform.position).normalized;
+        return direction;
     }
     
     /// <summary>
@@ -792,9 +747,15 @@ public class WildBoar : Enemy
     /// <summary>
     /// 重写受伤方法
     /// </summary>
-    public virtual void TakeDamage(int damage)
+    public override void TakePlayerDamage(int damage)
     {
-        base.TakeDamage(damage);
+        base.TakePlayerDamage(damage);
+        
+        // 通知状态机健康状态变化
+        if (stateMachine != null)
+        {
+            stateMachine.NotifyHealthStateChanged();
+        }
         
         // 受伤时有概率打断冲撞
         if (isCharging && Random.Range(0f, 1f) < 0.3f) // 30%概率
@@ -823,19 +784,9 @@ public class WildBoar : Enemy
     }
     
     /// <summary>
-    /// 重写动画更新
+    /// 获取状态机组件引用
     /// </summary>
-    public override void UpdateAnimations()
-    {
-        base.UpdateAnimations();
-        
-        if (animator == null) return;
-        
-        // 设置野猪特有的动画参数
-        animator.SetBool("IsCharging", isCharging);
-        animator.SetBool("IsEnraged", isEnraged);
-        animator.SetFloat("ChargeTimer", chargeTimer);
-    }
+    // private EnemyStateMachine stateMachine;
     
     /// <summary>
     /// 碰撞检测 - 处理冲撞时的碰撞
@@ -874,19 +825,43 @@ public class WildBoar : Enemy
     
     /// <summary>
     /// 撞墙后的眩晕效果
+    /// 优化：改进与状态机的集成
     /// </summary>
     private IEnumerator StunAfterWallHit()
     {
         EndCharge();
         
-        // 播放眩晕动画
+        isStunned = true;
+        
+        // 通知状态机眩晕状态变化
+        if (stateMachine != null)
+        {
+            stateMachine.NotifyStunStateChanged();
+        }
+        
+        // 播放眩晕动画 - 根据Unity动画控制器参数
         if (animator != null)
         {
-            animator.SetTrigger("Stunned");
+            // animator.SetTrigger("Stunned"); // 动画控制器中没有此触发器，已移除
+            animator.SetBool("IsStunned", true); // 使用布尔参数表示眩晕状态
         }
         
         // 眩晕2秒
         yield return new WaitForSeconds(2f);
+        
+        isStunned = false;
+        
+        // 通知状态机眩晕状态变化
+        if (stateMachine != null)
+        {
+            stateMachine.NotifyStunStateChanged();
+        }
+        
+        // 更新动画
+        if (animator != null)
+        {
+            animator.SetBool("IsStunned", false);
+        }
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
@@ -989,10 +964,10 @@ public class WildBoar : Enemy
     //     Gizmos.DrawRay(transform.position, facingDirection * 1f);
         
     //     // 速度向量
-    //     if (rb != null && rb.velocity.magnitude > 0.1f)
+    //     if (rb2D != null && rb2D.velocity.magnitude > 0.1f)
     //     {
     //         Gizmos.color = Color.magenta;
-    //         Gizmos.DrawRay(transform.position, rb.velocity * 0.3f);
+    //         Gizmos.DrawRay(transform.position, rb2D.velocity * 0.3f);
     //     }
         
     //     // 冲撞方向

@@ -9,6 +9,12 @@ using Sirenix.OdinInspector;
 [ShowOdinSerializedPropertiesInInspector]
 public abstract class Character : MonoBehaviour, IDamageable
 {
+  [Header("是否显示调试Gizmos")]
+    public bool showDebugGizmos=true;
+
+//正在攻击用于调试框
+    private float showDebugATTACKINGTime=0;
+    private bool showDebugAttacking=>Time.time<showDebugATTACKINGTime;
     [FoldoutGroup("等级系统", expanded: true)]
     [LabelText("角色等级")]
     [PropertyRange(1, 100)]
@@ -502,6 +508,7 @@ public abstract class Character : MonoBehaviour, IDamageable
     /// </summary>
     public virtual void DetectAndDamageEnemies(Action onAttackHit)
     {
+       
         // 获取角色朝向
         bool facingRight = GetFacingDirection();
         
@@ -524,19 +531,18 @@ public abstract class Character : MonoBehaviour, IDamageable
         
         // 检测攻击范围内的所有碰撞体
         Collider2D[] hitTargets = Physics2D.OverlapBoxAll(attackCenter, boxSize, 0f, enemyLayerMask);
-        
         int enemiesHit = 0;
         
         // 遍历所有被攻击的目标
         foreach (Collider2D target in hitTargets)
         {
+             Debug.Log("target:" + target);
             if (IsValidTarget(target))
             {
                 enemiesHit++;
                 
                 // 播放命中音效
                 onAttackHit?.Invoke();
-                
                 Debug.Log($"攻击命中目标: {target.name} (伤害: {physicalAttack})");
                 
                 // 获取IDamageable组件
@@ -561,15 +567,16 @@ public abstract class Character : MonoBehaviour, IDamageable
         {
             Debug.Log($"本次攻击命中 {enemiesHit} 个目标");
         }
+         showDebugATTACKINGTime=Time.time+0.5f;
     }
     
     /// <summary>
     /// 获取角色朝向（子类需要重写）
     /// </summary>
     /// <returns>true表示朝右，false表示朝左</returns>
-    protected virtual bool GetFacingDirection()
+    public virtual bool GetFacingDirection()
     {
-        return true; // 默认朝右
+        return transform.localScale.x > 0;
     }
     
     /// <summary>
@@ -625,6 +632,36 @@ public abstract class Character : MonoBehaviour, IDamageable
         if (ratio > 0.6f) return Color.green;
         if (ratio > 0.3f) return Color.yellow;
         return Color.red;
+    }
+       /// <summary>
+    /// 调试可视化
+    /// </summary>
+    void OnDrawGizmosSelected()
+    {
+        if (showDebugGizmos)
+        {
+            // 基础攻击范围
+            Gizmos.color = showDebugAttacking ? Color.red : Color.green;
+            Vector2 attackDirection = transform.localScale.x > 0 ? Vector2.right : Vector2.left;
+            Vector2 basicAttackCenter = (Vector2)attackPoint.position + attackDirection * (AttackRange / 2);
+            Vector3 basicAttackSize = new Vector3(AttackRange, AttackHeight, 0);
+            Gizmos.DrawWireCube(basicAttackCenter, basicAttackSize);
+            
+
+            
+
+            
+            // 角色朝向
+            Gizmos.color = Color.white;
+            Vector3 facingDirection = transform.localScale.x > 0 ? Vector3.right : Vector3.left;
+            Gizmos.DrawRay(transform.position, facingDirection * 0.8f);
+            
+
+            
+            // 交互范围
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(transform.position, interactionRange);
+        }
     }
     #endregion
 }

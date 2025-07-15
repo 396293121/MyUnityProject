@@ -72,6 +72,9 @@ MonoBehaviour:
     m_RotationOrder: 4
   invincibleDuringMove: 0
   stopOnCollision: 0
+  damageTime: 1
+  isMultiDamage: 0
+  damageInterval: 0.5
   showHitbox: 1
   hitboxColor: {r: 0.09420016, g: 0.092579246, b: 0.9496855, a: 1}
   hitboxAlpha: 0.3

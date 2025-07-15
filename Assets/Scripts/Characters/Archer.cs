@@ -114,15 +114,6 @@ public class Archer : Character
         
         // 消耗箭矢
         currentArrows--;
-        
-        // 执行攻击逻辑
-        DetectAndDamageEnemies(() => {
-            if (GameManager.Instance != null && GameManager.Instance.debugMode)
-            {
-                Debug.Log($"[Archer] 基础射击命中，伤害: {physicalAttack}, 剩余箭矢: {currentArrows}");
-            }
-        });
-        
         // 检查是否需要装填
         if (currentArrows <= 0)
         {

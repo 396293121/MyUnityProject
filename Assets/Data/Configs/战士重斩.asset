@@ -42,6 +42,39 @@ MonoBehaviour:
   healAmount: 50
   summonPrefab: {fileID: 0}
   summonDuration: 30
+  isMove: 0
+  moveDistance: 5
+  moveDuration: 0.3
+  moveType: 0
+  moveCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  invincibleDuringMove: 0
+  stopOnCollision: 1
+  damageTime: 0
+  isMultiDamage: 0
+  damageInterval: 0.5
   showHitbox: 1
   hitboxColor: {r: 0.9245283, g: 0.88182527, b: 0.09012682, a: 1}
   hitboxAlpha: 0.296

@@ -63,13 +63,6 @@ public class Mage : Character
         // 更新上次攻击时间
         lastAttackTime = Time.time;
         
-        // 执行攻击逻辑
-        DetectAndDamageEnemies(() => {
-            if (GameManager.Instance != null && GameManager.Instance.debugMode)
-            {
-                Debug.Log($"[Mage] 基础魔法攻击命中，伤害: {magicalAttack}");
-            }
-        });
         
         return true;
     }
@@ -415,7 +408,7 @@ public class Mage : Character
             var enemy = target.GetComponent<Enemy>();
             if (enemy != null)
             {
-                enemy.TakeDamage(damage);
+                enemy.TakePlayerDamage(damage);
             }
         }
         

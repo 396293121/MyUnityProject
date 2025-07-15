@@ -56,7 +56,7 @@ public class Arrow : MonoBehaviour
         if (enemy != null)
         {
             // 对敌人造成伤害
-            enemy.TakeDamage(damage);
+            enemy.TakePlayerDamage(damage);
             
             // 创建击中特效
             CreateHitEffect();

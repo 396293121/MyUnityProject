@@ -18,94 +18,94 @@ namespace CustomInspectors
     /// Transform组件的自定义Inspector
     /// 为位置、旋转、缩放属性添加中文标签和说明
     /// </summary>
-    [CustomEditor(typeof(Transform))]
-    public class TransformInspector : OdinEditor
-    {
-        public override void OnInspectorGUI()
-        {
-            Transform transform = (Transform)target;
+    // [CustomEditor(typeof(Transform))]
+    // public class TransformInspector : OdinEditor
+    // {
+    //     public override void OnInspectorGUI()
+    //     {
+    //         Transform transform = (Transform)target;
             
-            EditorGUILayout.Space();
+    //         EditorGUILayout.Space();
             
-            // 标题
-            SirenixEditorGUI.Title("Transform (变换组件)", "控制物体在3D空间中的位置、旋转和缩放", TextAlignment.Left, true);
+    //         // 标题
+    //         SirenixEditorGUI.Title("Transform (变换组件)", "控制物体在3D空间中的位置、旋转和缩放", TextAlignment.Left, true);
             
-            EditorGUILayout.Space();
+    //         EditorGUILayout.Space();
             
-            // 位置
-            EditorGUILayout.BeginVertical("box");
-            EditorGUILayout.LabelField("Position (位置)", EditorStyles.boldLabel);
-            var helpStyle = new GUIStyle(EditorStyles.helpBox) { fontSize = 11 };
-            EditorGUILayout.LabelField("ℹ️ 物体在世界坐标系中的位置坐标 (X, Y, Z)", helpStyle);
-            transform.position = EditorGUILayout.Vector3Field("Position (世界位置)", transform.position);
+    //         // 位置
+    //         EditorGUILayout.BeginVertical("box");
+    //         EditorGUILayout.LabelField("Position (位置)", EditorStyles.boldLabel);
+    //         var helpStyle = new GUIStyle(EditorStyles.helpBox) { fontSize = 11 };
+    //         EditorGUILayout.LabelField("ℹ️ 物体在世界坐标系中的位置坐标 (X, Y, Z)", helpStyle);
+    //         transform.position = EditorGUILayout.Vector3Field("Position (世界位置)", transform.position);
             
-            if (transform.parent != null)
-            {
-                transform.localPosition = EditorGUILayout.Vector3Field("Local Position (本地位置)", transform.localPosition);
-            }
-            EditorGUILayout.EndVertical();
+    //         if (transform.parent != null)
+    //         {
+    //             transform.localPosition = EditorGUILayout.Vector3Field("Local Position (本地位置)", transform.localPosition);
+    //         }
+    //         EditorGUILayout.EndVertical();
             
-            EditorGUILayout.Space();
+    //         EditorGUILayout.Space();
             
-            // 旋转
-            EditorGUILayout.BeginVertical("box");
-            EditorGUILayout.LabelField("Rotation (旋转)", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("ℹ️ 物体的旋转角度，以欧拉角表示 (X, Y, Z 轴旋转度数)", helpStyle);
+    //         // 旋转
+    //         EditorGUILayout.BeginVertical("box");
+    //         EditorGUILayout.LabelField("Rotation (旋转)", EditorStyles.boldLabel);
+    //         EditorGUILayout.LabelField("ℹ️ 物体的旋转角度，以欧拉角表示 (X, Y, Z 轴旋转度数)", helpStyle);
             
-            Vector3 eulerAngles = transform.eulerAngles;
-            Vector3 newEulerAngles = EditorGUILayout.Vector3Field("Euler Angles (世界旋转)", eulerAngles);
-            if (newEulerAngles != eulerAngles)
-            {
-                transform.eulerAngles = newEulerAngles;
-            }
+    //         Vector3 eulerAngles = transform.eulerAngles;
+    //         Vector3 newEulerAngles = EditorGUILayout.Vector3Field("Euler Angles (世界旋转)", eulerAngles);
+    //         if (newEulerAngles != eulerAngles)
+    //         {
+    //             transform.eulerAngles = newEulerAngles;
+    //         }
             
-            if (transform.parent != null)
-            {
-                Vector3 localEulerAngles = transform.localEulerAngles;
-                Vector3 newLocalEulerAngles = EditorGUILayout.Vector3Field("Local Euler Angles (本地旋转)", localEulerAngles);
-                if (newLocalEulerAngles != localEulerAngles)
-                {
-                    transform.localEulerAngles = newLocalEulerAngles;
-                }
-            }
-            EditorGUILayout.EndVertical();
+    //         if (transform.parent != null)
+    //         {
+    //             Vector3 localEulerAngles = transform.localEulerAngles;
+    //             Vector3 newLocalEulerAngles = EditorGUILayout.Vector3Field("Local Euler Angles (本地旋转)", localEulerAngles);
+    //             if (newLocalEulerAngles != localEulerAngles)
+    //             {
+    //                 transform.localEulerAngles = newLocalEulerAngles;
+    //             }
+    //         }
+    //         EditorGUILayout.EndVertical();
             
-            EditorGUILayout.Space();
+    //         EditorGUILayout.Space();
             
-            // 缩放
-            EditorGUILayout.BeginVertical("box");
-            EditorGUILayout.LabelField("Scale (缩放)", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("ℹ️ 物体的缩放比例，1为原始大小 (X, Y, Z 轴缩放倍数)", helpStyle);
-            transform.localScale = EditorGUILayout.Vector3Field("Local Scale (本地缩放)", transform.localScale);
-            EditorGUILayout.EndVertical();
+    //         // 缩放
+    //         EditorGUILayout.BeginVertical("box");
+    //         EditorGUILayout.LabelField("Scale (缩放)", EditorStyles.boldLabel);
+    //         EditorGUILayout.LabelField("ℹ️ 物体的缩放比例，1为原始大小 (X, Y, Z 轴缩放倍数)", helpStyle);
+    //         transform.localScale = EditorGUILayout.Vector3Field("Local Scale (本地缩放)", transform.localScale);
+    //         EditorGUILayout.EndVertical();
             
-            EditorGUILayout.Space();
+    //         EditorGUILayout.Space();
             
-            // 层级信息
-            if (transform.childCount > 0 || transform.parent != null)
-            {
-                EditorGUILayout.BeginVertical("box");
-                EditorGUILayout.LabelField("Hierarchy (层级信息)", EditorStyles.boldLabel);
+    //         // 层级信息
+    //         if (transform.childCount > 0 || transform.parent != null)
+    //         {
+    //             EditorGUILayout.BeginVertical("box");
+    //             EditorGUILayout.LabelField("Hierarchy (层级信息)", EditorStyles.boldLabel);
                 
-                if (transform.parent != null)
-                {
-                    EditorGUILayout.LabelField($"Parent (父物体): {transform.parent.name}");
-                }
+    //             if (transform.parent != null)
+    //             {
+    //                 EditorGUILayout.LabelField($"Parent (父物体): {transform.parent.name}");
+    //             }
                 
-                if (transform.childCount > 0)
-                {
-                    EditorGUILayout.LabelField($"Child Count (子物体数量): {transform.childCount}");
-                }
+    //             if (transform.childCount > 0)
+    //             {
+    //                 EditorGUILayout.LabelField($"Child Count (子物体数量): {transform.childCount}");
+    //             }
                 
-                EditorGUILayout.EndVertical();
-            }
+    //             EditorGUILayout.EndVertical();
+    //         }
             
-            if (GUI.changed)
-            {
-                EditorUtility.SetDirty(transform);
-            }
-        }
-    }
+    //         if (GUI.changed)
+    //         {
+    //             EditorUtility.SetDirty(transform);
+    //         }
+    //     }
+    // }
     
     /// <summary>
     /// Rigidbody2D组件的自定义Inspector

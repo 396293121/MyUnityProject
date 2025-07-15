@@ -48,7 +48,10 @@ public class SkillComponent : MonoBehaviour
     [ReadOnly]
     [ShowInInspector]
     private Dictionary<int, float> skillCooldowns = new Dictionary<int, float>();
-    
+          [FoldoutGroup("技能状态监控/调试信息", expanded: false)]
+    [LabelText("显示调试信息")]
+    [InfoBox("在Scene视图中显示技能范围等调试信息")]
+    public bool showDebugGizmos = true;
     [FoldoutGroup("技能状态监控/执行状态", expanded: false)]
     [LabelText("正在执行技能")]
     [ReadOnly]
@@ -60,11 +63,8 @@ public class SkillComponent : MonoBehaviour
     [ReadOnly]
     [ShowInInspector]
     private int currentExecutingSkillIndex = -1;
-    
-    [FoldoutGroup("技能状态监控/调试信息", expanded: false)]
-    [LabelText("显示调试信息")]
-    [InfoBox("在Scene视图中显示技能范围等调试信息")]
-    public bool showDebugGizmos = true;
+  
+
     
     private void Awake()
     {
@@ -128,6 +128,15 @@ public class SkillComponent : MonoBehaviour
             if (skillInputActions[i] != null)
             {
                 skillInputActions[i].action.Disable();
+            }
+        }
+        
+        // 停止所有持续伤害协程
+        for (int i = 0; i < skillDataList.Count; i++)
+        {
+            if (skillDataList[i] != null)
+            {
+                skillDataList[i].StopContinuousDamage(this, i);
             }
         }
     }
@@ -207,14 +216,49 @@ public class SkillComponent : MonoBehaviour
     }
     
     /// <summary>
+    /// 动画事件：技能伤害时间开始
+    /// 由动画控制器的动画事件调用
+    /// </summary>
+    public void OnSkillDamageTimeStart()
+    {
+        if (currentExecutingSkillIndex >= 0 && currentExecutingSkillIndex < skillDataList.Count)
+        {
+            var skillData = skillDataList[currentExecutingSkillIndex];
+            if (skillData != null && skillData.damageTime == skillDataConfig.damageTimeType.time)
+            {
+                // 调用SkillDataConfig中的持续伤害逻辑
+                Vector3 castPosition = characterController?.AttackPoint?.position ?? transform.position;
+                skillData.StartContinuousDamage(this, currentExecutingSkillIndex, gameObject, castPosition);
+                Debug.Log($"[SkillComponent] 开始持续伤害 - 技能: {skillData.skillName}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// 动画事件：技能伤害时间结束
+    /// 由动画控制器的动画事件调用
+    /// </summary>
+    public void OnSkillDamageTimeEnd()
+    {
+        if (currentExecutingSkillIndex >= 0 && currentExecutingSkillIndex < skillDataList.Count)
+        {
+            var skillData = skillDataList[currentExecutingSkillIndex];
+            if (skillData != null && skillData.damageTime == skillDataConfig.damageTimeType.time)
+            {
+                // 调用SkillDataConfig中的停止持续伤害逻辑
+                skillData.StopContinuousDamage(this, currentExecutingSkillIndex);
+                Debug.Log($"[SkillComponent] 结束持续伤害 - 技能: {skillData.skillName}");
+            }
+        }
+    }
+
+    /// <summary>
     /// 检查是否可以使用技能
     /// </summary>
     /// <param name="skillIndex">技能索引</param>
     /// <returns>是否可以使用</returns>
     public bool CanUseSkill(int skillIndex)
     {
-        Debug.Log($"[SkillComponent] CanUseSkill 检查开始，技能索引: {skillIndex}");
-        
         // 检查技能索引是否有效
         if (skillIndex < 0 || skillIndex >= skillDataList.Count || skillDataList[skillIndex] == null)
         {
@@ -400,7 +444,7 @@ public class SkillComponent : MonoBehaviour
             var movementComponent = gameObject.GetComponent<MonoBehaviour>();
             if (movementComponent != null)
             {
-                movementComponent.StartCoroutine(skillData.ExecuteMovement(gameObject));
+                movementComponent.StartCoroutine(skillData.ExecuteMovement(gameObject,characterController.GetFacingDirection()));
             }
         }
         
@@ -438,6 +482,12 @@ public class SkillComponent : MonoBehaviour
     /// </summary>
     public void OnSkillEnd()
     {
+        // 停止当前技能的持续伤害效果
+        if (currentExecutingSkillIndex >= 0 && skillDataList[currentExecutingSkillIndex] != null)
+        {
+            skillDataList[currentExecutingSkillIndex].StopContinuousDamage(this, currentExecutingSkillIndex);
+        }
+        
         isExecutingSkill = false;
         currentExecutingSkillIndex = -1;
         
@@ -445,7 +495,6 @@ public class SkillComponent : MonoBehaviour
         // 状态机会根据当前条件自动选择下一个状态（如Idle或Walking）
         Debug.Log("[SkillComponent] 技能执行结束，状态机将自动转换状态");
     }
-    
     /// <summary>
     /// 获取技能信息（用于UI显示）
     /// </summary>

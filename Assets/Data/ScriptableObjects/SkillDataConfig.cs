@@ -1,6 +1,7 @@
 using UnityEngine;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
+using System.Collections;
 
 // 技能类型枚举
 public enum SkillTypeTest
@@ -115,28 +116,24 @@ public class skillDataConfig : ScriptableObject
     [ShowIf("skillType", SkillTypeTest.SingleTargetBox)]
     [LabelText("向上距离")]
     [Range(0f, 20f)]
-    [InfoBox("从攻击点向上延伸的距离")]
     public float boxForward = 3f;
     
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.SingleTargetBox)]
     [LabelText("向下距离")]
     [Range(0f, 20f)]
-    [InfoBox("从攻击点向下延伸的距离")]
     public float boxBackward = 1f;
     
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.SingleTargetBox)]
     [LabelText("向左距离")]
     [Range(0f, 20f)]
-    [InfoBox("从攻击点向左延伸的距离")]
     public float boxLeft = 2f;
     
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.SingleTargetBox)]
     [LabelText("向右距离")]
     [Range(0f, 20f)]
-    [InfoBox("从攻击点向右延伸的距离")]
     public float boxRight = 2f;
     // 兼容性属性
     [HideInInspector]
@@ -153,28 +150,24 @@ public class skillDataConfig : ScriptableObject
     [ShowIf("@skillType == SkillTypeTest.AreaOfEffect && !isCircularAOE")]
     [LabelText("向上距离")]
     [Range(0f, 20f)]
-    [InfoBox("从攻击点向上延伸的距离")]
     public float aoeUp = 2.5f;
     
     [TabGroup("技能效果")]
     [ShowIf("@skillType == SkillTypeTest.AreaOfEffect && !isCircularAOE")]
     [LabelText("向下距离")]
     [Range(0f, 20f)]
-    [InfoBox("从攻击点向下延伸的距离")]
     public float aoeDown = 2.5f;
     
     [TabGroup("技能效果")]
     [ShowIf("@skillType == SkillTypeTest.AreaOfEffect && !isCircularAOE")]
     [LabelText("向左距离")]
     [Range(0f, 20f)]
-    [InfoBox("从攻击点向左延伸的距离")]
     public float aoeLeft = 2.5f;
     
     [TabGroup("技能效果")]
     [ShowIf("@skillType == SkillTypeTest.AreaOfEffect && !isCircularAOE")]
     [LabelText("向右距离")]
     [Range(0f, 20f)]
-    [InfoBox("从攻击点向右延伸的距离")]
     public float aoeRight = 2.5f;
     
     // 兼容性属性
@@ -218,14 +211,12 @@ public class skillDataConfig : ScriptableObject
     public float summonDuration = 30f;
         [TabGroup("技能效果")]
     [LabelText("是否位移")]
-    [InfoBox("是否使技能目标位移")]
     public bool isMove = false;
     
     [TabGroup("技能效果")]
     [ShowIf("isMove")]
     [LabelText("位移距离")]
     [Range(0f, 20f)]
-    [InfoBox("技能位移距离")]
     public float moveDistance = 5f;
     
     [TabGroup("技能效果")]
@@ -248,14 +239,12 @@ public class skillDataConfig : ScriptableObject
     
     [TabGroup("技能效果")]
     [ShowIf("isMove")]
-    [LabelText("位移时无敌帧")]
-    [InfoBox("位移过程中是否获得无敌效果")]
+    [LabelText("位移时是否无敌")]
     public bool invincibleDuringMove = false;
     
     [TabGroup("技能效果")]
     [ShowIf("isMove")]
     [LabelText("碰撞中断位移")]
-    [InfoBox("遇到障碍物时是否中断位移")]
     public bool stopOnCollision = true;
     
     public enum MoveType
@@ -270,6 +259,24 @@ public class skillDataConfig : ScriptableObject
         horizontal
     }
     
+    public enum damageTimeType{
+        [LabelText("关键帧")]
+        frame,
+        [LabelText("时间段")]
+        time
+    }
+    [TabGroup("技能效果")]
+    [LabelText("伤害判定时长")]
+    [InfoBox("关键帧：关键帧触发伤害\n时间段：在这段时间内触发伤害")]
+    public damageTimeType damageTime = damageTimeType.frame;
+    [ShowIf("damageTime", damageTimeType.time)]
+    [LabelText("是否对同一个敌人触发多段伤害")]
+    public bool isMultiDamage = false;
+    [ShowIf("isMultiDamage",true)]
+    [LabelText("伤害触发频率")]
+    [Range(0.1f, 2f)]
+    [InfoBox("伤害触发的频率，单位秒")]
+    public float damageInterval = 0.5f;
     [TabGroup("碰撞框显示")]
     [ShowIf("@skillType == SkillTypeTest.SingleTargetNearest || skillType == SkillTypeTest.SingleTargetCone || skillType == SkillTypeTest.SingleTargetBox || skillType == SkillTypeTest.AreaOfEffect")]
     [LabelText("显示技能碰撞框")]
@@ -291,12 +298,12 @@ public class skillDataConfig : ScriptableObject
     /// 执行技能效果的核心方法
     /// </summary>
     /// <param name="caster">施法者</param>
-    /// <param name="castPosition">施法位置</param>
+    /// <param name="castPosition">技能点位置/param>
     /// <param name="skillSpawnPoint">技能释放点</param>
     public void ExecuteSkillEffect(GameObject caster, Vector3 castPosition, Transform skillSpawnPoint)
     {
 
-        
+     
         switch (skillType)
         {
             case SkillTypeTest.SingleTargetNearest:
@@ -326,10 +333,10 @@ public class skillDataConfig : ScriptableObject
     /// <summary>
     /// 执行技能位移的协程
     /// </summary>
-    public System.Collections.IEnumerator ExecuteMovement(GameObject caster)
+    public System.Collections.IEnumerator ExecuteMovement(GameObject caster,bool isFacingRight)
     {
         Vector3 startPosition = caster.transform.position;
-        Vector3 moveDirection = GetMoveDirection(caster);
+        Vector3 moveDirection = GetMoveDirection(caster,isFacingRight);
         Vector3 targetPosition = startPosition + moveDirection * moveDistance;
         
         float elapsed = 0f;
@@ -373,16 +380,17 @@ public class skillDataConfig : ScriptableObject
     /// <summary>
     /// 获取位移方向
     /// </summary>
-    private Vector3 GetMoveDirection(GameObject caster)
+    private Vector3 GetMoveDirection(GameObject caster,bool isFacingRight)
+
     {
         switch (moveType)
         {
             case MoveType.dash:
                 // 向角色面朝方向冲撞
-                return caster.transform.localScale.x > 0 ? Vector3.right : Vector3.left;
+                return isFacingRight ? Vector3.right : Vector3.left;
             case MoveType.backstep:
                 // 向角色背后方向后撤
-                return caster.transform.localScale.x > 0 ? Vector3.left : Vector3.right;
+                return isFacingRight ? Vector3.left : Vector3.right;
             case MoveType.vertical:
                 return Vector3.up;
             case MoveType.horizontal:
@@ -809,4 +817,222 @@ public class skillDataConfig : ScriptableObject
             aoeRight = aoeRight
         };
     }
+    
+    // 静态持续伤害管理器
+    private static Dictionary<string, Coroutine> activeContinuousDamageCoroutines = new Dictionary<string, Coroutine>();
+    private static Dictionary<string, HashSet<GameObject>> activeDamagedEnemies = new Dictionary<string, HashSet<GameObject>>();
+    
+    /// <summary>
+    /// 启动持续伤害效果
+    /// </summary>
+    /// <param name="skillComponent">技能组件引用</param>
+    /// <param name="skillIndex">技能索引</param>
+    /// <param name="caster">施法者</param>
+    /// <param name="castPosition">施法位置</param>
+    public void StartContinuousDamage(MonoBehaviour skillComponent, int skillIndex, GameObject caster, Vector3 castPosition)
+    {
+        if (damageTime != damageTimeType.time)
+        {
+            Debug.LogWarning($"[SkillDataConfig] 技能 {skillName} 不是时间段伤害类型，无法启动持续伤害");
+            return;
+        }
+        
+        string damageKey = $"{caster.GetInstanceID()}_{skillIndex}";
+        
+        // 如果已经有相同的持续伤害在进行，先停止它
+        if (activeContinuousDamageCoroutines.ContainsKey(damageKey))
+        {
+            StopContinuousDamage(skillComponent, skillIndex);
+        }
+        
+        // 初始化受伤敌人列表
+        if (!activeDamagedEnemies.ContainsKey(damageKey))
+        {
+            activeDamagedEnemies[damageKey] = new HashSet<GameObject>();
+        }
+        else
+        {
+            activeDamagedEnemies[damageKey].Clear();
+        }
+        
+        // 开始新的持续伤害协程
+        var coroutine = skillComponent.StartCoroutine(ContinuousDamageCoroutine(damageKey, caster, castPosition));
+        activeContinuousDamageCoroutines[damageKey] = coroutine;
+        
+        Debug.Log($"[SkillDataConfig] 启动技能 {skillName} 的持续伤害效果，Key: {damageKey}");
+    }
+    
+    /// <summary>
+    /// 停止持续伤害效果
+    /// </summary>
+    /// <param name="skillComponent">技能组件引用</param>
+    /// <param name="skillIndex">技能索引</param>
+    public void StopContinuousDamage(MonoBehaviour skillComponent, int skillIndex)
+    {
+        string damageKey = $"{skillComponent.gameObject.GetInstanceID()}_{skillIndex}";
+        
+        // 停止协程
+        if (activeContinuousDamageCoroutines.ContainsKey(damageKey))
+        {
+            if (activeContinuousDamageCoroutines[damageKey] != null)
+            {
+                skillComponent.StopCoroutine(activeContinuousDamageCoroutines[damageKey]);
+            }
+            activeContinuousDamageCoroutines.Remove(damageKey);
+        }
+        
+        // 清理受伤敌人列表
+        if (activeDamagedEnemies.ContainsKey(damageKey))
+        {
+            activeDamagedEnemies[damageKey].Clear();
+            activeDamagedEnemies.Remove(damageKey);
+        }
+        
+        Debug.Log($"[SkillDataConfig] 停止技能 {skillName} 的持续伤害效果，Key: {damageKey}");
+    }
+    
+    /// <summary>
+    /// 持续伤害协程
+    /// </summary>
+    private IEnumerator ContinuousDamageCoroutine(string damageKey, GameObject caster, Vector3 castPosition)
+    {
+        float elapsed = 0f;
+        float nextDamageTime = 0f;
+        
+        while (activeContinuousDamageCoroutines.ContainsKey(damageKey))
+        {
+            if (elapsed >= nextDamageTime)
+            {
+                PerformContinuousDamage(damageKey, caster, castPosition);
+                nextDamageTime = elapsed + damageInterval;
+            }
+            
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        
+
+        
+        Debug.Log($"[SkillDataConfig] 技能 {skillName} 持续伤害协程结束");
+    }
+    
+    /// <summary>
+    /// 执行持续伤害
+    /// </summary>
+    private void PerformContinuousDamage(string damageKey, GameObject caster, Vector3 castPosition)
+    {
+        if (!activeDamagedEnemies.ContainsKey(damageKey))
+        {
+            return;
+        }
+        
+        var damagedEnemies = activeDamagedEnemies[damageKey];
+        
+        switch (skillType)
+        {
+            case SkillTypeTest.SingleTargetNearest:
+                PerformContinuousSingleTargetDamage(damageKey, caster, castPosition, damagedEnemies);
+                break;
+            case SkillTypeTest.AreaOfEffect:
+                PerformContinuousAOEDamage(damageKey, caster, castPosition, damagedEnemies);
+                break;
+            case SkillTypeTest.SingleTargetCone:
+                PerformContinuousConeTargetDamage(damageKey, caster, castPosition, damagedEnemies);
+                break;
+            case SkillTypeTest.SingleTargetBox:
+                PerformContinuousBoxTargetDamage(damageKey, caster, castPosition, damagedEnemies);
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// 执行持续单体伤害
+    /// </summary>
+    private void PerformContinuousSingleTargetDamage(string damageKey, GameObject caster, Vector3 castPosition, HashSet<GameObject> damagedEnemies)
+    {
+        Collider2D nearestEnemy = FindNearestTargetInDirection(castPosition, caster.transform, targetType);
+        if (nearestEnemy == null) return;
+        
+        if (!isMultiDamage && damagedEnemies.Contains(nearestEnemy.gameObject))
+            return;
+        
+        DealDamageToTarget(nearestEnemy.gameObject, damage);
+        damagedEnemies.Add(nearestEnemy.gameObject);
+        Debug.Log($"[SkillDataConfig] 单体持续伤害 - 对 {nearestEnemy.name} 造成 {damage} 伤害");
+    }
+    
+    /// <summary>
+    /// 执行持续AOE伤害
+    /// </summary>
+    private void PerformContinuousAOEDamage(string damageKey, GameObject caster, Vector3 castPosition, HashSet<GameObject> damagedEnemies)
+    {
+        Vector3 attackPosition = GetAttackPosition(caster, castPosition);
+        Collider2D[] enemies;
+        
+        if (isCircularAOE)
+        {
+            enemies = Physics2D.OverlapCircleAll(attackPosition, range, GetTargetLayerMask());
+        }
+        else
+        {
+            List<Collider2D> boxTargets = FindTargetsInDirectionalAOEBox(attackPosition, 
+                aoeUp, aoeDown, aoeLeft, aoeRight, GetTargetLayerMask());
+            enemies = boxTargets.ToArray();
+        }
+        
+        foreach (var enemy in enemies)
+        {
+            if (!IsValidTarget(enemy.gameObject)) continue;
+            if (!isMultiDamage && damagedEnemies.Contains(enemy.gameObject))
+                continue;
+            
+            DealDamageToTarget(enemy.gameObject, damage);
+            damagedEnemies.Add(enemy.gameObject);
+            Debug.Log($"[SkillDataConfig] AOE持续伤害 - 对 {enemy.name} 造成 {damage} 伤害");
+        }
+    }
+    
+    /// <summary>
+    /// 执行持续扇形伤害
+    /// </summary>
+    private void PerformContinuousConeTargetDamage(string damageKey, GameObject caster, Vector3 castPosition, HashSet<GameObject> damagedEnemies)
+    {
+        Vector3 forward = caster.transform.localScale.x > 0 ? Vector3.right : Vector3.left;
+        List<Collider2D> enemies = FindTargetsInCone(castPosition, forward, coneRadius, coneAngle, GetTargetLayerMask());
+        
+        foreach (var enemy in enemies)
+        {
+            if (!IsValidTarget(enemy.gameObject)) continue;
+            if (!isMultiDamage && damagedEnemies.Contains(enemy.gameObject))
+                continue;
+            
+            DealDamageToTarget(enemy.gameObject, damage);
+            damagedEnemies.Add(enemy.gameObject);
+            Debug.Log($"[SkillDataConfig] 扇形持续伤害 - 对 {enemy.name} 造成 {damage} 伤害");
+        }
+    }
+    
+    /// <summary>
+    /// 执行持续矩形伤害
+    /// </summary>
+    private void PerformContinuousBoxTargetDamage(string damageKey, GameObject caster, Vector3 castPosition, HashSet<GameObject> damagedEnemies)
+    {
+        Vector3 attackPosition = GetAttackPosition(caster, castPosition);
+        Vector3 forward = caster.transform.localScale.x > 0 ? Vector3.right : Vector3.left;
+        
+        List<Collider2D> enemies = FindTargetsInDirectionalBox(attackPosition, forward, 
+            boxForward, boxBackward, boxLeft, boxRight, GetTargetLayerMask());
+        
+        foreach (var enemy in enemies)
+        {
+            if (!IsValidTarget(enemy.gameObject)) continue;
+            if (!isMultiDamage && damagedEnemies.Contains(enemy.gameObject))
+                continue;
+            
+            DealDamageToTarget(enemy.gameObject, damage);
+            damagedEnemies.Add(enemy.gameObject);
+            Debug.Log($"[SkillDataConfig] 矩形持续伤害 - 对 {enemy.name} 造成 {damage} 伤害");
+        }
+    }
+    
 }

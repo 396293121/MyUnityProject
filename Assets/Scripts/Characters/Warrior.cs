@@ -52,8 +52,7 @@ public class Warrior : Character
 
     
 
-    [Header("是否显示调试Gizmos")]
-    public bool showDebugGizmos=true;
+
     
     // 重写Character基类的攻击属性，提供战士特有的配置
     public override float AttackRange => config != null ? config.attackRange : 2.5f;        // 战士攻击范围稍大
@@ -122,7 +121,7 @@ public class Warrior : Character
         {
             // 战士造成额外10%伤害
             int damage = Mathf.RoundToInt(physicalAttack * 1.1f);
-            enemy.TakeDamage(damage);
+            enemy.TakePlayerDamage(damage);
             Debug.Log($"战士攻击造成伤害: {damage} (基础伤害: {physicalAttack})");
         }
     }
@@ -142,13 +141,6 @@ public class Warrior : Character
         // 更新上次攻击时间
         lastAttackTime = Time.time;
         
-        // 执行攻击逻辑
-        DetectAndDamageEnemies(() => {
-            if (GameManager.Instance != null && GameManager.Instance.debugMode)
-            {
-                Debug.Log($"[Warrior] 基础攻击命中，伤害: {physicalAttack}");
-            }
-        });
         
         return true;
     }
@@ -195,36 +187,7 @@ public class Warrior : Character
 
 
     
-    /// <summary>
-    /// 调试可视化
-    /// </summary>
-    void OnDrawGizmosSelected()
-    {
-        if (showDebugGizmos)
-        {
-            // 基础攻击范围
-            Gizmos.color = canAttack ? Color.green : Color.red;
-            Vector2 attackDirection = transform.localScale.x > 0 ? Vector2.right : Vector2.left;
-            Vector2 basicAttackCenter = (Vector2)attackPoint.position + attackDirection * (AttackRange / 2);
-            Vector3 basicAttackSize = new Vector3(AttackRange, AttackHeight, 0);
-            Gizmos.DrawWireCube(basicAttackCenter, basicAttackSize);
-            
-
-            
-
-            
-            // 角色朝向
-            Gizmos.color = Color.white;
-            Vector3 facingDirection = transform.localScale.x > 0 ? Vector3.right : Vector3.left;
-            Gizmos.DrawRay(transform.position, facingDirection * 0.8f);
-            
-
-            
-            // 交互范围
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawWireSphere(transform.position, interactionRange);
-        }
-    }
+ 
 
 
     

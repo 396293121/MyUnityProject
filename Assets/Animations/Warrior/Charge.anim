@@ -22,40 +22,40 @@ AnimationClip:
     curve:
     - time: 0
       value: {fileID: 21300000, guid: dd1e973b580193c45aee49181d17047c, type: 3}
-    - time: 0.05
+    - time: 0.055555556
       value: {fileID: 21300000, guid: 1cf5dad1684f866459a37fa0fed59ca8, type: 3}
-    - time: 0.1
+    - time: 0.11111111
       value: {fileID: 21300000, guid: 98f2fc10eafe69e45b1f38adcdd860a0, type: 3}
-    - time: 0.15
+    - time: 0.16666667
       value: {fileID: 21300000, guid: d6b44c79ad6e7634bbdc867a66abf7c7, type: 3}
-    - time: 0.2
+    - time: 0.22222222
       value: {fileID: 21300000, guid: d9bc7d8a83b40f644bc5efda6ac0df17, type: 3}
-    - time: 0.25
+    - time: 0.2777778
       value: {fileID: 21300000, guid: 265bd91911d424d4697e15fc4cc726eb, type: 3}
-    - time: 0.3
+    - time: 0.33333334
       value: {fileID: 21300000, guid: 19e03454ab29de64eac6de7149155913, type: 3}
-    - time: 0.35
+    - time: 0.3888889
       value: {fileID: 21300000, guid: 9c44e6c3f9e2ba64ebb6cf8c66d20a19, type: 3}
-    - time: 0.4
+    - time: 0.44444445
       value: {fileID: 21300000, guid: 201dac3151610454e9c8b3af30345cb9, type: 3}
-    - time: 0.45
-      value: {fileID: 21300000, guid: bcb3729cf565bb44f9b6941629219461, type: 3}
     - time: 0.5
+      value: {fileID: 21300000, guid: bcb3729cf565bb44f9b6941629219461, type: 3}
+    - time: 0.5555556
       value: {fileID: 21300000, guid: ae1da02424e579043a8fefd0ee6d2673, type: 3}
-    - time: 0.55
+    - time: 0.6111111
       value: {fileID: 21300000, guid: 3cf1cbee86eabc94caa692668ca1ffa4, type: 3}
-    - time: 0.6
+    - time: 0.6666667
       value: {fileID: 21300000, guid: e7d54eedf8c8aae42a95b4ea3fb1d4b0, type: 3}
-    - time: 0.65
+    - time: 0.7222222
       value: {fileID: 21300000, guid: b368950fe3826e4499d3d061766df5ce, type: 3}
-    - time: 0.7
+    - time: 0.7777778
       value: {fileID: 21300000, guid: f05bee3a8db3a474c88d8584db9f85c3, type: 3}
     attribute: m_Sprite
     path: 
     classID: 212
     script: {fileID: 0}
     flags: 2
-  m_SampleRate: 20
+  m_SampleRate: 18
   m_WrapMode: 0
   m_Bounds:
     m_Center: {x: 0, y: 0, z: 0}
@@ -92,7 +92,7 @@ AnimationClip:
     m_AdditiveReferencePoseClip: {fileID: 0}
     m_AdditiveReferencePoseTime: 0
     m_StartTime: 0
-    m_StopTime: 0.75
+    m_StopTime: 0.8333334
     m_OrientationOffsetY: 0
     m_Level: 0
     m_CycleOffset: 0
@@ -112,14 +112,14 @@ AnimationClip:
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 0.5
+  - time: 0.5555556
     functionName: OnSkillDamageFrame
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.75
+  - time: 0.8333333
     functionName: OnSkillEnd
     data: 
     objectReferenceParameter: {fileID: 0}
