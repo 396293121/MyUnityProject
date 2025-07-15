@@ -9,8 +9,9 @@ using Sirenix.OdinInspector;
 /// 支持Odin Inspector可视化编辑
 /// </summary>
 [ShowOdinSerializedPropertiesInInspector]
-public class Enemy : MonoBehaviour, IDamageable
+public abstract class Enemy : MonoBehaviour, IDamageable
 {
+    
     #region 事件定义
     /// <summary>
     /// 敌人死亡事件
@@ -27,7 +28,6 @@ public class Enemy : MonoBehaviour, IDamageable
     /// </summary>
     public event Action<Enemy, float> OnTakeDamage;
     #endregion
-    
     #region 敌人属性
     [TitleGroup("敌人配置")]
     [FoldoutGroup("敌人配置/基础属性", expanded: false)]
@@ -146,6 +146,7 @@ public class Enemy : MonoBehaviour, IDamageable
     [LabelText("玩家在范围内")]
     [ReadOnly]
     [SerializeField] private bool isPlayerInRange = false;
+    
     [VerticalGroup("敌人配置/状态控制/状态信息/核心组件")]
     [LabelText("刚体组件")]
     [Required("需要Rigidbody2D组件")]
@@ -185,25 +186,7 @@ public class Enemy : MonoBehaviour, IDamageable
     [ReadOnly]
     [SerializeField] private Vector3 targetPosition;
     
-    [VerticalGroup("敌人配置/导航系统/导航设置/巡逻设置")]
-    [LabelText("巡逻起始点")]
-    [ReadOnly]
-    [SerializeField] private Vector3 patrolStartPoint;
-    
-    [VerticalGroup("敌人配置/导航系统/导航设置/巡逻设置")]
-    [LabelText("巡逻结束点")]
-    [ReadOnly]
-    [SerializeField] private Vector3 patrolEndPoint;
-    
-    [VerticalGroup("敌人配置/导航系统/导航设置/巡逻设置")]
-    [LabelText("正在巡逻")]
-    [ReadOnly]
-    [SerializeField] private bool isPatrolling = true;
-    
-    [VerticalGroup("敌人配置/导航系统/导航设置/巡逻设置")]
-    [LabelText("向终点移动")]
-    [ReadOnly]
-    [SerializeField] private bool movingToEnd = true;
+    // 巡逻相关字段已移至子类实现，基类不再包含具体巡逻逻辑
     #endregion
     
     #region 攻击系统
@@ -317,8 +300,6 @@ public class Enemy : MonoBehaviour, IDamageable
         ConfigureEnemy(this, enemyType);
         // 初始化属性
         currentHealth = maxHealth;
-        patrolStartPoint = transform.position;
-        patrolEndPoint = transform.position + Vector3.right * 5f; // 默认巡逻距离
     }
     
     private void Start()
@@ -397,12 +378,7 @@ public class Enemy : MonoBehaviour, IDamageable
     /// <summary>
     /// 设置巡逻点
     /// </summary>
-    public void SetPatrolPoints(Vector3 startPoint, Vector3 endPoint)
-    {
-        patrolStartPoint = startPoint;
-        patrolEndPoint = endPoint;
-        targetPosition = movingToEnd ? patrolEndPoint : patrolStartPoint;
-    }
+    // 巡逻点设置方法已移至子类实现
     
     /// <summary>
     /// 设置敌人属性
@@ -634,8 +610,8 @@ public class Enemy : MonoBehaviour, IDamageable
         if (rb2D != null)
         {
             // 使用velocity进行移动，这样可以正确显示速度并与物理系统协作
-            Vector2 targetVelocity = direction.normalized * moveSpeed;
-            rb2D.velocity = targetVelocity;
+        //    Vector2 targetVelocity = direction.normalized * moveSpeed;
+            rb2D.velocity = new Vector2(direction.x * moveSpeed, rb2D.velocity.y);
         }
         else
         {
@@ -652,19 +628,9 @@ public class Enemy : MonoBehaviour, IDamageable
     }
 
     /// <summary>
-    /// 执行巡逻行为
+    /// 执行巡逻行为 - 抽象方法，由子类实现具体逻辑
     /// </summary>
-    public virtual void ExecutePatrol()
-    {
-        if (!canMove || isDead) return;
-        
-        // 获取巡逻方向
-        Vector2 patrolDirection = GetPatrolDirection();
-        if (patrolDirection != Vector2.zero)
-        {
-            MoveInDirection(patrolDirection);
-        }
-    }
+    public abstract void ExecutePatrol();
 
     /// <summary>
     /// 执行追击行为
@@ -718,34 +684,17 @@ public class Enemy : MonoBehaviour, IDamageable
     }
 
     /// <summary>
-    /// 停止移动
+    /// 停止移动 - 只停止X轴移动，保持Y轴速度（重力等）
     /// </summary>
     public virtual void StopMovement()
     {
         if (rb2D != null)
         {
-            rb2D.velocity = Vector2.zero;
+            rb2D.velocity = new Vector2(0, rb2D.velocity.y);
         }
     }
 
-    /// <summary>
-    /// 获取巡逻方向
-    /// </summary>
-    protected virtual Vector2 GetPatrolDirection()
-    {
-        // 简单的左右巡逻逻辑
-        // 这里可以根据具体需求实现更复杂的巡逻路径
-        
-        // 检查是否需要转向
-        if (Time.time % 4f < 2f) // 每4秒切换一次方向
-        {
-            return Vector2.right;
-        }
-        else
-        {
-            return Vector2.left;
-        }
-    }
+    // GetPatrolDirection方法已移至子类实现
     #endregion
     
     #region 调试方法
@@ -759,15 +708,7 @@ public class Enemy : MonoBehaviour, IDamageable
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
         
-        // 绘制巡逻路径
-        Gizmos.color = Color.blue;
-        Gizmos.DrawLine(patrolStartPoint, patrolEndPoint);
-        Gizmos.DrawWireSphere(patrolStartPoint, 0.5f);
-        Gizmos.DrawWireSphere(patrolEndPoint, 0.5f);
-        
-        // 绘制目标位置
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(targetPosition, 0.3f);
+        // 巡逻相关调试绘制已移至子类实现
     }
     #endregion
 }

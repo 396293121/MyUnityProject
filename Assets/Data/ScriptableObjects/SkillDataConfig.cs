@@ -298,7 +298,7 @@ public class skillDataConfig : ScriptableObject
     /// 执行技能效果的核心方法
     /// </summary>
     /// <param name="caster">施法者</param>
-    /// <param name="castPosition">技能点位置/param>
+    /// <param name="castPosition">施法位置/param>
     /// <param name="skillSpawnPoint">技能释放点</param>
     public void ExecuteSkillEffect(GameObject caster, Vector3 castPosition, Transform skillSpawnPoint)
     {

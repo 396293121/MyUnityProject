@@ -118,6 +118,13 @@ public class WildBoar : Enemy
     [ShowInInspector]
     private int originalAttack;
     
+    // 简化的巡逻状态字段（移除了复杂的巡逻目标系统）
+    [FoldoutGroup("野猪配置/状态监控/巡逻状态", expanded: true)]
+    [LabelText("初始位置")]
+    [ReadOnly]
+    [ShowInInspector]
+    private Vector3 initialPosition;
+    
     [TabGroup("野猪配置", "AI状态机")]
     [FoldoutGroup("野猪配置/AI状态机/状态控制", expanded: true)]
     [LabelText("当前AI状态")]
@@ -134,28 +141,14 @@ public class WildBoar : Enemy
     public float patrolSpeed = 1f;
     
     [FoldoutGroup("野猪配置/AI状态机/巡逻设置")]
-    [LabelText("巡逻范围")]
-    [PropertyRange(2f, 10f)]
-    [SuffixLabel("米")]
-    public float patrolRange = 5f;
-    
-    [FoldoutGroup("野猪配置/AI状态机/巡逻设置")]
     [LabelText("巡逻等待时间")]
     [PropertyRange(1f, 5f)]
     [SuffixLabel("秒")]
     public float patrolWaitTime = 2f;
     
-    [FoldoutGroup("野猪配置/AI状态机/巡逻状态", expanded: true)]
-    [LabelText("当前巡逻目标")]
-    [ReadOnly]
-    [ShowInInspector]
-    private Vector2 currentPatrolTarget;
+    // 复杂巡逻字段已移除：patrolRange, currentPatrolTarget
     
-    [FoldoutGroup("野猪配置/AI状态机/巡逻状态")]
-    [LabelText("初始位置")]
-    [ReadOnly]
-    [ShowInInspector]
-    private Vector2 initialPosition;
+   
     
     [FoldoutGroup("野猪配置/AI状态机/眩晕设置", expanded: true)]
     [LabelText("眩晕持续时间")]
@@ -200,9 +193,6 @@ public class WildBoar : Enemy
         // 记录初始位置
         initialPosition = transform.position;
         
-        // 设置初始巡逻目标
-        SetRandomPatrolTarget();
-        
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
             Debug.Log($"[WildBoar] 野猪创建完成 - 生命值: {currentHealth}/{maxHealth}, 攻击力: {attackDamage}");
@@ -239,7 +229,7 @@ public class WildBoar : Enemy
             attackRange = wildBoarConfig.attackRange;
             patrolSpeed = wildBoarConfig.patrolSpeed;
             patrolWaitTime = wildBoarConfig.patrolWaitTime;
-            patrolRange = wildBoarConfig.patrolRadius;
+            // patrolRange = wildBoarConfig.patrolRadius; // 已移除复杂巡逻系统
         }
         else
         {
@@ -489,14 +479,7 @@ public class WildBoar : Enemy
     // 注意：以下状态机相关方法已被EnemyStateMachine接管，保留用于兼容性
     // 实际状态管理由EnemyStateMachine处理
     
-    /// <summary>
-    /// 设置随机巡逻目标
-    /// </summary>
-    private void SetRandomPatrolTarget()
-    {
-        float randomX = Random.Range(-patrolRange, patrolRange);
-        currentPatrolTarget = initialPosition + new Vector2(randomX, 0);
-    }
+    // SetRandomPatrolTarget方法已移除，使用简化的巡逻逻辑
     
     /// <summary>
     /// 更新角色朝向
@@ -599,18 +582,37 @@ public class WildBoar : Enemy
     }
 
     /// <summary>
-    /// 重写执行巡逻行为 - 野猪版本
+    /// 重写执行巡逻行为 - 野猪版本（简化版）
     /// </summary>
     public override void ExecutePatrol()
     {
         if (!canMove || isDead || isCharging) return;
         
-        // 野猪的巡逻逻辑
-        Vector2 patrolDirection = GetWildBoarPatrolDirection();
+        // 简化的左右巡逻逻辑
+        Vector2 patrolDirection = GetSimplePatrolDirection();
         if (patrolDirection != Vector2.zero)
         {
-            // 使用巡逻速度进行移动
+            // 使用巡逻速度进行移动，保持Y轴速度
             MoveInDirectionWithSpeed(patrolDirection, patrolSpeed);
+        }
+    }
+
+    /// <summary>
+    /// 获取简单的巡逻方向（左右巡逻）
+    /// </summary>
+    private Vector2 GetSimplePatrolDirection()
+    {
+        // 简单的时间基础左右巡逻
+        float patrolCycle = patrolWaitTime * 2f; // 完整巡逻周期
+        float currentTime = Time.time % patrolCycle;
+        
+        if (currentTime < patrolWaitTime)
+        {
+            return Vector2.right; // 向右巡逻
+        }
+        else
+        {
+            return Vector2.left;  // 向左巡逻
         }
     }
 
@@ -624,8 +626,10 @@ public class WildBoar : Enemy
         if (rb2D != null)
         {
             // 使用指定速度进行移动
-            Vector2 targetVelocity = direction.normalized * speed;
-            rb2D.velocity = targetVelocity;
+          //  Vector2 targetVelocity = direction.normalized * speed;
+           // rb2D.velocity = targetVelocity;
+           rb2D.velocity = new Vector2(direction.x * speed, rb2D.velocity.y);
+
         }
         else
         {
@@ -710,20 +714,7 @@ public class WildBoar : Enemy
         }
     }
 
-    /// <summary>
-    /// 获取野猪巡逻方向
-    /// </summary>
-    private Vector2 GetWildBoarPatrolDirection()
-    {
-        // 野猪的巡逻逻辑 - 更随机和自然
-        if (Vector2.Distance(transform.position, currentPatrolTarget) < 0.5f)
-        {
-            SetRandomPatrolTarget();
-        }
-        
-        Vector2 direction = (currentPatrolTarget - (Vector2)transform.position).normalized;
-        return direction;
-    }
+    // 复杂的巡逻系统已简化，移除相关字段和方法
     
     /// <summary>
     /// 应用击退效果
@@ -923,60 +914,51 @@ public class WildBoar : Enemy
     }
     
     /// <summary>
-    /// 调试可视化
+    /// 调试可视化 - 野猪专用
     /// </summary>
-    // void OnDrawGizmosSelected()
-    // {
-    //     // AI状态显示
-    //     Gizmos.color = GetStateColor();
-    //     Gizmos.DrawWireSphere(transform.position + Vector3.up * 2f, 0.3f);
+    void OnDrawGizmosSelected()
+    {
+        // 基础检测和攻击范围（继承自基类逻辑）
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
         
-    //     // 巡逻范围
-    //     if (initialPosition != Vector3.zero)
-    //     {
-    //         Gizmos.color = Color.green;
-    //         Gizmos.DrawWireSphere(initialPosition, patrolRange);
-            
-    //         // 巡逻目标点
-    //         if (currentPatrolTarget != Vector3.zero)
-    //         {
-    //             Gizmos.color = Color.cyan;
-    //             Gizmos.DrawWireSphere(currentPatrolTarget, 0.2f);
-    //             Gizmos.DrawLine(transform.position, currentPatrolTarget);
-    //         }
-    //     }
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
         
-    //     // 检测范围
-    //     Gizmos.color = Color.blue;
-    //     Gizmos.DrawWireSphere(transform.position, detectionRange);
+        // 简化的巡逻可视化（移除了复杂的巡逻范围显示）
+        if (initialPosition != Vector3.zero)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(initialPosition, 2f); // 使用固定的小范围显示起始位置
+        }
         
-    //     // 攻击范围
-    //     Gizmos.color = Color.yellow;
-    //     Gizmos.DrawWireSphere(transform.position, attackRange);
+        // 冲撞触发距离
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, chargeDistance);
         
-    //     // 冲撞触发距离
-    //     Gizmos.color = Color.red;
-    //     Gizmos.DrawWireSphere(transform.position, chargeDistance);
+        // 野猪状态指示器
+        Gizmos.color = GetStateColor();
+        Gizmos.DrawWireSphere(transform.position + Vector3.up * 2f, 0.4f);
         
-    //     // 角色朝向
-    //     Vector3 facingDirection = spriteRenderer != null && spriteRenderer.flipX ? Vector3.left : Vector3.right;
-    //     Gizmos.color = Color.white;
-    //     Gizmos.DrawRay(transform.position, facingDirection * 1f);
+        // 角色朝向
+        Vector3 facingDirection = spriteRenderer != null && spriteRenderer.flipX ? Vector3.left : Vector3.right;
+        Gizmos.color = Color.white;
+        Gizmos.DrawRay(transform.position, facingDirection * 1.5f);
         
-    //     // 速度向量
-    //     if (rb2D != null && rb2D.velocity.magnitude > 0.1f)
-    //     {
-    //         Gizmos.color = Color.magenta;
-    //         Gizmos.DrawRay(transform.position, rb2D.velocity * 0.3f);
-    //     }
+        // 速度向量
+        if (rb2D != null && rb2D.velocity.magnitude > 0.1f)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawRay(transform.position, rb2D.velocity * 0.5f);
+        }
         
-    //     // 冲撞方向
-    //     if (isCharging)
-    //     {
-    //         Gizmos.color = Color.red;
-    //         Gizmos.DrawRay(transform.position, chargeDirection * chargeSpeed * 0.2f);
-    //     }
-    // }
+        // 冲撞方向
+        if (isCharging && chargeDirection != Vector2.zero)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(transform.position, chargeDirection * chargeSpeed * 0.3f);
+        }
+    }
     
     /// <summary>
     /// 根据AI状态返回对应颜色

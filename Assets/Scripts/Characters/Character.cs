@@ -218,8 +218,9 @@ public abstract class Character : MonoBehaviour, IDamageable
     
     [VerticalGroup("攻击配置/击退与检测/右列")]
     [LabelText("敌人图层")]
-    [InfoBox("定义哪些图层被视为敌人目标")]
-    [SerializeField] protected LayerMask enemyLayerMask = 1;
+    [InfoBox("定义哪些图层被视为敌人目标,默认11ENEMY")]
+    [ReadOnly]
+    [SerializeField] protected LayerMask enemyLayerMask = 11;
     
     [FoldoutGroup("攻击配置")]
     [LabelText("攻击点")]
