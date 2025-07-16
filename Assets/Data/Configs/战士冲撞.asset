@@ -34,8 +34,8 @@ MonoBehaviour:
   isCircularAOE: 0
   aoeUp: 1.3
   aoeDown: 2.8
-  aoeLeft: 4.3
-  aoeRight: 2.6
+  aoeLeft: 5.7
+  aoeRight: 0.7
   buffDuration: 10
   attackBonus: 0
   speedBonus: 0

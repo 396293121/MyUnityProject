@@ -4,14 +4,71 @@ using System.Collections;
 using Sirenix.OdinInspector;
 
 /// <summary>
-/// 敌人基础类
-/// 基于Phaser项目中的敌人系统设计
+/// 敌人基础类 - 基于SimpleEnemy的优化设计
+/// 采用高效的状态机系统和性能优化
 /// 支持Odin Inspector可视化编辑
 /// </summary>
 [ShowOdinSerializedPropertiesInInspector]
 public abstract class Enemy : MonoBehaviour, IDamageable
 {
+    [LabelText("敌人基础配置文件")]
+    [Required]
+    [SerializeField]
+    public EnemySystemConfig enemySystem;
+  [LabelText("敌人配置/攻击点")]
+    [Required]
+    [SerializeField]
+    public GameObject attackPoint;
+    #region 性能优化配置
+    [FoldoutGroup("敌人配置/性能优化", expanded: false)]
+    [HorizontalGroup("敌人配置/性能优化/优化设置")]
+    [VerticalGroup("敌人配置/性能优化/优化设置/更新频率")]
+    [LabelText("屏幕外更新间隔")]
+    [ReadOnly]
+    [ShowInInspector]
+    [Tooltip("敌人在屏幕外时的更新间隔，减少性能消耗")]
+    private float offScreenUpdateInterval = 0.5f;
     
+    [VerticalGroup("敌人配置/性能优化/优化设置/更新频率")]
+    [LabelText("屏幕内更新间隔")]
+    [ReadOnly]
+    [ShowInInspector]
+    [Tooltip("敌人在屏幕内时的更新间隔")]
+    private float onScreenUpdateInterval = 0.05f;
+    
+    [VerticalGroup("敌人配置/性能优化/优化设置/检测设置")]
+    [LabelText("屏幕边界扩展")]
+    [ReadOnly]
+    [ShowInInspector]
+    [Tooltip("屏幕边界的扩展范围，用于提前激活敌人")]
+    private float screenBoundaryExtension = 5f;
+    
+    [VerticalGroup("敌人配置/性能优化/优化设置/状态监控")]
+    [LabelText("在屏幕内")]
+    [ReadOnly]
+    [ShowInInspector]
+    protected bool isOnScreen = true;
+    
+    [VerticalGroup("敌人配置/性能优化/优化设置/状态监控")]
+    [LabelText("上次更新时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    private float lastUpdateTime = 0f;
+    
+    [VerticalGroup("敌人配置/性能优化/优化设置/状态监控")]
+    [LabelText("状态计时器")]
+    [ReadOnly]
+    [ShowInInspector]
+    protected float stateTimer = 0f;
+    
+    [VerticalGroup("敌人配置/性能优化/优化设置/状态监控")]
+    [LabelText("上次状态改变时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    protected float lastStateChangeTime = 0f;
+    protected float lastPatrolPointUpdateTime = 0f;
+    #endregion
+
     #region 事件定义
     /// <summary>
     /// 敌人死亡事件
@@ -23,10 +80,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     /// </summary>
     public event Action<Enemy> OnAttack;
     
-    /// <summary>
-    /// 敌人受伤事件
-    /// </summary>
-    public event Action<Enemy, float> OnTakeDamage;
     #endregion
     #region 敌人属性
     [TitleGroup("敌人配置")]
@@ -43,8 +96,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     
     [VerticalGroup("敌人配置/基础属性/属性设置/生命值")]
     [LabelText("最大生命值")]
-    [PropertyRange(1, 1000)]
-    [SerializeField] public int maxHealth = 100;
+    [ReadOnly]
+    [ShowInInspector]
+    public int maxHealth = 100;
     
     [VerticalGroup("敌人配置/基础属性/属性设置/生命值")]
     [LabelText("当前生命值")]
@@ -54,41 +108,58 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     
     [VerticalGroup("敌人配置/基础属性/属性设置/战斗属性")]
     [LabelText("攻击伤害")]
-    [PropertyRange(1, 100)]
-    [SerializeField] public float attackDamage = 20f;
+    [ReadOnly]
+    [ShowInInspector]
+    public float attackDamage = 20f;
     
     [VerticalGroup("敌人配置/基础属性/属性设置/战斗属性")]
     [LabelText("物理攻击力")]
-    [PropertyRange(1, 100)]
-    [SerializeField] public float physicalAttack = 15f;
+    [ReadOnly]
+    [ShowInInspector]
+    public float physicalAttack = 15f;
     
     [VerticalGroup("敌人配置/基础属性/属性设置/战斗属性")]
     [LabelText("防御力")]
-    [PropertyRange(0, 50)]
-    [SerializeField] public float defense = 5f;
+    [ReadOnly]
+    [ShowInInspector]
+    public float defense = 5f;
     
     [HorizontalGroup("敌人配置/基础属性/移动设置")]
     [VerticalGroup("敌人配置/基础属性/移动设置/移动属性")]
     [LabelText("移动速度")]
-    [PropertyRange(0.1f, 10f)]
-    [SerializeField] public float moveSpeed = 3f;
-    
+    [ReadOnly]
+    [ShowInInspector]
+    public float moveSpeed = 3f;
 
+
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
+    private static readonly int isHurtHash = Animator.StringToHash("isHurt");
+    private static readonly int dieHash = Animator.StringToHash("Die");
     
+    private static readonly int AttackHash = Animator.StringToHash("Attack");
     [VerticalGroup("敌人配置/基础属性/移动设置/检测范围")]
     [LabelText("攻击范围")]
-    [PropertyRange(0.5f, 10f)]
-    [SerializeField] public float attackRange = 2f;
+    [ReadOnly]
+    [ShowInInspector]
+    public float attackRange = 2f;
     
     [VerticalGroup("敌人配置/基础属性/移动设置/检测范围")]
     [LabelText("检测范围")]
-    [PropertyRange(1f, 20f)]
-    [SerializeField] public float detectionRange = 8f;
+    [ReadOnly]
+    [ShowInInspector]
+    public float detectionRange = 8f;
+    
+    [VerticalGroup("敌人配置/基础属性/移动设置/检测范围")]
+    [LabelText("失去目标范围")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float loseTargetRange = 12f;
     
     [VerticalGroup("敌人配置/基础属性/移动设置/奖励")]
     [LabelText("经验奖励")]
-    [PropertyRange(1, 1000)]
-    [SerializeField] public int expReward = 10;
+    [ReadOnly]
+    [ShowInInspector]
+    public int expReward = 10;
     
     [FoldoutGroup("敌人配置/状态控制", expanded: false)]
     [HorizontalGroup("敌人配置/状态控制/状态设置")]
@@ -97,10 +168,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     [ReadOnly]
     public bool isAlive = true;
     
-    [VerticalGroup("敌人配置/状态控制/状态设置/基础状态")]
-    [LabelText("目标对象")]
-    [ReadOnly]
-    public Transform target;
     
     [VerticalGroup("敌人配置/状态控制/状态设置/行为控制")]
     [LabelText("可以移动")]
@@ -112,12 +179,14 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     
     public enum EnemyState
     {
-        [LabelText("待机")] Idle,
-        [LabelText("巡逻")] Patrol,
-        [LabelText("追击")] Chase,
-        [LabelText("攻击")] Attack,
-        [LabelText("死亡")] Dead,
-        [LabelText("眩晕")] Stun
+        [LabelText("空闲状态")] Idle,
+        [LabelText("巡逻状态")] Patrol,
+        [LabelText("追击状态")] Chase,
+        [LabelText("攻击状态")] Attack,
+        [LabelText("冲锋状态")] Charge,
+        [LabelText("眩晕状态")] Stun,
+        [LabelText("受伤状态")] Hurt,
+        [LabelText("死亡状态")] Dead
     }
     
     [HorizontalGroup("敌人配置/状态控制/状态信息")]
@@ -140,7 +209,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     [VerticalGroup("敌人配置/状态控制/状态信息/状态标志")]
     [LabelText("正在移动")]
     [ReadOnly]
-    [SerializeField] private bool isMoving = false;
+    [SerializeField] protected bool isMoving = false;
     
     [VerticalGroup("敌人配置/状态控制/状态信息/状态标志")]
     [LabelText("玩家在范围内")]
@@ -166,11 +235,58 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     [LabelText("精灵渲染器")]
     [Required("需要SpriteRenderer组件")]
     public SpriteRenderer spriteRenderer;
+    #endregion
     
-    [VerticalGroup("敌人配置/状态控制/状态信息/核心组件")]
-    [LabelText("状态机")]
-    [InfoBox("敌人状态机系统，负责状态转换和管理")]
-    protected EnemyStateMachine stateMachine;
+    #region 巡逻系统
+    [FoldoutGroup("敌人配置/巡逻系统", expanded: false)]
+    [HorizontalGroup("敌人配置/巡逻系统/巡逻设置")]
+    [VerticalGroup("敌人配置/巡逻系统/巡逻设置/巡逻属性")]
+    [LabelText("巡逻速度")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float patrolSpeed = 1f;
+    
+    [VerticalGroup("敌人配置/巡逻系统/巡逻设置/巡逻属性")]
+    [LabelText("巡逻范围")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float patrolRange = 8f;
+    
+    [VerticalGroup("敌人配置/巡逻系统/巡逻设置/巡逻属性")]
+    [LabelText("巡逻等待时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float patrolWaitTime = 2f;
+    
+    [VerticalGroup("敌人配置/巡逻系统/巡逻设置/巡逻状态")]
+    [LabelText("初始位置")]
+    [ReadOnly]
+    [ShowInInspector]
+    protected Vector3 initialPosition;
+    
+    [VerticalGroup("敌人配置/巡逻系统/巡逻设置/巡逻状态")]
+    [LabelText("左巡逻点")]
+    [ReadOnly]
+    [ShowInInspector]
+    protected Vector3 leftPatrolPoint;
+    
+    [VerticalGroup("敌人配置/巡逻系统/巡逻设置/巡逻状态")]
+    [LabelText("右巡逻点")]
+    [ReadOnly]
+    [ShowInInspector]
+    protected Vector3 rightPatrolPoint;
+    
+    [VerticalGroup("敌人配置/巡逻系统/巡逻设置/巡逻状态")]
+    [LabelText("当前巡逻目标")]
+    [ReadOnly]
+    [ShowInInspector]
+    protected Vector3 currentPatrolTarget;
+    
+    [VerticalGroup("敌人配置/巡逻系统/巡逻设置/朝向控制")]
+    [LabelText("面向右侧")]
+    [ReadOnly]
+    [ShowInInspector]
+    protected bool facingRight = true;
     #endregion
     
     #region 目标和导航
@@ -180,32 +296,24 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     [LabelText("玩家对象")]
     [ReadOnly]
     [SerializeField] protected Transform player;
-    
-    [VerticalGroup("敌人配置/导航系统/导航设置/目标设置")]
-    [LabelText("目标位置")]
-    [ReadOnly]
-    [SerializeField] private Vector3 targetPosition;
-    
-    // 巡逻相关字段已移至子类实现，基类不再包含具体巡逻逻辑
+
+    //玩家控制器，用于触发HURT
+    protected PlayerController playerController;
     #endregion
-    
+
     #region 攻击系统
     [FoldoutGroup("敌人配置/攻击系统", expanded: false)]
     [HorizontalGroup("敌人配置/攻击系统/攻击配置")]
     [VerticalGroup("敌人配置/攻击系统/攻击配置/攻击设置")]
     [LabelText("攻击冷却时间")]
-    [PropertyRange(0.1f, 10f)]
-    [SuffixLabel("秒")]
-    [SerializeField] public float attackCooldown = 2f;
+    [ReadOnly]
+    [ShowInInspector]
+    public float attackCooldown = 2f;
     
     [VerticalGroup("敌人配置/攻击系统/攻击配置/攻击设置")]
     [LabelText("上次攻击时间")]
     [ReadOnly]
     [SerializeField] protected float lastAttackTime;
-    
-    [VerticalGroup("敌人配置/攻击系统/攻击配置/攻击设置")]
-    [LabelText("玩家图层")]
-    [SerializeField] private LayerMask playerLayer = 1;
     #endregion
     
     #region 属性访问器
@@ -289,17 +397,19 @@ public abstract class Enemy : MonoBehaviour, IDamageable
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         
-        // 获取或添加状态机组件
-        stateMachine = GetComponent<EnemyStateMachine>();
-        if (stateMachine == null)
-        {
-            stateMachine = gameObject.AddComponent<EnemyStateMachine>();
-        }
+        // 从系统配置初始化参数
+        InitializeFromSystemConfig();
         
         // 配置敌人属性
-        ConfigureEnemy(this, enemyType);
+     //   ConfigureEnemy(this, enemyType);
         // 初始化属性
         currentHealth = maxHealth;
+        
+        // 记录初始位置
+        initialPosition = transform.position;
+        
+        // 根据初始水平方向设置facingRight
+        facingRight = transform.localScale.x > 0;
     }
     
     private void Start()
@@ -307,90 +417,219 @@ public abstract class Enemy : MonoBehaviour, IDamageable
         // 查找玩家
         FindPlayer();
         
-        // 注意：AIBehavior协程已被EnemyStateMachine接管，不再启动
-        // StartCoroutine(AIBehavior()); // 已移除，由状态机处理
+        // 设置巡逻点
+     //   SetupPatrolPoints();
+        
+        // 初始状态设置为Idle
+        ChangeState(EnemyState.Idle);
+        
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[Enemy] {gameObject.name} 初始化完成 - 生命值: {currentHealth}/{maxHealth}, 位置: {initialPosition}");
+        }
     }
     
     protected virtual void Update()
     {
         if (!isAlive) return;
         
-        // 基础的玩家检测（主要是设置目标）
-        if (target == null)
+                // 更新动画控制器参数
+        UpdateAnimatorParameters();
+        // 性能优化：检查是否需要更新
+        // if (!ShouldUpdate()) return;
+        
+        // 更新状态计时器
+        stateTimer += Time.unscaledDeltaTime;
+        
+
+        
+        // 根据当前状态执行对应的AI逻辑
+        ExecuteCurrentState();
+        
+        // 检测玩家（降低频率）
+        if (ShouldDetectPlayer())
         {
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
-            {
-                target = playerObj.transform;
-                player = target;
-            }
+            DetectPlayer();
+        }
+        updatePatrolPoints();
+        // 更新最后更新时间
+        lastUpdateTime = Time.time;
+    }
+
+    private void updatePatrolPoints()
+    {
+        if (Time.time - lastPatrolPointUpdateTime > 5f)
+        {
+            SetupPatrolPoints();
+            lastPatrolPointUpdateTime = Time.time;
+        }
+    }
+
+
+    private bool ShouldDetectPlayer()
+{
+    // 冲锋状态下禁用检测（WildBoar.cs第228-231行）
+    if (currentState == EnemyState.Charge) return false;
+    
+    // 攻击状态下降低检测频率
+    float baseInterval = isOnScreen ? 0.1f : 0.5f;
+    if (currentState == EnemyState.Attack) baseInterval *= 2;
+    
+    return Time.time - lastUpdateTime >= baseInterval;
+}
+    /// <summary>
+    /// 性能优化：检查是否应该更新敌人
+    /// </summary>
+    private bool ShouldUpdate()
+    {
+        // 检查屏幕范围
+        CheckScreenBounds();
+        
+        // 根据是否在屏幕内决定更新频率
+        float updateInterval = isOnScreen ? onScreenUpdateInterval : offScreenUpdateInterval;
+        
+        return Time.time - lastUpdateTime >= updateInterval;
+    }
+    
+    /// <summary>
+    /// 检查敌人是否在屏幕范围内
+    /// </summary>
+    // 在CheckScreenBounds方法中添加状态同步
+    private void CheckScreenBounds()
+    {
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null) 
+        {
+            isOnScreen = true; // 如果没有主摄像机，默认认为在屏幕内
+            return;
         }
         
-        // 状态机会处理大部分逻辑，这里只做必要的更新
-        // 移除了大部分状态检测逻辑，交给状态机处理
+        Vector3 screenPoint = mainCamera.WorldToViewportPoint(transform.position);
+        
+        // 考虑边界扩展
+        float extension = screenBoundaryExtension / mainCamera.orthographicSize;
+        
+        isOnScreen = screenPoint.x >= -extension && screenPoint.x <= 1 + extension &&
+                     screenPoint.y >= -extension && screenPoint.y <= 1 + extension &&
+                     screenPoint.z > 0;
+           if (!wasOnScreen && isOnScreen)
+    {
+        DetectPlayer();
     }
+    wasOnScreen = isOnScreen;
+    }
+    
+    /// <summary>
+    /// 更新动画控制器的参数
+    /// </summary>
+    private void UpdateAnimatorParameters()
+    {
+        if (animator != null)
+        {
+           // 使用哈希值提升性能（参考PlayerController优化）
+    animator.SetFloat(SpeedHash, Mathf.Abs(rb2D.velocity.x));
+    // 仅在状态变化时更新（参考EnemyStateMachine_Optimization_Summary.md第13点）
+            
+        }
+    }
+    
     
     private void FixedUpdate()
     {
         if (isDead) return;
         
-        // 注意：HandleMovement已被EnemyStateMachine接管，不再调用
+        // 移动逻辑现在由状态机处理
         // HandleMovement(); // 已移除，由状态机处理
     }
     #endregion
     
-    void ConfigureEnemy(Enemy enemyController, string enemyType)
+    /// <summary>
+    /// 从系统配置初始化敌人基础属性
+    /// </summary>
+    protected virtual void InitializeFromSystemConfig()
     {
-        if (enemyController == null) return;
-        
-        // 从EnemySystemConfig获取配置
-        var systemConfig = ConfigManager.Instance?.GetEnemySystemConfig();
-        if (systemConfig?.wildBoarConfig != null && enemyType == "WildBoar")
+            //优先读取配置文件
+         enemySystem ??= FindObjectOfType<EnemySystemConfig>();
+        if (enemySystem != null)
         {
-            var wildBoarConfig = systemConfig.wildBoarConfig;
-            enemyController.maxHealth = wildBoarConfig.health;
-            enemyController.currentHealth = wildBoarConfig.health;
-            enemyController.attackDamage = wildBoarConfig.attackDamage;
-            enemyController.moveSpeed = wildBoarConfig.moveSpeed;
-            enemyController.attackRange = wildBoarConfig.attackRange;
-            enemyController.detectionRange = wildBoarConfig.detectionRange;
+            var baseConfig = GetBaseConfig(enemySystem);
+            
+            if (baseConfig != null)
+            {
+                // 初始化基础属性
+                maxHealth = baseConfig.health;
+                currentHealth = maxHealth;
+                attackDamage = baseConfig.attackDamage;
+                physicalAttack = baseConfig.physicalAttack;
+                defense = baseConfig.defense;
+                moveSpeed = baseConfig.moveSpeed;
+                attackRange = baseConfig.attackRange;
+                detectionRange = baseConfig.detectionRange;
+                loseTargetRange = baseConfig.loseTargetRange;
+                attackCooldown = baseConfig.attackCooldown;
+                expReward = baseConfig.expReward;
+                
+                // 初始化巡逻属性
+                patrolSpeed = baseConfig.patrolSpeed;
+                patrolWaitTime = baseConfig.patrolWaitTime;
+                patrolRange = baseConfig.patrolRadius;
+                
+                // 初始化性能优化参数
+                offScreenUpdateInterval = baseConfig.offScreenUpdateInterval;
+                onScreenUpdateInterval = baseConfig.onScreenUpdateInterval;
+                screenBoundaryExtension = baseConfig.screenBoundaryExtension;
+                
+                if (GameManager.Instance != null && GameManager.Instance.debugMode)
+                {
+                    Debug.Log($"[Enemy] {gameObject.name} 从系统配置初始化完成");
+                }
+            }
         }
         else
         {
-            // 使用默认值
-            Debug.LogWarning($"[Enemy] 未找到敌人配置: {enemyType}，使用默认值");
+            Debug.LogWarning($"[Enemy] {gameObject.name} 未找到EnemySystemConfig，使用默认配置");
         }
     }
     
+    /// <summary>
+    /// 获取基础配置，子类可重写以返回特定配置
+    /// </summary>
+    protected virtual enmeyConfig GetBaseConfig(EnemySystemConfig systemConfig)
+    {
+        // 基类返回野猪配置作为默认配置
+        return systemConfig.wildBoarConfig;
+    }
     #region 初始化方法
     /// <summary>
     /// 查找玩家
     /// </summary>
     private void FindPlayer()
     {
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null)
         {
             player = playerObj.transform;
+            playerController=playerObj.GetComponent<PlayerController>();
         }
     }
     
     /// <summary>
-    /// 设置巡逻点
+    /// 设置巡逻点 - 简化版本
     /// </summary>
-    // 巡逻点设置方法已移至子类实现
-    
-    /// <summary>
-    /// 设置敌人属性
-    /// </summary>
-    public void SetEnemyStats(int health, int damage, float speed, float range)
+    protected void SetupPatrolPoints()
     {
-        maxHealth = health;
-        currentHealth = health;
-        attackDamage = damage;
-        moveSpeed = speed;
-        attackRange = range;
+        initialPosition = transform.position;
+        leftPatrolPoint = initialPosition + Vector3.left * (patrolRange * 0.5f);
+        rightPatrolPoint = initialPosition + Vector3.right * (patrolRange * 0.5f);
+        currentPatrolTarget = facingRight ? rightPatrolPoint : leftPatrolPoint;
+        
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[Enemy] {gameObject.name} 巡逻点设置完成 - 左: {leftPatrolPoint}, 右: {rightPatrolPoint}");
+        }
     }
+    
+  
     
     /// <summary>
     /// 设置敌人等级
@@ -406,44 +645,485 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     }
     #endregion
     
-    #region AI行为系统
-    // 注意：以下AI行为方法已被EnemyStateMachine接管，保留用于兼容性
-    // 实际AI逻辑由EnemyStateMachine处理
+    #region AI状态机系统
+    
+    /// <summary>
+    /// 改变敌人AI状态
+    /// </summary>
+    /// <param name="newState">新的状态</param>
+    protected void ChangeState(EnemyState newState)
+    {
+        if (currentState == newState) return;
+        cachedPatrolDirection = null;
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[Enemy] {gameObject.name} 状态改变: {currentState} -> {newState}");
+        }
+        
+        // 退出当前状态
+        ExitCurrentState();
+        
+        // 设置新状态
+        currentState = newState;
+        stateTimer = 0f;
+        lastStateChangeTime = Time.time;
+        
+        // 进入新状态
+        EnterNewState();
+    }
+    
+    /// <summary>
+    /// 退出当前状态的清理工作
+    /// </summary>
+    private void ExitCurrentState()
+    {
+        switch (currentState)
+        {
+            case EnemyState.Chase:
+                break;
+            case EnemyState.Attack:
+                break;
+            case EnemyState.Hurt:
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// 进入新状态的初始化工作
+    /// </summary>
+    private void EnterNewState()
+    {
+        switch (currentState)
+        {
+            case EnemyState.Idle:
+                break;
+                
+            case EnemyState.Patrol:
+                SetRandomPatrolTarget();
+                break;
+                
+            case EnemyState.Chase:
+                break;
+                
+            case EnemyState.Attack:
+                StopMovement();
+                break;
+                
+            case EnemyState.Hurt:
+             
+                break;
+                
+            case EnemyState.Dead:
+                isAlive = false;
+                rb2D.velocity = Vector2.zero;
+                rb2D.isKinematic = true;
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// 执行当前状态的逻辑 - 优化版本
+    /// </summary>
+    protected virtual void ExecuteCurrentState()
+    {
+        switch (currentState)
+        {
+            case EnemyState.Idle:
+                ExecuteIdleState();
+                CheckPlayerWithInterval(1.5f); // 空闲状态降低检测频率
+                break;
+                
+            case EnemyState.Patrol:
+                ExecutePatrolState();
+                CheckPlayerWithInterval(0.8f); // 巡逻状态中等检测频率
+                break;
+                
+            case EnemyState.Chase:
+                ExecuteChaseState();
+                CheckPlayerWithInterval(0.2f); // 追击状态高频检测
+                break;
+                
+            case EnemyState.Attack:
+                ExecuteAttackState(attackDamage);
+                break;
+                
+            case EnemyState.Hurt:
+                ExecuteHurtState();
+                break;
+                
+            case EnemyState.Dead:
+                // 死亡状态无需执行逻辑
+                break;
+                
+            case EnemyState.Charge:
+                // 子类可以重写此状态
+                break;
+                
+            case EnemyState.Stun:
+                // 子类可以重写此状态
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// 分层玩家检测（带状态专属间隔）
+    /// </summary>
+    private void CheckPlayerWithInterval(float baseInterval)
+    {
+        // 动态调整检测间隔：屏幕外时延长检测间隔
+        float adjustedInterval = isOnScreen ? baseInterval : baseInterval * 3f;
+        
+        if (Time.time - lastDetectionTime > adjustedInterval)
+        {
+            DetectPlayer();
+            lastDetectionTime = Time.time;
+        }
+    }
+
     #endregion
     
-    #region 伤害和死亡系统
+    #region AI状态执行方法
+    
+    /// <summary>
+    /// 执行空闲状态逻辑 - 优化版本，避免频繁切换
+    /// </summary>
+    private void ExecuteIdleState()
+    {
+        // 停止移动
+        StopMovement();
+        
+        // 增加最小空闲时间，避免频繁切换到巡逻
+        float minIdleTime = isOnScreen ? 1f : 2f; // 屏幕外更长的空闲时间
+        if (stateTimer > minIdleTime)
+        {
+            // 随机决定是否开始巡逻，增加变化性
+            if (UnityEngine.Random.Range(0f, 1f) < 0.7f) // 70%概率开始巡逻
+            {
+                ChangeState(EnemyState.Patrol);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 执行巡逻状态逻辑 - 优化版本，采用SimpleEnemy的简化巡逻
+    /// </summary>
+    private void ExecutePatrolState()
+    {
+        if (!canMove) return;
+        
+        // 简化的左右巡逻逻辑，类似SimpleEnemy
+        Vector2 patrolDirection = GetSimplePatrolDirection();
+        if (patrolDirection != Vector2.zero)
+        {
+            rb2D.velocity = new Vector2(patrolDirection.x * patrolSpeed, rb2D.velocity.y);
+        }
+        
+        // 增加最小巡逻时间，避免频繁切换回空闲
+        float minPatrolTime = isOnScreen ? 3f : 5f; // 屏幕外更长的巡逻时间
+        if (stateTimer > minPatrolTime)
+        {
+            // 随机决定是否回到空闲状态
+            if (UnityEngine.Random.Range(0f, 1f) < 0.3f) // 30%概率回到空闲
+            {
+                ChangeState(EnemyState.Idle);
+            }
+        }
+    }
+    private Vector2? cachedPatrolDirection;
+    private float lastDetectionTime;
+  private bool wasOnScreen;
+
+    /// <summary>
+    /// 获取简单的巡逻方向 - 采用SimpleEnemy的时间基础巡逻
+    /// </summary>
+    private Vector2 GetSimplePatrolDirection()
+    {
+        if (cachedPatrolDirection.HasValue)
+        {
+            return cachedPatrolDirection.Value;
+        }
+        else
+        {
+            float patrolCycle = patrolWaitTime * 4f; // 完整巡逻周期，增加稳定性
+            float currentTime = (Time.time + GetInstanceID()) % patrolCycle; // 加入实例ID避免同步
+               bool shouldMoveRight = currentTime < patrolCycle * 0.5f;
+    UpdateFacing(shouldMoveRight); // 新增方向同步
+
+            Vector2 direction = shouldMoveRight ? Vector2.right : Vector2.left;
+            cachedPatrolDirection = direction;
+              return direction;
+        }
+  
+       
+    }
+    
+    /// <summary>
+    /// 执行追击状态逻辑 - 优化版本
+    /// </summary>
+    private void ExecuteChaseState()
+    {
+        if (!canMove || player == null) return;
+           // 修改为攻击点检测
+        if (IsPlayerInAttackRange())
+        {
+            ChangeState(EnemyState.Attack);
+            return;
+        }
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+        // 检查是否失去目标 - 增加缓冲时间避免频繁切换
+        if (distanceToPlayer > loseTargetRange)
+        {
+            if (stateTimer > 2f) // 至少追击2秒后才能失去目标
+            {
+                ChangeState(EnemyState.Patrol);
+            }
+            return;
+        }
+        
+        // 追击移动
+        Vector2 directionToPlayer = (player.position - transform.position).normalized;
+        rb2D.velocity = new Vector2(directionToPlayer.x * moveSpeed, rb2D.velocity.y);
+        UpdateFacing(directionToPlayer.x > 0);
+    }
+    
+
+    /// <summary>
+    /// 执行受伤状态逻辑
+    /// </summary>
+    private void ExecuteHurtState()
+    {
+        // 停止移动
+        StopMovement();
+        
+        // 受伤状态持续时间
+        if (stateTimer > 0.5f)
+        {
+            if (player != null && Vector2.Distance(transform.position, player.position) <= detectionRange)
+            {
+                ChangeState(EnemyState.Chase);
+            }
+            else
+            {
+                ChangeState(EnemyState.Patrol);
+            }
+        }
+    }
+    
+    #endregion
+    
+    #region 玩家检测系统
+    
+    /// <summary>
+    /// 检测玩家并决定是否追击
+    /// </summary>
+    private void DetectPlayer()
+    {
+        if (player == null || !isAlive) return;
+        Debug.Log($"[Enemy] 检测玩家距离：{Vector2.Distance(transform.position, player.position)}");
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+        
+        // 根据当前状态和距离决定行为
+        switch (currentState)
+        {
+            case EnemyState.Idle:
+            case EnemyState.Patrol:
+                if (distanceToPlayer <= detectionRange)
+                {
+                    ChangeState(EnemyState.Chase);
+                }
+                break;
+                
+            case EnemyState.Chase:
+                if (distanceToPlayer <= attackRange)
+                {
+                    ChangeState(EnemyState.Attack);
+                }
+                else if (distanceToPlayer > loseTargetRange)
+                {
+                    ChangeState(EnemyState.Patrol);
+                }
+                break;
+        }
+    }
+    
+    #endregion
+    
+    #region 巡逻系统方法
+    
+
+    
+    /// <summary>
+    /// 设置随机巡逻目标
+    /// </summary>
+    private void SetRandomPatrolTarget()
+    {
+        // 简单的左右巡逻逻辑
+        if (Vector2.Distance(transform.position, rightPatrolPoint) < Vector2.Distance(transform.position, leftPatrolPoint))
+        {
+            currentPatrolTarget = leftPatrolPoint;
+        }
+        else
+        {
+            currentPatrolTarget = rightPatrolPoint;
+        }
+    }
+    
+    /// <summary>
+    /// 更新敌人朝向
+    /// </summary>
+    /// <param name="facingRight">是否面向右侧</param>
+    protected virtual void UpdateFacing(bool facingRight)
+    {
+        if (facingRight && !this.facingRight)
+        {
+            Flip();
+        }
+        else if (!facingRight && this.facingRight)
+        {
+            Flip();
+        }
+    }
+
+    /// <summary>
+    /// 翻转敌人朝向
+    /// </summary>
+    private void Flip()
+    {
+ // 先更新方向状态再设置缩放
+    facingRight = !facingRight;
+    float scaleX = Mathf.Abs(transform.localScale.x) * (facingRight ? 1 : -1);
+    transform.localScale = new Vector3(scaleX, transform.localScale.y, transform.localScale.z);
+    }
+    
+    #endregion
+    
+    #region AI行为系统
+    
+    /// <summary>
+    /// 执行攻击
+    /// </summary>
+    protected virtual void PerformAttack()
+    {
+        
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[Enemy] {gameObject.name} 执行攻击");
+        }
+        
+        // 子类可以重写此方法实现具体的攻击逻辑
+    }
+    
     /// <summary>
     /// 受到伤害
-    /// 优化：改进与状态机的健康状态通知
     /// </summary>
-    public virtual void TakePlayerDamage(int damage)
+    /// <param name="damage">伤害值</param>
+        public virtual void TakeDamage(float damage, Vector2 knockbackForce = default)
     {
-        if (isDead) return;
+        if (!isAlive) return;
         
-        currentHealth -= damage;
-        currentHealth = Mathf.Max(0, currentHealth);
-        
-        // 通知状态机健康状态变化
-        if (stateMachine != null)
+        currentHealth -= (int)damage;
+      
+        // 应用击退效果
+        if (knockbackForce != Vector2.zero && rb2D != null) 
         {
-            stateMachine.NotifyHealthStateChanged();
+            rb2D.AddForce(knockbackForce, ForceMode2D.Impulse);
         }
-        
-        // 触发受伤事件
-        OnTakeDamage?.Invoke(this, damage);
-        
-        // 播放受伤动画 - 根据Unity动画控制器参数
-        if (animator != null)
-        {
-            animator.SetTrigger("isHurt"); // 与动画控制器中的isHurt参数一致
-        }
-        
-        // 检查是否死亡
         if (currentHealth <= 0)
         {
             Die();
+            return;
+          }
+        // 触发受伤状态
+        ChangeState(EnemyState.Hurt);
+           if (animator != null)
+                {
+                    animator.SetTrigger(isHurtHash);
+                }
+          PlayerAudioConfig.Instance.PlaySound(enemyType+"_hurt");
+        // 死亡检查
+    
+        
+        // 调试日志
+        if (GameManager.Instance?.debugMode ?? false)
+        {
+            Debug.Log($"[Enemy] 受到伤害: {damage}, 击退力: {knockbackForce}");
         }
     }
+
+    
+    /// <summary>
+    /// 敌人死亡
+    /// </summary>
+    public virtual void Die()
+    {
+        if (!isAlive) return;
+        
+        isAlive = false;
+        ChangeState(EnemyState.Dead);
+        
+        if (animator != null)
+        {
+            animator.SetTrigger(dieHash);
+        }
+        PlayerAudioConfig.Instance.PlaySound(enemyType+"_die");
+        
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[Enemy] {gameObject.name} 死亡");
+        }
+        
+        // 启动死亡处理协程
+        StartCoroutine(HandleDeath());
+    }
+    
+    /// <summary>
+    /// 处理死亡后的清理工作
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator HandleDeath()
+    {
+        // 等待死亡动画播放完毕
+        yield return new WaitForSeconds(2f);
+        
+        // 销毁敌人对象
+        Destroy(gameObject);
+    }
+    
+    #endregion
+    
+    #region 移动系统 (已优化)
+    
+    
+    /// <summary>
+    /// 向指定方向以指定速度移动 (保持Y轴速度)
+    /// </summary>
+    /// <param name="direction">移动方向</param>
+    /// <param name="speed">移动速度</param>
+    protected virtual void MoveInDirection(Vector2 direction, float speed)
+    {
+        if (rb2D != null)
+        {
+            // 保持Y轴速度，只改变X轴速度
+            rb2D.velocity = new Vector2(direction.x * speed, rb2D.velocity.y);
+        }
+    }
+    
+    /// <summary>
+    /// 停止移动 (保持Y轴速度)
+    /// </summary>
+    protected virtual void StopMovement()
+    {
+        if (rb2D != null)
+        {
+            // 保持Y轴速度，只停止X轴移动
+            rb2D.velocity = new Vector2(0, rb2D.velocity.y);
+        }
+    }
+    
+    #endregion
+    
+    #region 伤害和死亡系统
+ 
     
     /// <summary>
     /// IDamageable接口实现 - 受到伤害（带击中点和攻击者）
@@ -451,45 +1131,10 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     public void TakeDamage(int damage, Vector2 hitPoint, Character attacker)
     {
         // 调用原有的TakeDamage方法保持兼容性
-        TakePlayerDamage(damage);
+        TakeDamage(damage);
     }
     
-    /// <summary>
-    /// 死亡处理
-    /// </summary>
-    public virtual void Die()
-    {
-        if (isDead) return;
-        
-        isDead = true;
-        isMoving = false;
-        isAttacking = false;
-        
-        // 触发死亡事件
-        OnDeath?.Invoke(this);
-        
-        // 播放死亡动画 - 根据Unity动画控制器参数
-        if (animator != null)
-        {
-            animator.SetTrigger("Die"); // 保持原有触发器名称
-        }
-        
-        // 禁用碰撞器
-        if (enemyCollider != null)
-        {
-            enemyCollider.enabled = false;
-        }
-        
-        // 停止物理
-        if (rb2D != null)
-        {
-            rb2D.velocity = Vector2.zero;
-            rb2D.isKinematic = true;
-        }
-        
-        // 开始死亡清理
-        StartCoroutine(DeathCleanup());
-    }
+   
     
     /// <summary>
     /// 死亡清理协程
@@ -520,11 +1165,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     }
     #endregion
     
-    #region 动画更新
-
-    
-
-    #endregion
     
     #region 公共方法
     /// <summary>
@@ -547,21 +1187,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable
         currentHealth = Mathf.Min(maxHealth, currentHealth);
     }
     
-    /// <summary>
-    /// 设置玩家引用
-    /// </summary>
-    public void SetPlayer(Transform playerTransform)
-    {
-        player = playerTransform;
-    }
+ 
     
-    /// <summary>
-    /// 设置目标
-    /// </summary>
-    public void SetTarget(Transform target)
-    {
-        player = target;
-    }
+
     
     /// <summary>
     /// 获取到玩家的距离
@@ -619,11 +1247,11 @@ public abstract class Enemy : MonoBehaviour, IDamageable
             Vector3 movement = direction.normalized * moveSpeed * Time.fixedDeltaTime;
             transform.position += movement;
         }
-        
+
         // 翻转精灵
         if (spriteRenderer != null && direction.x != 0)
         {
-            spriteRenderer.flipX = direction.x < 0;
+            UpdateFacing(direction.x > 0);
         }
     }
 
@@ -638,8 +1266,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     public virtual void ExecuteChase()
     {
         if (!canMove || isDead) return;
-        
-        Transform player = GameObject.FindGameObjectWithTag("Player")?.transform;
         if (player == null) return;
         
         // 计算朝向玩家的方向
@@ -652,64 +1278,69 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     /// <summary>
     /// 执行攻击行为
     /// </summary>
-    public virtual void ExecuteAttack()
+    #region 攻击系统
+    // 新增攻击检测方法
+    protected bool IsPlayerInAttackRange()
     {
-        if (!canAttack || isDead) return;
+        if (attackPoint == null) return false;
         
-        // 检查攻击冷却
-        if (Time.time - lastAttackTime < attackCooldown) return;
+        Collider2D[] hits = Physics2D.OverlapCircleAll(
+            attackPoint.transform.position, 
+            attackRange
+        );
         
-        Transform player = GameObject.FindGameObjectWithTag("Player")?.transform;
-        if (player == null) return;
-        
-        // 播放攻击动画
-        if (animator != null)
+        foreach (var hit in hits)
         {
-            animator.SetTrigger("Attack");
+            if (hit.CompareTag("Player"))
+            {
+                return true;
+            }
         }
-        
-        // 对玩家造成伤害
-        var playerCharacter = player.GetComponent<Character>();
-        if (playerCharacter != null)
-        {
-            int damage = (int)attackDamage;
-            playerCharacter.TakeDamage(damage);
-        }
-        
-        // 更新最后攻击时间
-        lastAttackTime = Time.time;
-        
-        // 触发攻击事件
-        OnAttack?.Invoke(this);
+        return false;
     }
 
-    /// <summary>
-    /// 停止移动 - 只停止X轴移动，保持Y轴速度（重力等）
-    /// </summary>
-    public virtual void StopMovement()
+    protected virtual void ExecuteAttackState(float damage)
     {
-        if (rb2D != null)
+        if (!canAttack || isDead) return;
+
+        // 新增攻击范围检测
+        if (!IsPlayerInAttackRange())
         {
-            rb2D.velocity = new Vector2(0, rb2D.velocity.y);
+            ChangeState(EnemyState.Chase);
+            return;
+        }
+
+        // 检查攻击冷却
+        if (Time.time - lastAttackTime < attackCooldown) return;
+
+        if (animator != null)
+        {
+            animator.SetTrigger(AttackHash);
+            PlayerAudioConfig.Instance.PlaySound(enemyType+"_attack");
+        }
+
+        // 新增攻击点检测
+            if (playerController != null)
+            {
+                playerController.TakeDamage((int)damage);
+            }
+
+        lastAttackTime = Time.time;
+        OnAttack?.Invoke(this);
+           if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[WildBoar] {gameObject.name} 攻击玩家，伤害: {damage}");
         }
     }
 
     // GetPatrolDirection方法已移至子类实现
     #endregion
     
-    #region 调试方法
-    private void OnDrawGizmosSelected()
-    {
-        // 绘制检测范围
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
-        
-        // 绘制攻击范围
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
-        
-        // 巡逻相关调试绘制已移至子类实现
-    }
+
+    #region 调试可视化
+    
+ 
+
     #endregion
 }
 
@@ -720,17 +1351,13 @@ public class PlayerHealth : MonoBehaviour
 {
     [SerializeField] private float maxHealth = 100f;
     [SerializeField] private float currentHealth;
-    
+
     private void Start()
     {
         currentHealth = maxHealth;
     }
-    
 
-    
-    private void Die()
-    {
-        Debug.Log("[PlayerHealth] 敌人死亡");
-        // 处理玩家死亡逻辑
-    }
+
+ #endregion
+
 }

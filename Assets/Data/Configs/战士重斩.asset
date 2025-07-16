@@ -27,7 +27,7 @@ MonoBehaviour:
   targetType: 0
   coneAngle: 145
   coneRadius: 12.1
-  boxForward: 1.4
+  boxForward: 1.7
   boxBackward: 3.2
   boxLeft: 1.7
   boxRight: 3.1

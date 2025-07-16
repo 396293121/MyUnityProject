@@ -47,6 +47,29 @@ public class TestSceneController : MonoBehaviour
     [LabelText("启用音效")]
     [InfoBox("控制是否播放音效")]
     [SerializeField] private bool enableAudioEffects = true;
+    #region 性能优化配置
+    [FoldoutGroup("性能优化", expanded: false)]
+    [LabelText("FPS更新间隔")]
+    [PropertyRange(0.1f, 2f)]
+    [SuffixLabel("秒")]
+    [SerializeField] private float fpsUpdateInterval = 1f;
+    
+    [FoldoutGroup("性能优化")]
+    [LabelText("调试信息更新间隔")]
+    [PropertyRange(0.1f, 1f)]
+    [SuffixLabel("秒")]
+    [SerializeField] private float debugUpdateInterval = 0.5f;
+    
+    [FoldoutGroup("性能优化")]
+    [LabelText("UI更新间隔")]
+    [PropertyRange(0.016f, 0.1f)]
+    [SuffixLabel("秒")]
+    [SerializeField] private float uiUpdateInterval = 0.05f; // 30 FPS
+    
+    // 性能优化计时器
+    private float lastFpsUpdateTime;
+    private float lastDebugUpdateTime;
+    private float lastUIUpdateTime;
     #endregion
     
     #region 私有字段
@@ -85,11 +108,7 @@ public class TestSceneController : MonoBehaviour
     private GameObject currentMap;
     
     [TabGroup("状态", "系统管理器")]
-    [FoldoutGroup("状态/系统管理器/核心管理器", expanded: true)]
-    [LabelText("敌人系统管理器")]
-    [ReadOnly]
-    [ShowInInspector]
-    private TestSceneEnemySystem enemySystem;
+
     
     [FoldoutGroup("状态/系统管理器/核心管理器")]
     [LabelText("UI管理器")]
@@ -242,7 +261,6 @@ public class TestSceneController : MonoBehaviour
     {
         if (Application.isPlaying)
         {
-            enemySystem?.ClearAllEnemies();
             foreach (var enemy in enemies.ToList())
             {
                 if (enemy != null)
@@ -496,28 +514,37 @@ public static TestSceneController Instance { get; private set; }
         InputManager.Instance.OnPausePressed += TogglePause;
     }
     }
-    
+
     private void Update()
     {
         if (!isSceneInitialized) return;
-        
-        // 更新FPS计算
-        UpdateFPSCalculation();
-        
-        
-        // 更新敌人系统
-        enemySystem?.UpdateEnemySystem(Time.deltaTime);
-        
-        // 更新UI系统
-        uiManager?.UpdateUI();
-        
-        // 更新调试信息
-        UpdateDebugInfo();
-        
-        // 检查游戏结束条件
-     //   CheckGameEndConditions();
+
+        float currentTime = Time.time;
+
+        // 更新FPS计算 - 降低频率
+        if (currentTime - lastFpsUpdateTime >= fpsUpdateInterval)
+        {
+            UpdateFPSCalculation();
+
+
+  
+
+            // 检查游戏结束条件
+            //   CheckGameEndConditions();
+        }
+            // 更新UI系统
+            if(currentTime - lastUIUpdateTime >= uiUpdateInterval)
+            {
+                uiManager?.UpdateUI();
+                lastUIUpdateTime = currentTime;
+            }
+            // 更新调试信息
+            if(currentTime - lastDebugUpdateTime >= debugUpdateInterval)
+            {
+                UpdateDebugInfo();
+                lastDebugUpdateTime = currentTime;
+            }
     }
-    
     private void LateUpdate()
     {
         // 更新摄像机跟随
@@ -556,8 +583,16 @@ public static TestSceneController Instance { get; private set; }
     {
         Debug.Log("[TestSceneController] 开始清理测试场景...");
         
-        // 清理敌人系统
-        enemySystem?.ClearAllEnemies();
+        // 清理敌人列表
+        foreach (var enemy in enemies.ToList())
+        {
+            if (enemy != null)
+            {
+                Destroy(enemy);
+            }
+        }
+        enemies.Clear();
+        enemyControllers.Clear();
         
         // 清理UI管理器
         if (uiManager != null)
@@ -609,8 +644,8 @@ public static TestSceneController Instance { get; private set; }
         // 步骤4: 创建玩家
         yield return StartCoroutine(CreatePlayerAsync());
         
-        // 步骤5: 初始化敌人系统
-        yield return StartCoroutine(InitializeEnemySystemAsync());
+        // 步骤5: 生成敌人
+        yield return StartCoroutine(SpawnEnemiesAsync());
         
         // 步骤6: 初始化UI系统
         yield return StartCoroutine(InitializeUISystemAsync());
@@ -667,37 +702,17 @@ public static TestSceneController Instance { get; private set; }
     }
     
     /// <summary>
-    /// 异步初始化敌人系统
+    /// 异步生成敌人
     /// </summary>
-    private IEnumerator InitializeEnemySystemAsync()
+    private IEnumerator SpawnEnemiesAsync()
     {
-        Debug.Log("[TestSceneController] 初始化敌人系统...");
+        Debug.Log("[TestSceneController] 生成敌人...");
         
-        if (enemySystem == null)
-        {
-            // 使用UnifiedSceneConfig中的敌人系统配置
-            var enemyConfig = unifiedConfig.enemySystemConfig;
-            if (enemyConfig == null)
-            {
-                Debug.LogWarning("[TestSceneController] UnifiedSceneConfig中未配置敌人系统，使用默认配置");
-                enemyConfig = CreateTempEnemySystemConfig();
-            }
-            enemySystem = new TestSceneEnemySystem(enemyConfig, eventBus);
-        }
-        
-        enemySystem.SetPlayerTransform(currentPlayer?.transform);
-        
-        // 设置敌人波次配置
-        if (unifiedConfig.enemyWaves != null)
-        {
-            enemySystem.SetEnemyWaves(unifiedConfig.enemyWaves);
-        }
-        
-        // 创建敌人
+        // 直接创建敌人，不再使用TestSceneEnemySystem
         CreateEnemies();
         
         yield return null;
-        Debug.Log("[TestSceneController] 敌人系统初始化完成");
+        Debug.Log("[TestSceneController] 敌人生成完成");
     }
     
     /// <summary>
@@ -1056,42 +1071,9 @@ public static TestSceneController Instance { get; private set; }
         }
     }
     
-    /// <summary>
-    /// 更新敌人系统
-    /// </summary>
-    void UpdateEnemySystem()
-    {
-        if (isGamePaused) return;
-        
-        // 更新所有敌人的AI
-        foreach (var enemy in enemyControllers)
-        {
-            if (enemy != null && enemy.gameObject.activeInHierarchy)
-            {
-                // 设置玩家为目标
-                if (currentPlayer != null)
-                {
-                    enemy.SetPlayer(currentPlayer.transform);
-                }
-            }
-        }
-    }
+ 
     
-    /// <summary>
-    /// 更新UI
-    /// </summary>
-    void UpdateUI()
-    {
-        if (UIManager.Instance != null && currentPlayer != null)
-        {
-            var character = currentPlayer.GetComponent<Character>();
-            if (character != null)
-            {
-                UIManager.Instance.UpdateCharacterUI(character);
-            }
-        }
-    }
-    
+   
     /// <summary>
     /// 返回主菜单
     /// </summary>
@@ -1175,42 +1157,7 @@ public static TestSceneController Instance { get; private set; }
         }
     }
     
-    /// <summary>
-    /// 创建临时的敌人系统配置
-    /// </summary>
-    private EnemySystemConfig CreateTempEnemySystemConfig()
-    {
-        var config = ScriptableObject.CreateInstance<EnemySystemConfig>();
-        
-        // 设置基础配置
-        config.maxEnemyCount = 10;
-        config.enemyUpdateInterval = 0.1f;
-        config.aiUpdateInterval = 0.2f;
-        
-        // 创建野猪配置
-        config.wildBoarConfig = new WildBoarConfig
-        {
-            health = 50,
-            moveSpeed = 2f,
-            attackDamage = 15,
-            attackRange = 1.5f,
-            detectionRange = 5f,
-            chargeSpeed = 8f,
-            chargeDistance = 6f,
-            chargeCooldown = 3f,
-            chargePreparationTime = 0.5f,
-            patrolSpeed = 1f,
-            patrolWaitTime = 2f,
-            patrolRadius = 3f
-        };
-        
-        // 设置碰撞层
-        config.collisionLayers = -1;
-        config.platformLayers = -1;
-        config.playerLayers = -1;
-        
-        return config;
-    }
+
     
     /// <summary>
     /// 创建临时的HUD配置
@@ -1233,4 +1180,5 @@ public static TestSceneController Instance { get; private set; }
     }
     
     // OnDestroy方法已在第133行定义，此处移除重复定义
+    #endregion
 }

@@ -49,7 +49,7 @@ public class Archer : Character
     
 
     
-    protected override void DealDamageToTarget(IDamageable target, Vector2 hitPoint)
+    public override void DealDamageToTarget(IDamageable target, Vector2 hitPoint)
     {
         // 射手造成物理伤害，基于敏捷度
         int damage = Mathf.RoundToInt(physicalAttack * 0.9f); // 使用90%的物理攻击力
@@ -209,7 +209,7 @@ public class Archer : Character
     protected override void Awake()
     {
         base.Awake();
-        
+          playerType = "archer";
         // 从配置文件设置射手特有属性
         if (config != null)
         {
@@ -277,7 +277,7 @@ public class Archer : Character
     /// </summary>
     private void HandleArcherInput()
     {
-        if (!canMove || !isAlive) return;
+        if ( !isAlive) return;
         
         // 检查技能输入
         if (InputManager.Instance != null)
@@ -292,9 +292,8 @@ public class Archer : Character
     /// </summary>
     public bool Shoot(Vector2 targetPosition)
     {
-        if (!canAttack || !isAlive || isReloading || currentArrows <= 0) return false;
+        if (  isReloading || currentArrows <= 0) return false;
         
-        canAttack = false;
         currentArrows--;
         
         // 播放射击动画
@@ -325,10 +324,9 @@ public class Archer : Character
     /// </summary>
     public bool PerformMultiShot(Vector2 targetPosition)
     {
-        if (!canUseMultiShot || !canAttack || !isAlive || isReloading || currentArrows < 3) return false;
+        if (!canUseMultiShot ||  !isAlive || isReloading || currentArrows < 3) return false;
         
         canUseMultiShot = false;
-        canAttack = false;
         currentArrows -= 3;
         
         // 播放多重射击动画
@@ -362,10 +360,9 @@ public class Archer : Character
     /// </summary>
     public bool PerformPiercingShot(Vector2 targetPosition)
     {
-        if (!canUsePiercingShot || !canAttack || !isAlive || isReloading || currentArrows <= 0) return false;
+        if (!canUsePiercingShot || !isAlive || isReloading || currentArrows <= 0) return false;
         
         canUsePiercingShot = false;
-        canAttack = false;
         currentArrows--;
         
         // 播放穿透射击动画
@@ -430,10 +427,9 @@ public class Archer : Character
     /// </summary>
     public bool PerformExplosiveArrow(Vector2 targetPosition)
     {
-        if (!canUseExplosiveArrow || !canAttack || !isAlive || isReloading || currentArrows <= 0) return false;
+        if (!canUseExplosiveArrow || !isAlive || isReloading || currentArrows <= 0) return false;
         
         canUseExplosiveArrow = false;
-        canAttack = false;
         currentArrows--;
         
         // 播放爆炸箭动画
@@ -503,7 +499,6 @@ StartCoroutine(nameof(ReloadArrows));
         float normalDelay = config != null ? config.normalAttackRecoveryTime : 0.3f;
         float attackDelay = rapidFireActive ? rapidFireDelay : normalDelay;
         yield return new WaitForSeconds(attackDelay);
-        canAttack = true;
     }
     
     /// <summary>
@@ -546,7 +541,6 @@ StartCoroutine(nameof(ReloadArrows));
         // 恢复攻击能力
         float recoveryTime = config != null ? config.multiShotRecoveryTime : 0.4f;
         yield return new WaitForSeconds(recoveryTime);
-        canAttack = true;
     }
     
     /// <summary>
@@ -555,7 +549,6 @@ StartCoroutine(nameof(ReloadArrows));
     private System.Collections.IEnumerator DoReloadArrows()
     {
         isReloading = true;
-        canAttack = false;
         
         // 播放装填动画
         if (animator != null)
@@ -574,7 +567,6 @@ StartCoroutine(nameof(ReloadArrows));
         // 恢复箭矢
         currentArrows = maxArrows;
         isReloading = false;
-        canAttack = true;
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {

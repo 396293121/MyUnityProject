@@ -62,7 +62,7 @@ public class Warrior : Character
     protected override void Awake()
     {
         base.Awake();
-        
+        playerType = "warrior";
         // 战士特有属性设置
         strength = config != null ? config.strength : 15;      // 高力量
         agility = config != null ? config.agility : 8;        // 较低敏捷
@@ -114,16 +114,21 @@ public class Warrior : Character
     /// 重写Character基类的DealDamageToTarget方法，战士造成更高伤害
     /// </summary>
     /// <param name="target">目标碰撞体</param>
-    public void DealDamageToTarget(Collider2D target)
+    public override  void DealDamageToTarget(IDamageable target, Vector2 hitPoint)
+    { if (target is Enemy enemy) 
     {
-        var enemy = target.GetComponent<Enemy>();
-        if (enemy != null)
-        {
-            // 战士造成额外10%伤害
-            int damage = Mathf.RoundToInt(physicalAttack * 1.1f);
-            enemy.TakePlayerDamage(damage);
-            Debug.Log($"战士攻击造成伤害: {damage} (基础伤害: {physicalAttack})");
-        }
+        int damage = Mathf.RoundToInt(physicalAttack * 1.1f);
+        enemy.TakeDamage(damage);
+        Debug.Log($"战士攻击造成伤害: {damage}");
+    }
+        // var enemy = target.GetComponent<Enemy>();
+        // if (enemy != null)
+        // {
+        //     // 战士造成额外10%伤害
+        //     int damage = Mathf.RoundToInt(physicalAttack * 1.1f);
+        //     enemy.TakePlayerDamage(damage);
+        //     Debug.Log($"战士攻击造成伤害: {damage} (基础伤害: {physicalAttack})");
+        // }
     }
     
     /// <summary>

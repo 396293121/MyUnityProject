@@ -68,7 +68,7 @@ public class Fireball : MonoBehaviour
         if (enemy != null)
         {
             // 造成伤害
-            enemy.TakePlayerDamage(damage);
+            enemy.TakeDamage(damage);
             
             if (GameManager.Instance != null && GameManager.Instance.debugMode)
             {

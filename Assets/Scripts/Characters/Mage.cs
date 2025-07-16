@@ -23,7 +23,7 @@ public class Mage : Character
     public override float KnockbackForce => config != null ? config.knockbackForce : 3f;
 
     
-    protected override void DealDamageToTarget(IDamageable target, Vector2 hitPoint)
+    public override void DealDamageToTarget(IDamageable target, Vector2 hitPoint)
     {
         // 法师造成魔法伤害，基于魔法攻击力
         int damage = Mathf.RoundToInt(magicalAttack * 0.8f); // 使用80%的魔法攻击力
@@ -112,7 +112,7 @@ public class Mage : Character
     protected override void Awake()
     {
         base.Awake();
-        
+          playerType = "mage";
         // 法师特有属性设置
         strength = config != null ? config.strength : 5;
         agility = config != null ? config.agility : 10;
@@ -192,7 +192,7 @@ public class Mage : Character
     /// </summary>
     private void HandleMageInput()
     {
-        if (!canMove || !isAlive) return;
+        if ( !isAlive) return;
         
         // 检查技能输入
         if (InputManager.Instance != null)
@@ -207,13 +207,12 @@ public class Mage : Character
     /// </summary>
     public bool CastFireball(Vector2 targetPosition)
     {
-        if (!canUseFireball || !canAttack || !isAlive) return false;
+        if (!canUseFireball  || !isAlive) return false;
         
         int manaCost = config != null ? config.fireballManaCost : 15;
         if (currentMana < manaCost) return false;
         
         canUseFireball = false;
-        canAttack = false;
         
         // 消耗魔法值
         ConsumeMana(manaCost);
@@ -243,7 +242,7 @@ public class Mage : Character
     /// </summary>
     public bool CastLightningBolt(Transform target)
     {
-        if (!canUseLightningBolt || !canAttack || !isAlive || target == null) return false;
+        if (!canUseLightningBolt || !isAlive || target == null) return false;
         
         int manaCost = config != null ? config.lightningBoltManaCost : 25;
         if (currentMana < manaCost) return false;
@@ -254,7 +253,6 @@ public class Mage : Character
         if (distance > castRange) return false;
         
         canUseLightningBolt = false;
-        canAttack = false;
         
         // 消耗魔法值
         ConsumeMana(manaCost);
@@ -381,7 +379,6 @@ public class Mage : Character
         // 恢复攻击能力
         float recoveryTime = config != null ? config.normalAttackRecoveryTime : 0.2f;
         yield return new WaitForSeconds(recoveryTime);
-        canAttack = true;
     }
     
     /// <summary>
@@ -408,14 +405,13 @@ public class Mage : Character
             var enemy = target.GetComponent<Enemy>();
             if (enemy != null)
             {
-                enemy.TakePlayerDamage(damage);
+                enemy.TakeDamage(damage);
             }
         }
         
         // 恢复攻击能力
         float recoveryTime = config != null ? config.normalAttackRecoveryTime : 0.2f;
         yield return new WaitForSeconds(recoveryTime);
-        canAttack = true;
     }
     
     /// <summary>

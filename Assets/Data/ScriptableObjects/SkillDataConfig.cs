@@ -135,11 +135,6 @@ public class skillDataConfig : ScriptableObject
     [LabelText("向右距离")]
     [Range(0f, 20f)]
     public float boxRight = 2f;
-    // 兼容性属性
-    [HideInInspector]
-    public float boxWidth => boxLeft + boxRight;
-    [HideInInspector]
-    public float boxLength => boxForward + boxBackward;
 
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.AreaOfEffect)]
@@ -169,12 +164,6 @@ public class skillDataConfig : ScriptableObject
     [LabelText("向右距离")]
     [Range(0f, 20f)]
     public float aoeRight = 2.5f;
-    
-    // 兼容性属性
-    [HideInInspector]
-    public float aoeWidth => aoeLeft + aoeRight;
-    [HideInInspector]
-    public float aoeHeight => aoeUp + aoeDown;
     
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Buff)]
@@ -475,7 +464,8 @@ public class skillDataConfig : ScriptableObject
         
         // 使用新的方向性矩形配置
         List<Collider2D> targets = FindTargetsInDirectionalBox(attackPosition, forward, 
-            boxForward, boxBackward, boxLeft, boxRight, GetTargetLayerMask());
+            boxForward, boxBackward, caster.transform.localScale.x > 0 ? boxLeft : boxRight, caster.transform.localScale.x > 0 ? boxRight : boxLeft, GetTargetLayerMask());
+
         
         int hitCount = 0;
         foreach (var target in targets)
@@ -505,7 +495,7 @@ public class skillDataConfig : ScriptableObject
         {
             // 使用新的方向性矩形AOE配置
             List<Collider2D> boxTargets = FindTargetsInDirectionalAOEBox(attackPosition, 
-                aoeUp, aoeDown, aoeLeft, aoeRight, GetTargetLayerMask());
+                aoeUp, aoeDown, caster.transform.localScale.x > 0 ? aoeLeft : aoeRight,caster.transform.localScale.x > 0?aoeRight:aoeLeft, GetTargetLayerMask());
             targets = boxTargets.ToArray();
         }
         
@@ -538,7 +528,7 @@ public class skillDataConfig : ScriptableObject
     private void ExecuteHealEffect(GameObject caster)
     {
         // 治疗效果
-        var healthComponent = caster.GetComponent<SimplePlayerController>();
+        var healthComponent = caster.GetComponent<PlayerController>();
         if (healthComponent != null)
         {
             // 假设SimplePlayerController有治疗方法
@@ -681,7 +671,7 @@ public class skillDataConfig : ScriptableObject
     private void DealDamageToTarget(GameObject target, float damageAmount)
     {
         // 尝试对敌人造成伤害
-        var enemy = target.GetComponent<SimpleEnemy>();
+        var enemy = target.GetComponent<Enemy>();
         if (enemy != null)
         {
             enemy.TakeDamage(damageAmount);
@@ -797,12 +787,8 @@ public class skillDataConfig : ScriptableObject
             skillType = skillType,
             isCircularAOE = isCircularAOE,
             range = range,
-            aoeWidth = aoeWidth,
-            aoeHeight = aoeHeight,
             coneAngle = coneAngle,
             coneRadius = coneRadius,
-            boxWidth = boxWidth,
-            boxLength = boxLength,
             hitboxColor = hitboxColor,
             hitboxAlpha = hitboxAlpha,
             skillName = skillName,

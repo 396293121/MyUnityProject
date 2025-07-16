@@ -9,6 +9,7 @@ using Sirenix.OdinInspector;
 [ShowOdinSerializedPropertiesInInspector]
 public abstract class Character : MonoBehaviour, IDamageable
 {
+   public string playerType ;
   [Header("是否显示调试Gizmos")]
     public bool showDebugGizmos=true;
 
@@ -36,8 +37,6 @@ public abstract class Character : MonoBehaviour, IDamageable
     // 兼容性属性
     public int currentExperience => experience;
     public int maxExperience => experienceToNext;
-
-    public Action<int> OnTakeDamage { get; internal set; }
 
     [FoldoutGroup("生命与魔法", expanded: true)]
     [HorizontalGroup("生命与魔法/生命值")]
@@ -155,15 +154,7 @@ public abstract class Character : MonoBehaviour, IDamageable
     [InfoBox("角色是否存活，死亡时为false")]
     public bool isAlive = true;
     
-    [VerticalGroup("状态控制/基础状态/右列")]
-    [LabelText("可移动")]
-    [InfoBox("角色是否可以移动，受控制时为false")]
-    public bool canMove = true;
-    
-    [FoldoutGroup("状态控制")]
-    [LabelText("可攻击")]
-    [InfoBox("角色是否可以攻击，眩晕时为false")]
-    public bool canAttack = true;
+
     
     [FoldoutGroup("状态控制")]
     [LabelText("交互范围")]
@@ -301,7 +292,7 @@ public abstract class Character : MonoBehaviour, IDamageable
     /// <summary>
     /// 受到伤害
     /// </summary>
-    public virtual void TakeDamage(int damage, bool isMagical = false)
+    public virtual void TakeDamage(int damage, bool isMagical = false,Vector2 knockbackForce = default)
     {
         if (!isAlive) return;
         
@@ -312,13 +303,13 @@ public abstract class Character : MonoBehaviour, IDamageable
         
         currentHealth = Mathf.Max(0, currentHealth - actualDamage);
         OnHealthChanged?.Invoke(currentHealth);
-        
-        // 播放受伤动画
-        if (animator != null)
-        {
-            animator.SetTrigger("hurtTrigger");
-        }
-        
+ 
+         // 基础击退逻辑
+    if (TryGetComponent<Rigidbody2D>(out var rb) && knockbackForce != default)
+    {
+        rb.AddForce(knockbackForce, ForceMode2D.Impulse);
+    }
+
         // 检查死亡
         if (currentHealth <= 0)
         {
@@ -472,15 +463,8 @@ public abstract class Character : MonoBehaviour, IDamageable
     /// </summary>
     protected virtual void Die()
     {
-        isAlive = false;
-        canMove = false;
-        canAttack = false;
+        isAlive = false;;
         
-        // 播放死亡动画
-        if (animator != null)
-        {
-            animator.SetTrigger("deathTrigger");
-        }
         
         OnDeath?.Invoke();
         
@@ -493,8 +477,6 @@ public abstract class Character : MonoBehaviour, IDamageable
     public virtual void Revive()
     {
         isAlive = true;
-        canMove = true;
-        canAttack = true;
         currentHealth = maxHealth;
         currentMana = maxMana;
         
@@ -537,7 +519,6 @@ public abstract class Character : MonoBehaviour, IDamageable
         // 遍历所有被攻击的目标
         foreach (Collider2D target in hitTargets)
         {
-             Debug.Log("target:" + target);
             if (IsValidTarget(target))
             {
                 enemiesHit++;
@@ -594,7 +575,7 @@ public abstract class Character : MonoBehaviour, IDamageable
     /// </summary>
     /// <param name="target">目标碰撞体</param>
     /// <param name="hitPoint">命中点</param>
-    protected virtual void DealDamageToTarget(IDamageable target, Vector2 hitPoint)
+    public  virtual void DealDamageToTarget(IDamageable target, Vector2 hitPoint)
     {
         target.TakeDamage(physicalAttack, hitPoint, this);
     }

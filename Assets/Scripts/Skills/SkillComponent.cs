@@ -553,7 +553,8 @@ public class SkillComponent : MonoBehaviour
                     Vector3 forward = transform.localScale.x > 0 ? Vector3.right : Vector3.left;
                     DrawDirectionalBoxGizmo(skillSpawnPoint.position, forward, 
                         gizmoData.boxForward, gizmoData.boxBackward, 
-                        gizmoData.boxLeft, gizmoData.boxRight);
+                        transform.localScale.x > 0 ? gizmoData.boxLeft : gizmoData.boxRight,
+                        transform.localScale.x > 0 ? gizmoData.boxRight : gizmoData.boxLeft);
                     break;
                     
                 case SkillTypeTest.AreaOfEffect:
@@ -565,7 +566,8 @@ public class SkillComponent : MonoBehaviour
                     {
                         DrawDirectionalAOEBoxGizmo(skillSpawnPoint.position, 
                             gizmoData.aoeUp, gizmoData.aoeDown, 
-                            gizmoData.aoeLeft, gizmoData.aoeRight);
+                            transform.localScale.x > 0 ? gizmoData.aoeLeft : gizmoData.aoeRight,
+                            transform.localScale.x > 0 ? gizmoData.aoeRight : gizmoData.aoeLeft);
                     }
                     break;
             }

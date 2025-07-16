@@ -105,7 +105,6 @@ public class PlayerStateMachine : MonoBehaviour
     private PlayerController playerController;
     private Character character;
     private SkillComponent skillComponent;
-    private Animator animator;
     private Rigidbody2D rb;
     
     // 状态进入时间记录
@@ -117,7 +116,6 @@ public class PlayerStateMachine : MonoBehaviour
     public System.Action<PlayerState> OnStateExit;
     
     // 性能优化：条件缓存和脏标记
-    private Dictionary<string, bool> cachedConditions = new Dictionary<string, bool>();
     private bool conditionsDirty = true;
     private float lastConditionCheckTime = 0f;
     private const float CONDITION_CHECK_INTERVAL = 0.02f; // 50fps检查频率
@@ -138,7 +136,6 @@ public class PlayerStateMachine : MonoBehaviour
         playerController = GetComponent<PlayerController>();
         character = GetComponent<Character>();
         skillComponent = GetComponent<SkillComponent>();
-        animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
         
         // 初始化性能监控器

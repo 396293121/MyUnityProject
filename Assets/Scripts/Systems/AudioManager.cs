@@ -41,6 +41,11 @@ public class AudioManager : MonoBehaviour
     
     // 音频配置（从原项目的AudioConfig.js迁移）
     private Dictionary<string, AudioConfig> audioConfigs = new Dictionary<string, AudioConfig>();
+        /// <summary>
+    /// 自动初始化InputManager - 在场景加载前自动创建
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+ 
     
     private void Awake()
     {

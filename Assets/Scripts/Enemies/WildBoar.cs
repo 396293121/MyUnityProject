@@ -4,98 +4,100 @@ using Sirenix.OdinInspector;
 
 /// <summary>
 /// 野猪敌人类 - 具有冲撞攻击能力的近战敌人
-/// 从原Phaser项目的WildBoar.js迁移而来
-/// 支持Odin Inspector可视化编辑
+/// 继承自重构后的Enemy基类，采用SimpleEnemy的状态机设计
+/// 特色功能：冲锋攻击、狂暴状态、撞墙眩晕
+/// 性能优化：屏幕外减少更新频率
 /// </summary>
 [ShowOdinSerializedPropertiesInInspector]
 public class WildBoar : Enemy
 {
-    [TabGroup("野猪配置", "配置引用")]
-    [FoldoutGroup("野猪配置/配置引用/系统配置", expanded: true)]
-    [LabelText("敌人系统配置")]
-    [InfoBox("从EnemySystemConfig获取配置，避免重复定义", InfoMessageType.Info)]
+    [TabGroup("野猪配置", "冲锋系统")]
+    [FoldoutGroup("野猪配置/冲锋系统/冲锋属性", expanded: true)]
+    [LabelText("冲锋速度")]
     [ReadOnly]
     [ShowInInspector]
-    private EnemySystemConfig systemConfig;
+    [InfoBox("冲锋时的移动速度")]
+    public float chargeSpeed = 8f;
     
-    [TabGroup("野猪配置", "冲撞系统")]
-    [FoldoutGroup("野猪配置/冲撞系统/冲撞属性", expanded: true)]
-    [LabelText("冲撞速度")]
-    [InfoBox("从系统配置获取，如未配置则使用默认值", InfoMessageType.Warning)]
+    [FoldoutGroup("野猪配置/冲锋系统/冲锋属性")]
+    [LabelText("冲锋持续时间")]
     [ReadOnly]
     [ShowInInspector]
-    private float chargeSpeed = 8f;
+    public float chargeDuration = 2f;
     
-    [FoldoutGroup("野猪配置/冲撞系统/冲撞属性")]
-    [LabelText("冲撞持续时间")]
+    [FoldoutGroup("野猪配置/冲锋系统/冲锋属性")]
+    [LabelText("冲锋触发距离")]
     [ReadOnly]
     [ShowInInspector]
-    private float chargeDuration = 2f;
+    public float chargeDistance = 6f;
     
-    [FoldoutGroup("野猪配置/冲撞系统/冲撞属性")]
-    [LabelText("冲撞触发距离")]
+    [FoldoutGroup("野猪配置/冲锋系统/冲锋属性")]
+    [LabelText("冲锋冷却时间")]
     [ReadOnly]
     [ShowInInspector]
-    private float chargeDistance = 6f;
+    public float chargeCooldown = 5f;
     
-    [FoldoutGroup("野猪配置/冲撞系统/冲撞属性")]
-    [LabelText("冲撞冷却时间")]
+    [FoldoutGroup("野猪配置/冲锋系统/冲锋属性")]
+    [LabelText("冲锋伤害")]
     [ReadOnly]
     [ShowInInspector]
-    private float chargeCooldown = 5f;
-    
-    [FoldoutGroup("野猪配置/冲撞系统/冲撞属性")]
-    [LabelText("冲撞伤害")]
-    [ReadOnly]
-    [ShowInInspector]
-    private int chargeDamage = 25;
+    public int chargeDamage = 25;
     
     [TabGroup("野猪配置", "狂暴系统")]
     [FoldoutGroup("野猪配置/狂暴系统/狂暴条件", expanded: true)]
     [LabelText("狂暴血量阈值")]
-    [PropertyRange(0.1f, 0.8f)]
-    [SuffixLabel("%")]
+    [ReadOnly]
+    [ShowInInspector]
     [InfoBox("血量低于此百分比时进入狂暴状态")]
     public float enrageHealthThreshold = 0.3f;
     
     [FoldoutGroup("野猪配置/狂暴系统/狂暴效果", expanded: true)]
     [LabelText("狂暴速度倍数")]
-    [PropertyRange(1f, 3f)]
+    [ReadOnly]
+    [ShowInInspector]
     public float enrageSpeedMultiplier = 1.5f;
     
     [FoldoutGroup("野猪配置/狂暴系统/狂暴效果")]
     [LabelText("狂暴伤害倍数")]
-    [PropertyRange(1f, 3f)]
+    [ReadOnly]
+    [ShowInInspector]
     public float enrageDamageMultiplier = 1.3f;
     
+    [TabGroup("野猪配置", "眩晕系统")]
+    [FoldoutGroup("野猪配置/眩晕系统/眩晕设置", expanded: true)]
+    [LabelText("眩晕持续时间")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float stunDuration = 2f;
+    
     [TabGroup("野猪配置", "状态监控")]
-    [FoldoutGroup("野猪配置/状态监控/冲撞状态", expanded: true)]
-    [LabelText("正在冲撞")]
+    [FoldoutGroup("野猪配置/状态监控/冲锋状态", expanded: true)]
+    [LabelText("正在冲锋")]
     [ReadOnly]
     [ShowInInspector]
     private bool isCharging = false;
     
-    [FoldoutGroup("野猪配置/状态监控/冲撞状态")]
-    [LabelText("可以冲撞")]
+    [FoldoutGroup("野猪配置/状态监控/冲锋状态")]
+    [LabelText("可以冲锋")]
     [ReadOnly]
     [ShowInInspector]
     private bool canCharge = true;
     
-    [FoldoutGroup("野猪配置/状态监控/冲撞状态")]
-    [LabelText("冲撞方向")]
+    [FoldoutGroup("野猪配置/状态监控/冲锋状态")]
+    [LabelText("冲锋方向")]
     [ReadOnly]
     [ShowInInspector]
     private Vector2 chargeDirection;
     
-    [FoldoutGroup("野猪配置/状态监控/冲撞状态")]
-    [LabelText("冲撞计时器")]
+    [FoldoutGroup("野猪配置/状态监控/冲锋状态")]
+    [LabelText("冲锋计时器")]
     [ReadOnly]
     [ProgressBar(0, "chargeDuration")]
     [ShowInInspector]
     private float chargeTimer = 0f;
     
-    [FoldoutGroup("野猪配置/状态监控/冲撞状态")]
-    [LabelText("上次冲撞时间")]
+    [FoldoutGroup("野猪配置/状态监控/冲锋状态")]
+    [LabelText("上次冲锋时间")]
     [ReadOnly]
     [ShowInInspector]
     private float lastChargeTime = 0f;
@@ -105,6 +107,12 @@ public class WildBoar : Enemy
     [ReadOnly]
     [ShowInInspector]
     private bool isEnraged = false;
+    
+    [FoldoutGroup("野猪配置/状态监控/眩晕状态", expanded: true)]
+    [LabelText("正在眩晕")]
+    [ReadOnly]
+    [ShowInInspector]
+    private bool isStunned = false;
     
     [FoldoutGroup("野猪配置/状态监控/原始属性", expanded: true)]
     [LabelText("原始速度")]
@@ -118,51 +126,7 @@ public class WildBoar : Enemy
     [ShowInInspector]
     private int originalAttack;
     
-    // 简化的巡逻状态字段（移除了复杂的巡逻目标系统）
-    [FoldoutGroup("野猪配置/状态监控/巡逻状态", expanded: true)]
-    [LabelText("初始位置")]
-    [ReadOnly]
-    [ShowInInspector]
-    private Vector3 initialPosition;
-    
-    [TabGroup("野猪配置", "AI状态机")]
-    [FoldoutGroup("野猪配置/AI状态机/状态控制", expanded: true)]
-    [LabelText("当前AI状态")]
-    [ReadOnly]
-    [ShowInInspector]
-    private EnemyState currentAIState = EnemyState.Idle;
-    
-
-    
-    [FoldoutGroup("野猪配置/AI状态机/巡逻设置", expanded: true)]
-    [LabelText("巡逻速度")]
-    [PropertyRange(0.5f, 3f)]
-    [SuffixLabel("米/秒")]
-    public float patrolSpeed = 1f;
-    
-    [FoldoutGroup("野猪配置/AI状态机/巡逻设置")]
-    [LabelText("巡逻等待时间")]
-    [PropertyRange(1f, 5f)]
-    [SuffixLabel("秒")]
-    public float patrolWaitTime = 2f;
-    
-    // 复杂巡逻字段已移除：patrolRange, currentPatrolTarget
-    
-   
-    
-    [FoldoutGroup("野猪配置/AI状态机/眩晕设置", expanded: true)]
-    [LabelText("眩晕持续时间")]
-    [PropertyRange(1f, 5f)]
-    [SuffixLabel("秒")]
-    public float stunDuration = 2f;
-    
-    [FoldoutGroup("野猪配置/状态监控/眩晕状态", expanded: true)]
-    [LabelText("正在眩晕")]
-    [ReadOnly]
-    [ShowInInspector]
-    private bool isStunned = false;
-    
-    // 公共属性访问器，供状态机使用
+    // 系统配置引用
     public bool IsCharging => isCharging;
     public bool IsStunned => isStunned;
     public bool IsEnraged => isEnraged;
@@ -170,230 +134,313 @@ public class WildBoar : Enemy
     public float ChargeTimer => chargeTimer;
     public float ChargeCooldownTime => chargeCooldown;
     public float LastChargeTime => lastChargeTime;
-    
+    private static readonly int IsChargingHash = Animator.StringToHash("IsCharging");
+    private static readonly int IsStunnedHash = Animator.StringToHash("IsStunned"); 
+    private static readonly int ChargeHash = Animator.StringToHash("Charge");
     public override void Awake()
     {
-        this.enemyType = "WildBoar";
+        // 设置敌人类型
+        enemyType = "WildBoar";
+        
+        // 调用基类初始化
         base.Awake();
-        
-        // 初始化状态机引用
-        // stateMachine = GetComponent<EnemyStateMachine>();
-        // if (stateMachine == null)
-        // {
-        //     Debug.LogWarning($"[WildBoar] {gameObject.name} 未找到EnemyStateMachine组件");
-        // }
-        
-        // 从系统配置初始化属性
-        InitializeFromSystemConfig();
         
         // 保存原始属性
         originalSpeed = moveSpeed;
         originalAttack = (int)attackDamage;
-        
-        // 记录初始位置
-        initialPosition = transform.position;
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
             Debug.Log($"[WildBoar] 野猪创建完成 - 生命值: {currentHealth}/{maxHealth}, 攻击力: {attackDamage}");
         }
     }
+          /// <summary>
+    /// 调试可视化 - 野猪专用
+    /// </summary>
+    void OnDrawGizmosSelected()
+    {
+        // 绘制检测范围
+   // 绘制检测范围
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
+        
+        // 绘制攻击范围
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(attackPoint.transform.position, attackRange);
+        
+        // 绘制失去目标范围
+        Gizmos.color = Color.black;
+        Gizmos.DrawWireSphere(transform.position, loseTargetRange);
+        
+        // 绘制巡逻范围
+        if (initialPosition != Vector3.zero)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(leftPatrolPoint, rightPatrolPoint);
+            Gizmos.DrawWireSphere(leftPatrolPoint, 0.3f);
+            Gizmos.DrawWireSphere(rightPatrolPoint, 0.3f);
+            
+            // 绘制当前巡逻目标
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(currentPatrolTarget, 0.2f);
+        }
+        
+        // 绘制屏幕边界检测范围
+        if (Camera.main != null)
+        {
+            Vector3 screenBounds = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, Camera.main.nearClipPlane));
+            Gizmos.color = isOnScreen ? Color.green : Color.gray;
+            Gizmos.DrawWireCube(transform.position, Vector3.one * 0.5f);
+        }
+                Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
+        
+        // 野猪状态指示器
+        Gizmos.color = GetStateColor();
+        Gizmos.DrawWireSphere(transform.position + Vector3.up * 2f, 0.4f);
+        
+        // 角色朝向
+        Vector3 facingDirection = spriteRenderer != null && spriteRenderer.flipX ? Vector3.left : Vector3.right;
+        Gizmos.color = Color.white;
+        Gizmos.DrawRay(transform.position, facingDirection * 1.5f);
+        
+        // 速度向量
+        if (rb2D != null && rb2D.velocity.magnitude > 0.1f)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawRay(transform.position, rb2D.velocity * 0.5f);
+        }
+        
+        // 冲撞方向
+        if (isCharging && chargeDirection != Vector2.zero)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(transform.position, chargeDirection * chargeSpeed * 0.3f);
+        }
+    }
+    /// <summary>
+    /// 重写获取基础配置方法，返回野猪特定配置
+    /// </summary>
+    protected override enmeyConfig GetBaseConfig(EnemySystemConfig systemConfig)
+    {
+        return systemConfig.wildBoarConfig;
+    }
     
     /// <summary>
-    /// 从系统配置初始化野猪属性
+    /// 从系统配置初始化野猪特定属性
     /// </summary>
-    private void InitializeFromSystemConfig()
+    protected override void InitializeFromSystemConfig()
     {
-        // 尝试从TestSceneEnemySystem获取配置
-        var enemySystem = FindObjectOfType<TestSceneEnemySystem>();
-        if (enemySystem != null && enemySystem.config != null)
+        // 先调用基类初始化
+        base.InitializeFromSystemConfig();
+        
+        enemySystem??=FindObjectOfType<EnemySystemConfig>();
+        if (enemySystem != null )
         {
-            systemConfig = enemySystem.config;
-            var wildBoarConfig = systemConfig.wildBoarConfig;
+            var wildBoarConfig = enemySystem.wildBoarConfig;
             
-            // 使用系统配置初始化属性
-            maxHealth = wildBoarConfig.health;
-            currentHealth = maxHealth;
-            attackDamage = wildBoarConfig.attackDamage;
-            moveSpeed = wildBoarConfig.moveSpeed;
-            
-            // 初始化冲撞属性
+            // 初始化野猪特定属性
             chargeSpeed = wildBoarConfig.chargeSpeed;
             chargeDuration = wildBoarConfig.chargeDuration;
             chargeDistance = wildBoarConfig.chargeDistance;
             chargeCooldown = wildBoarConfig.chargeCooldown;
             chargeDamage = wildBoarConfig.chargeDamage;
             
-            // 初始化其他属性
-            detectionRange = wildBoarConfig.detectionRange;
-            attackRange = wildBoarConfig.attackRange;
-            patrolSpeed = wildBoarConfig.patrolSpeed;
-            patrolWaitTime = wildBoarConfig.patrolWaitTime;
-            // patrolRange = wildBoarConfig.patrolRadius; // 已移除复杂巡逻系统
-        }
-        else
-        {
-            // 如果没有找到系统配置，使用默认值
-            Debug.LogWarning($"[WildBoar] 未找到EnemySystemConfig，使用默认配置");
-            maxHealth = 120;
-            currentHealth = maxHealth;
-            attackDamage = 15;
-            moveSpeed = 2.5f;
+            // 初始化狂暴系统属性
+            enrageHealthThreshold = wildBoarConfig.enrageHealthThreshold;
+            enrageSpeedMultiplier = wildBoarConfig.enrageSpeedMultiplier;
+            enrageDamageMultiplier = wildBoarConfig.enrageDamageMultiplier;
+            
+            // 初始化眩晕系统属性
+            stunDuration = wildBoarConfig.stunDuration;
+            
+            if (GameManager.Instance != null && GameManager.Instance.debugMode)
+            {
+                Debug.Log($"[WildBoar] 野猪特定配置初始化完成 - 冲锋速度: {chargeSpeed}, 狂暴阈值: {enrageHealthThreshold}");
+            }
         }
     }
     
     protected override void Update()
     {
+        // 调用基类的优化更新逻辑
         base.Update();
         
         if (IsDead) return;
         
+        // 只处理野猪特有的逻辑
+        UpdateWildBoarSpecificLogic();
+    }
+    
+    /// <summary>
+    /// 更新野猪特有逻辑
+    /// </summary>
+    private void UpdateWildBoarSpecificLogic()
+    {
         // 更新野猪特有的动画参数
-        UpdateAnimation();
+        UpdateWildBoarAnimationParameters();
         
-        // 状态机会处理大部分逻辑，这里只保留必要的野猪特有逻辑
-        // 移除了重复的状态检测，交给状态机的PerformWildBoarStateCheck处理
+        // 检查狂暴状态
+        CheckEnrageState();
         
-        // 只在冲撞状态下执行冲撞移动逻辑
-        if (isCharging)
+    }
+
+    /// <summary>
+    /// 更新野猪特有的动画参数
+    /// </summary>
+    private void UpdateWildBoarAnimationParameters()
+    {
+        if (animator == null) return;
+        
+       // animator.SetBool("IsEnraged", isEnraged);
+    }
+    
+    /// <summary>
+    /// 重写状态执行方法，添加冲锋和眩晕状态支持
+    /// </summary>
+    protected override void ExecuteCurrentState()
+    {
+        switch (currentState)
         {
-            ExecuteCharge();
+            case EnemyState.Charge:
+                ExecuteChargeState();
+                break;
+            case EnemyState.Stun:
+                ExecuteStunState();
+                break;
+            default:
+                base.ExecuteCurrentState();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// 执行冲锋状态 - 新增状态
+    /// </summary>
+    private void ExecuteChargeState()
+    {
+        if (!isCharging)
+        {
+            ChangeState(EnemyState.Idle);
+            return;
+        }
+
+        // 更新冲锋计时器
+        chargeTimer += Time.deltaTime;
+
+        // 冲锋时间结束
+        if (chargeTimer >= chargeDuration)
+        {
+            EndCharge();
+            return;
+        }
+
+        // 执行冲锋移动
+        if (rb2D != null)
+        {
+            Vector2 chargeVelocity = chargeDirection * chargeSpeed;
+            rb2D.velocity = new Vector2(chargeVelocity.x, rb2D.velocity.y);
+        }
+
+        // 更新朝向
+        if (chargeDirection.x != 0)
+        {
+            UpdateFacing(chargeDirection.x > 0);
+        }
+    }
+    
+    /// <summary>
+    /// 执行眩晕状态 - 新增状态
+    /// </summary>
+    private void ExecuteStunState()
+    {
+        // 眩晕时停止移动
+        if (rb2D != null)
+        {
+            rb2D.velocity = new Vector2(0, rb2D.velocity.y);
+        }
+        
+        // 眩晕时间结束后回到空闲状态
+        if (Time.time - lastStateChangeTime >= stunDuration)
+        {
+            ChangeState(EnemyState.Idle);
+        }
+    }
+    
+   
+    
+
+    
+    /// <summary>
+    /// 开始冲锋 - 优化版本，采用SimpleEnemy的设计
+    /// </summary>
+    private void StartCharge()
+    {
+        if (!canCharge || player == null || isDead) return;
+        
+        isCharging = true;
+
+        canCharge = false;
+        chargeTimer = 0f;
+        lastChargeTime = Time.time;
+        
+        // 计算冲锋方向
+        chargeDirection = (player.position - transform.position).normalized;
+        
+        // 播放冲锋动画
+        if (animator != null)
+        {
+            animator.SetTrigger(ChargeHash);
+            animator.SetBool(IsChargingHash, true);
+        }
+        
+        // 播放音效
+        // if (AudioManagerTest.Instance != null)
+        // {
+        //     AudioManagerTest.Instance.PlaySound(AudioManagerTest.Instance.enemyChargeSound);
+        // }
+ PlayerAudioConfig.Instance.PlaySound("WildBoar_charge");
+
+        // 切换到冲锋状态
+        ChangeState(EnemyState.Charge);
+        
+        if (GameManager.Instance != null && GameManager.Instance.debugMode)
+        {
+            Debug.Log($"[WildBoar] {gameObject.name} 开始冲锋攻击，方向: {chargeDirection}");
         }
     }
     
 
     
     /// <summary>
-    /// 处理冲撞逻辑
-    /// </summary>
-    private void HandleChargeLogic()
-    {
-        if (IsDead) return;
-        
-        if (isCharging)
-        {
-            // 执行冲撞移动
-            ExecuteCharge();
-        }
-        else
-        {
-            // 检查是否可以开始冲撞
-            CheckChargeCondition();
-        }
-    }
-    
-    /// <summary>
-    /// 检查冲撞条件
-    /// </summary>
-    private void CheckChargeCondition()
-    {
-        if (!canCharge || player == null || currentState != EnemyState.Chase) return;
-        
-        // 检查冷却时间
-        if (Time.time - lastChargeTime < chargeCooldown) return;
-        
-        // 检查距离 - 在检测范围内但不在攻击范围内时触发冲撞
-        float distanceToTarget = Vector2.Distance(transform.position, player.position);
-        if (distanceToTarget > attackRange && distanceToTarget <= chargeDistance)
-        {
-            StartCharge();
-        }
-    }
-    
-    /// <summary>
-    /// 开始冲撞
-    /// 优化：改进与状态机的集成
-    /// </summary>
-    private void StartCharge()
-    {
-        if (!canAttack || player == null) return;
-        
-        isCharging = true;
-        canCharge = false;
-        chargeTimer = 0f;
-        lastChargeTime = Time.time;
-        
-        // 通知状态机冲撞状态变化
-        if (stateMachine != null)
-        {
-            stateMachine.NotifyChargeStateChanged();
-        }
-        
-        // 计算冲撞方向
-        chargeDirection = (player.position - transform.position).normalized;
-        
-        // 播放冲撞动画 - 根据Unity动画控制器参数
-        if (animator != null)
-        {
-            animator.SetTrigger("Charge"); // 与动画控制器中的Charge参数一致
-            animator.SetBool("IsCharging", true);
-        }
-        
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log($"[WildBoar] {gameObject.name} 开始冲撞攻击");
-        }
-    }
-    
-    /// <summary>
-    /// 执行冲撞
-    /// </summary>
-    // private void ExecuteCharge()
-    // {
-    //     chargeTimer += Time.deltaTime;
-        
-    //     if (chargeTimer >= chargeDuration)
-    //     {
-    //         // 冲撞结束
-    //         EndCharge();
-    //         return;
-    //     }
-        
-    //      // 冲撞移动
-    //     if (rb2D != null)
-    //     {
-    //         rb2D.velocity = chargeDirection * chargeSpeed;
-    //     }
-        
-    //     // 翻转精灵
-    //     if (spriteRenderer != null)
-    //     {
-    //         spriteRenderer.flipX = chargeDirection.x < 0;
-    //     }
-    // }
-    
-    /// <summary>
-    /// 结束冲撞
-    /// 优化：改进与状态机的集成
+    /// 结束冲锋 - 优化版本
     /// </summary>
     private void EndCharge()
     {
         isCharging = false;
-        
-        // 通知状态机冲撞状态变化
-        if (stateMachine != null)
-        {
-            stateMachine.NotifyChargeStateChanged();
-        }
+        chargeTimer = 0f;
         
         // 停止移动
         if (rb2D != null)
         {
-            rb2D.velocity = Vector2.zero;
+            rb2D.velocity = new Vector2(0, rb2D.velocity.y);
         }
         
         // 更新动画
         if (animator != null)
         {
-            animator.SetBool("IsCharging", false);
+            animator.SetBool(IsChargingHash, false);
         }
+        
+        // 切换到眩晕状态
+        ChangeState(EnemyState.Stun);
         
         // 开始冷却
         StartCoroutine(ChargeCooldown());
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
-            Debug.Log($"[WildBoar] {gameObject.name} 冲撞结束");
+            Debug.Log($"[WildBoar] {gameObject.name} 冲锋结束");
         }
     }
     
@@ -418,7 +465,7 @@ public class WildBoar : Enemy
     {
         if (IsDead) return;
         
-        float healthPercentage = (float)CurrentHealth / MaxHealth;
+        float healthPercentage = (float)currentHealth / maxHealth;
         
         if (!isEnraged && healthPercentage <= enrageHealthThreshold)
         {
@@ -441,7 +488,7 @@ public class WildBoar : Enemy
         if (animator != null)
         {
             // animator.SetTrigger("Enrage"); // 动画控制器中没有此触发器，已移除
-            animator.SetBool("IsEnraged", true); // 使用布尔参数表示狂暴状态
+           // animator.SetBool("IsEnraged", true); // 使用布尔参数表示狂暴状态
         }
         
         // 改变颜色表示狂暴状态
@@ -456,199 +503,137 @@ public class WildBoar : Enemy
         }
     }
     
-    /// <summary>
-    /// 更新动画参数 - 野猪特有的动画更新
-    /// </summary>
-    private void UpdateAnimation()
-    {
-        if (animator == null) return;
-        
-        // 更新野猪特有的动画参数
-        animator.SetBool("IsCharging", isCharging);
-        animator.SetBool("IsStunned", isStunned);
-        animator.SetBool("IsEnraged", isEnraged);
-        
-        // 检查狂暴状态
-        CheckEnrageState();
-    }
-    
+  
 
     
     #region AI状态机系统
     
-    // 注意：以下状态机相关方法已被EnemyStateMachine接管，保留用于兼容性
-    // 实际状态管理由EnemyStateMachine处理
+    // 清理过时的注释和代码
+    // 状态管理现在由基类Enemy的状态机处理
     
     // SetRandomPatrolTarget方法已移除，使用简化的巡逻逻辑
     
     /// <summary>
     /// 更新角色朝向
     /// </summary>
-    /// <param name="directionX">移动方向X分量</param>
-    private void UpdateFacing(float directionX)
+    /// <param name="facingRight">是否面向右侧</param>
+    private void UpdateFacing(bool facingRight)
     {
         if (spriteRenderer != null)
         {
-            spriteRenderer.flipX = directionX < 0;
+            spriteRenderer.flipX = !facingRight;
         }
+        this.facingRight = facingRight;
     }
     
-    // 注意：DetectPlayer方法已被EnemyStateMachine接管，保留用于兼容性
-    // 实际玩家检测由EnemyStateMachine处理
+    // 清理过时的注释和代码
+    // 玩家检测现在由基类Enemy处理
     
     #endregion
     
     /// <summary>
-    /// 重写攻击方法
+    /// 重写攻击执行方法 - 移除重复的PerformAttack
     /// </summary>
-    protected virtual void PerformAttack()
+    protected override void ExecuteAttackState(float damage)
     {
-        if (player == null) return;
-        
-        // 如果正在冲撞，使用冲撞伤害
-        int damage = isCharging ? chargeDamage : (int)attackDamage;
-        
-        // 播放攻击动画 - 根据Unity动画控制器参数
-        if (animator != null)
-        {
-            // 动画控制器中只有Attack触发器，没有ChargeAttack
-            animator.SetTrigger("Attack"); // 统一使用Attack触发器
-        }
-        
-        // 对玩家造成伤害
-        var playerCharacter = player.GetComponent<Character>();
-        if (playerCharacter != null)
-        {
-            playerCharacter.TakeDamage(damage);
-            
-            // 如果是冲撞攻击，可能造成击退效果
-            if (isCharging)
-            {
-                ApplyKnockback(playerCharacter);
-            }
-        }
-        
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log($"[WildBoar] {gameObject.name} 攻击玩家，伤害: {damage} (冲撞: {isCharging})");
-        }
+                // 如果正在冲锋，使用冲锋伤害
+        damage = isCharging ? chargeDamage : damage;
+         base.ExecuteAttackState(damage);
+     
     }
 
     /// <summary>
-    /// 重写执行攻击行为 - 野猪版本
-    /// </summary>
-    public override void ExecuteAttack()
-    {
-        if (!canAttack || isDead) return;
-        
-        // 检查攻击冷却
-        if (Time.time - lastAttackTime < attackCooldown) return;
-        
-        // 调用野猪的攻击方法
-        PerformAttack();
-        
-        // 更新最后攻击时间
-        lastAttackTime = Time.time;
-
-        // 触发攻击事件
-     //   OnAttack?.Invoke(this);
-    }
-
-    /// <summary>
-    /// 重写执行追击行为 - 野猪版本，包含冲撞逻辑
+    /// 重写执行追击行为 - 野猪版本，采用SimpleEnemy的优化逻辑
     /// </summary>
     public override void ExecuteChase()
     {
         if (!canMove || isDead) return;
         
-        // 如果正在冲撞，让冲撞逻辑处理移动
+        // 如果正在冲锋，让冲锋逻辑处理移动
         if (isCharging) return;
         
-        Transform player = GameObject.FindGameObjectWithTag("Player")?.transform;
         if (player == null) return;
         
+      // 集成冲锋条件检查（原CheckChargeCondition逻辑）
+    if (canCharge 
+        && currentState == EnemyState.Chase 
+        && Time.time >= lastChargeTime + chargeCooldown)
+    {
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-        
-        // 检查是否应该开始冲撞
-        if (canCharge && distanceToPlayer <= chargeDistance && distanceToPlayer > attackRange)
+        if (distanceToPlayer > attackRange * 1.5f 
+            && distanceToPlayer <= chargeDistance 
+            && stateTimer > 1f)
         {
-            ExecuteCharge();
-            return;
+            // 30%概率触发冲锋，避免过于频繁
+            if (Random.Range(0f, 1f) < 0.3f)
+            {
+                StartCharge();
+                return;
+            }
         }
+    }
         
         // 普通追击移动
         Vector2 directionToPlayer = (player.position - transform.position).normalized;
         MoveInDirection(directionToPlayer);
+        UpdateFacing(directionToPlayer.x > 0);
     }
-
+    
     /// <summary>
-    /// 重写执行巡逻行为 - 野猪版本（简化版）
+    /// 重写执行巡逻行为 - 野猪版本，采用SimpleEnemy的简化巡逻
     /// </summary>
     public override void ExecutePatrol()
     {
         if (!canMove || isDead || isCharging) return;
         
-        // 简化的左右巡逻逻辑
-        Vector2 patrolDirection = GetSimplePatrolDirection();
+        // 采用SimpleEnemy的时间基础巡逻逻辑
+        Vector2 patrolDirection = GetWildBoarPatrolDirection();
         if (patrolDirection != Vector2.zero)
         {
-            // 使用巡逻速度进行移动，保持Y轴速度
-            MoveInDirectionWithSpeed(patrolDirection, patrolSpeed);
+            MoveInDirection(patrolDirection, patrolSpeed);
+            UpdateFacing(patrolDirection.x > 0);
+        }
+    }
+    
+    /// <summary>
+    /// 获取野猪巡逻方向 - 采用SimpleEnemy的稳定巡逻机制
+    /// </summary>
+    private Vector2 GetWildBoarPatrolDirection()
+    {
+        // 使用更长的巡逻周期，减少频繁切换
+        float patrolCycle = patrolWaitTime * 6f; // 增加周期长度
+        float currentTime = (Time.time + GetInstanceID()) % patrolCycle; // 加入实例ID避免同步
+        
+        if (currentTime < patrolCycle * 0.5f)
+        {
+            return facingRight ? Vector2.right : Vector2.left;
+        }
+        else
+        {
+            return facingRight ? Vector2.left : Vector2.right;
         }
     }
 
     /// <summary>
-    /// 获取简单的巡逻方向（左右巡逻）
+    /// 使用指定速度向指定方向移动 - 重载方法
     /// </summary>
-    private Vector2 GetSimplePatrolDirection()
+    private void MoveInDirection(Vector2 direction, float speed)
     {
-        // 简单的时间基础左右巡逻
-        float patrolCycle = patrolWaitTime * 2f; // 完整巡逻周期
-        float currentTime = Time.time % patrolCycle;
+        if (!canMove || isDead || rb2D == null) return;
         
-        if (currentTime < patrolWaitTime)
-        {
-            return Vector2.right; // 向右巡逻
-        }
-        else
-        {
-            return Vector2.left;  // 向左巡逻
-        }
-    }
-
-    /// <summary>
-    /// 使用指定速度向指定方向移动
-    /// </summary>
-    private void MoveInDirectionWithSpeed(Vector2 direction, float speed)
-    {
-        if (!canMove || isDead) return;
+        Vector2 targetVelocity = new Vector2(direction.x * speed, rb2D.velocity.y);
+        rb2D.velocity = targetVelocity;
         
-        if (rb2D != null)
-        {
-            // 使用指定速度进行移动
-          //  Vector2 targetVelocity = direction.normalized * speed;
-           // rb2D.velocity = targetVelocity;
-           rb2D.velocity = new Vector2(direction.x * speed, rb2D.velocity.y);
-
-        }
-        else
-        {
-            // 如果没有Rigidbody2D，使用transform移动作为后备
-            Vector3 movement = direction.normalized * speed * Time.fixedDeltaTime;
-            transform.position += movement;
-        }
+        isMoving = targetVelocity.magnitude > 0.1f;
         
-        // 翻转精灵
-        if (spriteRenderer != null && direction.x != 0)
-        {
-            spriteRenderer.flipX = direction.x < 0;
-        }
+        // 更新朝向
+        UpdateFacing(direction.x > 0);
     }
 
     /// <summary>
     /// 重写停止移动 - 野猪版本，处理冲撞状态
     /// </summary>
-    public override void StopMovement()
+    protected override void StopMovement()
     {
         // 如果正在冲撞，不要强制停止
         if (isCharging) return;
@@ -656,49 +641,6 @@ public class WildBoar : Enemy
         base.StopMovement();
     }
 
-    /// <summary>
-    /// 执行冲撞
-    /// </summary>
-    public void ExecuteCharge()
-    {
-        if (!canCharge || isCharging || isDead) return;
-        
-        Transform player = GameObject.FindGameObjectWithTag("Player")?.transform;
-        if (player == null) return;
-        
-        // 开始冲撞
-        isCharging = true;
-        canCharge = false;
-        
-        // 计算冲撞方向并设置为类成员变量
-        chargeDirection = (player.position - transform.position).normalized;
-        
-        // 设置冲撞速度
-        if (rb2D != null)
-        {
-            rb2D.velocity = chargeDirection * chargeSpeed;
-        }
-        
-        // 播放冲撞动画
-        if (animator != null)
-        {
-            animator.SetBool("IsCharging", true);
-        }
-        
-        // 通知状态机冲撞状态变化
-        if (stateMachine != null)
-        {
-            stateMachine.NotifyChargeStateChanged();
-        }
-        
-        // 设置冲撞持续时间
-        StartCoroutine(ChargeTimerCoroutine());
-        
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log($"[WildBoar] {gameObject.name} 开始冲撞，方向: {chargeDirection}");
-        }
-    }
 
     /// <summary>
     /// 冲撞计时器协程
@@ -717,58 +659,35 @@ public class WildBoar : Enemy
     // 复杂的巡逻系统已简化，移除相关字段和方法
     
     /// <summary>
-    /// 应用击退效果
+    /// 受到玩家伤害 - 优化版本
     /// </summary>
-    private void ApplyKnockback(Character playerCharacter)
+    public override void TakeDamage(float damage, Vector2 knockbackForce = default)
     {
-        var playerRb = playerCharacter.GetComponent<Rigidbody2D>();
-        if (playerRb != null)
-        {
-            Vector2 knockbackDirection = (playerCharacter.transform.position - transform.position).normalized;
-            float knockbackForce = 10f;
-            playerRb.AddForce(knockbackDirection * knockbackForce, ForceMode2D.Impulse);
-            
-            if (GameManager.Instance != null && GameManager.Instance.debugMode)
-            {
-                Debug.Log($"[WildBoar] 对玩家施加击退效果");
-            }
-        }
-    }
-    
-    /// <summary>
-    /// 重写受伤方法
-    /// </summary>
-    public override void TakePlayerDamage(int damage)
-    {
-        base.TakePlayerDamage(damage);
+        base.TakeDamage(damage, knockbackForce);
         
-        // 通知状态机健康状态变化
-        if (stateMachine != null)
-        {
-            stateMachine.NotifyHealthStateChanged();
-        }
-        
-        // 受伤时有概率打断冲撞
-        if (isCharging && Random.Range(0f, 1f) < 0.3f) // 30%概率
+        // 有概率中断冲锋
+        if (isCharging && Random.Range(0f, 1f) < 0.3f)
         {
             EndCharge();
-            
-            if (GameManager.Instance != null && GameManager.Instance.debugMode)
-            {
-                Debug.Log($"[WildBoar] {gameObject.name} 冲撞被打断");
-            }
         }
+        
+        // 检查是否进入狂暴状态
+        CheckEnrageState();
     }
     
     /// <summary>
-    /// 重写死亡方法
+    /// 重写死亡方法 - 停止冲锋
     /// </summary>
     public override void Die()
     {
-        // 如果正在冲撞，立即停止
+        // 如果正在冲锋，立即停止
         if (isCharging)
         {
-            EndCharge();
+            isCharging = false;
+            if (rb2D != null)
+            {
+                rb2D.velocity = new Vector2(0, rb2D.velocity.y);
+            }
         }
         
         base.Die();
@@ -777,7 +696,7 @@ public class WildBoar : Enemy
     /// <summary>
     /// 获取状态机组件引用
     /// </summary>
-    // private EnemyStateMachine stateMachine;
+    // 状态机已集成到基类Enemy中
     
     /// <summary>
     /// 碰撞检测 - 处理冲撞时的碰撞
@@ -789,11 +708,9 @@ public class WildBoar : Enemy
         // 如果冲撞时碰到玩家
         if (other.CompareTag("Player"))
         {
-            var playerCharacter = other.GetComponent<Character>();
-            if (playerCharacter != null)
+            if (playerController != null)
             {
-                playerCharacter.TakeDamage(chargeDamage);
-                ApplyKnockback(playerCharacter);
+                playerController.TakeDamage(chargeDamage);
                 
                 if (GameManager.Instance != null && GameManager.Instance.debugMode)
                 {
@@ -824,17 +741,14 @@ public class WildBoar : Enemy
         
         isStunned = true;
         
-        // 通知状态机眩晕状态变化
-        if (stateMachine != null)
-        {
-            stateMachine.NotifyStunStateChanged();
-        }
+        // 切换到眩晕状态
+        ChangeState(EnemyState.Stun);
         
         // 播放眩晕动画 - 根据Unity动画控制器参数
         if (animator != null)
         {
             // animator.SetTrigger("Stunned"); // 动画控制器中没有此触发器，已移除
-            animator.SetBool("IsStunned", true); // 使用布尔参数表示眩晕状态
+            animator.SetBool(IsStunnedHash, true); // 使用布尔参数表示眩晕状态
         }
         
         // 眩晕2秒
@@ -842,16 +756,10 @@ public class WildBoar : Enemy
         
         isStunned = false;
         
-        // 通知状态机眩晕状态变化
-        if (stateMachine != null)
-        {
-            stateMachine.NotifyStunStateChanged();
-        }
-        
         // 更新动画
         if (animator != null)
         {
-            animator.SetBool("IsStunned", false);
+            animator.SetBool(IsStunnedHash, false);
         }
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
@@ -886,7 +794,7 @@ public class WildBoar : Enemy
     [ShowInInspector, ReadOnly, LabelText("当前血量百分比")]
     [ProgressBar(0, 1, ColorGetter = "GetHealthBarColor")]
     [PropertyOrder(100)]
-    public float HealthPercentage => CurrentHealth / MaxHealth;
+    public float HealthPercentage => (float)currentHealth / maxHealth;
     
     [BoxGroup("野猪配置/控制面板/状态信息")]
     [ShowInInspector, ReadOnly, LabelText("冲撞冷却剩余时间")]
@@ -909,63 +817,18 @@ public class WildBoar : Enemy
             canCharge = this.canCharge,
             isEnraged = this.isEnraged,
             chargeTimer = this.chargeTimer,
-            healthPercentage = (float)CurrentHealth / MaxHealth
+            healthPercentage = (float)currentHealth / maxHealth
         };
     }
     
-    /// <summary>
-    /// 调试可视化 - 野猪专用
-    /// </summary>
-    void OnDrawGizmosSelected()
-    {
-        // 基础检测和攻击范围（继承自基类逻辑）
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
-        
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
-        
-        // 简化的巡逻可视化（移除了复杂的巡逻范围显示）
-        if (initialPosition != Vector3.zero)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(initialPosition, 2f); // 使用固定的小范围显示起始位置
-        }
-        
-        // 冲撞触发距离
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(transform.position, chargeDistance);
-        
-        // 野猪状态指示器
-        Gizmos.color = GetStateColor();
-        Gizmos.DrawWireSphere(transform.position + Vector3.up * 2f, 0.4f);
-        
-        // 角色朝向
-        Vector3 facingDirection = spriteRenderer != null && spriteRenderer.flipX ? Vector3.left : Vector3.right;
-        Gizmos.color = Color.white;
-        Gizmos.DrawRay(transform.position, facingDirection * 1.5f);
-        
-        // 速度向量
-        if (rb2D != null && rb2D.velocity.magnitude > 0.1f)
-        {
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawRay(transform.position, rb2D.velocity * 0.5f);
-        }
-        
-        // 冲撞方向
-        if (isCharging && chargeDirection != Vector2.zero)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawRay(transform.position, chargeDirection * chargeSpeed * 0.3f);
-        }
-    }
+  
     
     /// <summary>
     /// 根据AI状态返回对应颜色
     /// </summary>
     private Color GetStateColor()
     {
-        switch (currentAIState)
+        switch (currentState)
         {
             case EnemyState.Idle: return Color.gray;
             case EnemyState.Patrol: return Color.green;

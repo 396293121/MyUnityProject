@@ -8,6 +8,8 @@ TagManager:
   - Enemy
   - Wall
   - Obstacle
+  - PlayerTrigger
+  - EnemyTrigger
   layers:
   - Default
   - TransparentFX
