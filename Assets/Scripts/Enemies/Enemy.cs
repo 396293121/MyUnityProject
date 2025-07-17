@@ -139,19 +139,22 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     private static readonly int AttackHash = Animator.StringToHash("Attack");
     [VerticalGroup("敌人配置/基础属性/移动设置/检测范围")]
     [LabelText("攻击范围")]
-    [ReadOnly]
+    //[ReadOnly]
+    [Range(0f, 5f)]
     [ShowInInspector]
     public float attackRange = 2f;
     
     [VerticalGroup("敌人配置/基础属性/移动设置/检测范围")]
     [LabelText("检测范围")]
-    [ReadOnly]
+   // [ReadOnly]
+       [Range(0f, 20f)]
     [ShowInInspector]
     public float detectionRange = 8f;
     
     [VerticalGroup("敌人配置/基础属性/移动设置/检测范围")]
     [LabelText("失去目标范围")]
-    [ReadOnly]
+    //[ReadOnly]
+     [Range(0f, 20f)]
     [ShowInInspector]
     public float loseTargetRange = 12f;
     
@@ -248,7 +251,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     
     [VerticalGroup("敌人配置/巡逻系统/巡逻设置/巡逻属性")]
     [LabelText("巡逻范围")]
-    [ReadOnly]
+    // [ReadOnly]
+    [Range(0f, 20f)]
     [ShowInInspector]
     public float patrolRange = 8f;
     
@@ -919,7 +923,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     private void DetectPlayer()
     {
         if (player == null || !isAlive) return;
-        Debug.Log($"[Enemy] 检测玩家距离：{Vector2.Distance(transform.position, player.position)}");
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         
         // 根据当前状态和距离决定行为

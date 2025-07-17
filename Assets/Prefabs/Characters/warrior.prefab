@@ -161,9 +161,9 @@ GameObject:
   - component: {fileID: 2293877032079825830}
   - component: {fileID: 8844898361935919589}
   - component: {fileID: 4187876456670026591}
+  - component: {fileID: 395180499527017281}
   - component: {fileID: 6378622902067727011}
   - component: {fileID: 7109428010291904151}
-  - component: {fileID: 395180499527017281}
   - component: {fileID: 1234094422006537599}
   - component: {fileID: 3954200196351654381}
   - component: {fileID: 5219955795635038263}
@@ -244,6 +244,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 07e3bf528516a5743a9b449de1fb1c21, type: 2}
   - {fileID: 11400000, guid: 35857258402495d40811263c9fcb19a8, type: 2}
   - {fileID: 11400000, guid: 59345cb70c7c65444a639f9e8163d8af, type: 2}
+  - {fileID: 11400000, guid: a54d7a77f39bc7b46b625762b2bdb61f, type: 2}
   skillInputActions:
   - {fileID: 9138152033273414294, guid: 54c44c021f8817542a70cde8e1406f69, type: 3}
   - {fileID: 2607892318586337012, guid: 54c44c021f8817542a70cde8e1406f69, type: 3}
@@ -253,6 +254,43 @@ MonoBehaviour:
   characterController: {fileID: 395180499527017281}
   showDebugGizmos: 1
   isExecutingSkill: 0
+--- !u!114 &395180499527017281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5332153218383502975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e91ad85d3af1ec4894c4660708b129b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerType: 
+  showDebugGizmos: 1
+  level: 1
+  experience: 0
+  experienceToNext: 100
+  maxHealth: 100
+  currentHealth: 100
+  maxMana: 500
+  currentMana: 50
+  strength: 10
+  agility: 10
+  stamina: 10
+  intelligence: 10
+  physicalAttack: 0
+  magicalAttack: 0
+  defense: 0
+  magicDefense: 0
+  speed: 5
+  isAlive: 1
+  interactionRange: 2
+  attackRange: 2
+  attackHeight: 2
+  knockbackForce: 5
+  attackPoint: {fileID: 2122437360670417740}
+  config: {fileID: 11400000, guid: 7014c9d4fc32f36458683857fdf809a1, type: 2}
 --- !u!114 &6378622902067727011
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -319,45 +357,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &395180499527017281
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5332153218383502975}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5e91ad85d3af1ec4894c4660708b129b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  showDebugGizmos: 1
-  level: 1
-  experience: 0
-  experienceToNext: 100
-  maxHealth: 100
-  currentHealth: 100
-  maxMana: 500
-  currentMana: 50
-  strength: 10
-  agility: 10
-  stamina: 10
-  intelligence: 10
-  physicalAttack: 0
-  magicalAttack: 0
-  defense: 0
-  magicDefense: 0
-  speed: 5
-  isAlive: 1
-  interactionRange: 2
-  attackRange: 2
-  attackHeight: 2
-  knockbackForce: 5
-  enemyLayerMask:
-    serializedVersion: 2
-    m_Bits: 1
-  attackPoint: {fileID: 2122437360670417740}
-  config: {fileID: 11400000, guid: 7014c9d4fc32f36458683857fdf809a1, type: 2}
 --- !u!95 &1234094422006537599
 Animator:
   serializedVersion: 5

@@ -156,7 +156,7 @@ public class PlayerAudioConfig : MonoBehaviour
     public void PlaySound(string soundName, float volumeMultiplier = 1f, float pitchMultiplier = 1f)
 
     {
-        AudioClipConfig config = audioDataConfig.classSoundConfigs.Find((entry)=>entry.className==soundName)?.sound;
+        AudioClipConfig config = audioDataConfig.classSoundConfigs.Find((entry) => entry.className == soundName)?.sound;
         if (config?.audioClip == null)
         {
             if (enableDebugLog)
@@ -186,6 +186,7 @@ public class PlayerAudioConfig : MonoBehaviour
         // 播放音效
         if (config.delay > 0f)
         {
+
             StartCoroutine(PlaySoundWithDelay(config, volumeMultiplier, pitchMultiplier, soundName));
         }
         else
@@ -251,11 +252,16 @@ public class PlayerAudioConfig : MonoBehaviour
     private System.Collections.IEnumerator CleanupAudioSource(AudioSource audioSource, float duration)
     {
         yield return new WaitForSeconds(duration + 0.1f); // 额外等待0.1秒确保播放完成
-
-        if (activeSources.Contains(audioSource))
+       // 保留至少一个专用音频源
+        if (audioSource != dedicatedAudioSource && activeSources.Count > 1) 
         {
             activeSources.Remove(audioSource);
+            Destroy(audioSource);
         }
+        // if (activeSources.Contains(audioSource))
+        // {
+        //     activeSources.Remove(audioSource);
+        // }
     }
 
     /// <summary>
@@ -263,20 +269,17 @@ public class PlayerAudioConfig : MonoBehaviour
     /// </summary>
     private AudioSource GetAudioSource()
     {
-        if (dedicatedAudioSource != null)
+       // 优先使用专用音频源
+        if (dedicatedAudioSource != null && !dedicatedAudioSource.isPlaying) 
         {
             return dedicatedAudioSource;
         }
 
-        // 使用AudioManager的音频源
-        if (AudioManager.Instance != null)
-        {
-            // 这里可以扩展为从AudioManager获取可用的音频源
-            return AudioManager.Instance.sfxSource;
-        }
-
-        Debug.LogWarning("[PlayerAudioConfig] 没有可用的音频源");
-        return null;
+        // 动态创建临时音频源（最多保留5个）
+        var newSource = gameObject.AddComponent<AudioSource>();
+        newSource.spatialBlend = use3DAudio ? 1f : 0f;
+        activeSources.Add(newSource);
+        return newSource;
     }
 
 

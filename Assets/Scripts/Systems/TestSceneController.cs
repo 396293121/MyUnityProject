@@ -792,15 +792,15 @@ public static TestSceneController Instance { get; private set; }
             debugUpdateTimer = 0f;
         }
     }
-    
+
     /// <summary>
     /// 更新调试信息
     /// </summary>
     private void UpdateDebugInfo()
     {
         if (!debugMode) return;
-        
-        // 调试信息更新逻辑
+
+
     }
     
     /// <summary>
@@ -1110,7 +1110,7 @@ public static TestSceneController Instance { get; private set; }
         GUILayout.Label($"玩家: {selectedCharacterType}");
         GUILayout.Label($"敌人数量: {enemies.Count}");
         GUILayout.Label($"游戏状态: {(isGamePaused ? "暂停" : "运行中")}");
-        
+    GUILayout.Label($"事件驱动更新率: {SkillComponent.EventDrivenRate:P}");
         if (currentPlayer != null)
         {
             GUILayout.Label($"玩家位置: {currentPlayer.transform.position}");

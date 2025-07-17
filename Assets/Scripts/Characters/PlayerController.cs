@@ -305,8 +305,6 @@ public class PlayerController : MonoBehaviour, IInputListener
         // 监听角色事件
         if (playerCharacter != null)
         {
-            playerCharacter.OnHealthChanged += OnHealthChanged;
-            playerCharacter.OnManaChanged += OnManaChanged;
             playerCharacter.OnLevelUp += OnLevelUp;
             playerCharacter.OnDeath += OnPlayerDeath;
         }
@@ -927,23 +925,7 @@ public class PlayerController : MonoBehaviour, IInputListener
         return nearest;
     }
     
-    /// <summary>
-    /// 角色事件处理
-    /// </summary>
-    private void OnHealthChanged(int currentHealth)
-    {
-        // 生命值变化时的处理
-        if (playerCharacter != null && currentHealth <= playerCharacter.maxHealth * 0.2f) // 生命值低于20%
-        {
-            // 播放低血量音效或显示警告 - 优先使用配置化音频系统
-                   PlayerAudioConfig.Instance.PlaySound(playerCharacter.playerType+"_lowHealth");
-        }
-    }
-    
-    private void OnManaChanged(int currentMana)
-    {
-        // 魔法值变化时的处理
-    }
+
     
     private void OnLevelUp(int newLevel)
     {
@@ -1097,8 +1079,6 @@ public class PlayerController : MonoBehaviour, IInputListener
         // 取消监听角色事件
         if (playerCharacter != null)
         {
-            playerCharacter.OnHealthChanged -= OnHealthChanged;
-            playerCharacter.OnManaChanged -= OnManaChanged;
             playerCharacter.OnLevelUp -= OnLevelUp;
             playerCharacter.OnDeath -= OnPlayerDeath;
         }

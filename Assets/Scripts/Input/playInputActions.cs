@@ -98,6 +98,15 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SKILL4"",
+                    ""type"": ""Button"",
+                    ""id"": ""75e20289-5b0e-4571-8903-88a75831a7d0"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -243,6 +252,17 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""SKILL3"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5f384445-3c93-470f-8894-f5901f431676"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SKILL4"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -287,6 +307,7 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
         m_Player_Pause = m_Player.FindAction("Pause", throwIfNotFound: true);
         m_Player_SKILL2 = m_Player.FindAction("SKILL2", throwIfNotFound: true);
         m_Player_SKILL3 = m_Player.FindAction("SKILL3", throwIfNotFound: true);
+        m_Player_SKILL4 = m_Player.FindAction("SKILL4", throwIfNotFound: true);
         // New action map1
         m_Newactionmap1 = asset.FindActionMap("New action map1", throwIfNotFound: true);
         m_Newactionmap1_Newaction = m_Newactionmap1.FindAction("New action", throwIfNotFound: true);
@@ -365,6 +386,7 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Pause;
     private readonly InputAction m_Player_SKILL2;
     private readonly InputAction m_Player_SKILL3;
+    private readonly InputAction m_Player_SKILL4;
     public struct PlayerActions
     {
         private @PlayInputActions m_Wrapper;
@@ -377,6 +399,7 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
         public InputAction @Pause => m_Wrapper.m_Player_Pause;
         public InputAction @SKILL2 => m_Wrapper.m_Player_SKILL2;
         public InputAction @SKILL3 => m_Wrapper.m_Player_SKILL3;
+        public InputAction @SKILL4 => m_Wrapper.m_Player_SKILL4;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -410,6 +433,9 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
             @SKILL3.started += instance.OnSKILL3;
             @SKILL3.performed += instance.OnSKILL3;
             @SKILL3.canceled += instance.OnSKILL3;
+            @SKILL4.started += instance.OnSKILL4;
+            @SKILL4.performed += instance.OnSKILL4;
+            @SKILL4.canceled += instance.OnSKILL4;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -438,6 +464,9 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
             @SKILL3.started -= instance.OnSKILL3;
             @SKILL3.performed -= instance.OnSKILL3;
             @SKILL3.canceled -= instance.OnSKILL3;
+            @SKILL4.started -= instance.OnSKILL4;
+            @SKILL4.performed -= instance.OnSKILL4;
+            @SKILL4.canceled -= instance.OnSKILL4;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -511,6 +540,7 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
         void OnPause(InputAction.CallbackContext context);
         void OnSKILL2(InputAction.CallbackContext context);
         void OnSKILL3(InputAction.CallbackContext context);
+        void OnSKILL4(InputAction.CallbackContext context);
     }
     public interface INewactionmap1Actions
     {

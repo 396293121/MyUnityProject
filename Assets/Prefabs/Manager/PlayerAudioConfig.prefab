@@ -50,4 +50,4 @@ MonoBehaviour:
   maxDistance: 20
   enableCaching: 1
   maxConcurrentSounds: 5
-  enableDebugLog: 0
+  enableDebugLog: 1

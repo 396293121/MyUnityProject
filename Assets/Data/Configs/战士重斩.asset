@@ -20,7 +20,9 @@ MonoBehaviour:
   manaCost: 20
   range: 8.1
   skillEffect: {fileID: 0}
-  skillSound: {fileID: 0}
+  skillSound: {fileID: 8300000, guid: 9be7884ac01923e41bfad083faf9a03c, type: 3}
+  skillStartSoundName: skillStart
+  skillHitSoundName: skillHit
   animationTrigger: heavySlashTrigger
   animationDuration: 1
   skillType: 2

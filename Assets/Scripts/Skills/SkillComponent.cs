@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using System.Collections;
 using Sirenix.OdinInspector;
+using System;
 
 /// <summary>
 /// 技能组件 - 独立的技能系统，从角色脚本中分离技能逻辑
@@ -17,38 +18,38 @@ public class SkillComponent : MonoBehaviour
     [Required]
     [InfoBox("角色可使用的技能列表，基于skillDataConfig配置")]
     public List<skillDataConfig> skillDataList = new List<skillDataConfig>();
-    
+
     [FoldoutGroup("技能系统配置/输入设置", expanded: true)]
     [LabelText("技能输入动作")]
     [Required]
     [InfoBox("新输入系统的技能按键配置")]
     public InputActionReference[] skillInputActions = new InputActionReference[4];
-    
+
     [FoldoutGroup("技能系统配置/组件引用", expanded: false)]
     [LabelText("技能释放点")]
     [Required]
     [InfoBox("技能效果的生成位置")]
     public Transform skillSpawnPoint;
-    
+
     [FoldoutGroup("技能系统配置/组件引用")]
     [LabelText("角色动画器")]
     [Required]
     [InfoBox("用于播放技能动画")]
     public Animator characterAnimator;
-    
+
     [FoldoutGroup("技能系统配置/组件引用")]
     [LabelText("角色控制器")]
     [Required]
     [InfoBox("角色控制器引用，用于获取角色状态")]
     public Character characterController;
-    
+
     [TitleGroup("技能状态监控", "实时技能状态信息", TitleAlignments.Centered)]
     [FoldoutGroup("技能状态监控/冷却状态", expanded: true)]
     [LabelText("技能冷却时间")]
     [ReadOnly]
     [ShowInInspector]
     private Dictionary<int, float> skillCooldowns = new Dictionary<int, float>();
-          [FoldoutGroup("技能状态监控/调试信息", expanded: false)]
+    [FoldoutGroup("技能状态监控/调试信息", expanded: false)]
     [LabelText("显示调试信息")]
     [InfoBox("在Scene视图中显示技能范围等调试信息")]
     public bool showDebugGizmos = true;
@@ -57,15 +58,19 @@ public class SkillComponent : MonoBehaviour
     [ReadOnly]
     [ShowInInspector]
     public bool isExecutingSkill = false;
-    
+
     [FoldoutGroup("技能状态监控/执行状态")]
     [LabelText("当前执行的技能")]
     [ReadOnly]
     [ShowInInspector]
     private int currentExecutingSkillIndex = -1;
-  
 
-    
+    // 新增技能状态变化事件
+    public event Action<int> OnSkillCooldownUpdated;  // 参数：技能索引
+    public event Action<int> OnSkillAvailabilityChanged;
+    private Dictionary<int, float> previousCooldowns = new Dictionary<int, float>();
+    private Dictionary<int, bool> previousAvailabilities = new Dictionary<int, bool>();
+
     private void Awake()
     {
         // 初始化技能冷却字典
@@ -73,17 +78,17 @@ public class SkillComponent : MonoBehaviour
         {
             skillCooldowns[i] = 0f;
         }
-        
+
         // 自动获取组件引用
         if (skillSpawnPoint == null)
             skillSpawnPoint = transform;
-        
+
         if (characterAnimator == null)
             characterAnimator = GetComponent<Animator>();
-        
+
         if (characterController == null)
             characterController = GetComponent<Character>();
-        
+
         // 检查技能数据配置
         Debug.Log($"[SkillComponent] Awake - 技能数据列表数量: {skillDataList?.Count ?? 0}");
         if (skillDataList != null && skillDataList.Count > 0)
@@ -105,7 +110,7 @@ public class SkillComponent : MonoBehaviour
             Debug.LogWarning("[SkillComponent] 技能数据列表为空或未配置");
         }
     }
-    
+
     private void OnEnable()
     {
         // 启用输入动作
@@ -119,7 +124,7 @@ public class SkillComponent : MonoBehaviour
             }
         }
     }
-    
+
     private void OnDisable()
     {
         // 禁用输入动作
@@ -130,7 +135,7 @@ public class SkillComponent : MonoBehaviour
                 skillInputActions[i].action.Disable();
             }
         }
-        
+
         // 停止所有持续伤害协程
         for (int i = 0; i < skillDataList.Count; i++)
         {
@@ -140,13 +145,19 @@ public class SkillComponent : MonoBehaviour
             }
         }
     }
-    
+    private float cooldownUpdateTimer = 0f;
     private void Update()
     {
         // 更新技能冷却时间
-        UpdateSkillCooldowns();
+        // 优化为每0.1秒更新一次冷却（保持UI流畅同时减少性能消耗）
+        cooldownUpdateTimer += Time.deltaTime;
+        if (cooldownUpdateTimer >= 0.1f)
+        {
+            UpdateSkillCooldowns();
+            cooldownUpdateTimer = 0f;
+        }
     }
-    
+
     /// <summary>
     /// 更新技能冷却时间
     /// </summary>
@@ -157,15 +168,45 @@ public class SkillComponent : MonoBehaviour
         {
             if (skillCooldowns[skillIndex] > 0)
             {
-                skillCooldowns[skillIndex] -= Time.deltaTime;
-                if (skillCooldowns[skillIndex] <= 0)
+                // 获取技能数据
+                var skillData = skillDataList[skillIndex];
+                if (skillData == null) continue;
+
+                // 存储旧值
+                float previousCooldown = previousCooldowns.ContainsKey(skillIndex) ?
+                    previousCooldowns[skillIndex] : 0f;
+                bool previousAvailability = previousAvailabilities.ContainsKey(skillIndex) ?
+                    previousAvailabilities[skillIndex] : false;
+
+                // 更新冷却时间
+                float delta = Mathf.Min(skillCooldowns[skillIndex], cooldownUpdateTimer);
+
+                skillCooldowns[skillIndex] -= delta;
+                // 计算当前可用性
+                bool currentAvailability = CanUseSkill(skillIndex);
+
+                // 触发冷却时间变化事件
+                if (!Mathf.Approximately(previousCooldown, skillCooldowns[skillIndex]))
                 {
-                    skillCooldowns[skillIndex] = 0;
+                    OnSkillCooldownUpdated?.Invoke(skillIndex);
+
+                    previousCooldowns[skillIndex] = skillCooldowns[skillIndex];
+                    //记录事件驱动更新次数
+                    EventDrivenRate++;
+                }
+
+                // 触发可用性变化事件
+                if (previousAvailability != currentAvailability)
+                {
+                    OnSkillAvailabilityChanged?.Invoke(skillIndex);
+                    previousAvailabilities[skillIndex] = currentAvailability;
+                    //记录事件驱动更新次数
+                    EventDrivenRate++;
                 }
             }
         }
     }
-    
+
     /// <summary>
     /// 尝试使用技能
     /// </summary>
@@ -173,7 +214,7 @@ public class SkillComponent : MonoBehaviour
     public void TryUseSkill(int skillIndex)
     {
         Debug.Log($"[SkillComponent] TryUseSkill 被调用，技能索引: {skillIndex}");
-        
+
         // 性能优化：通知状态机技能输入
         PlayerStateMachine stateMachine = GetComponent<PlayerStateMachine>();
         if (stateMachine != null)
@@ -185,36 +226,36 @@ public class SkillComponent : MonoBehaviour
         {
             Debug.LogWarning("[SkillComponent] 未找到PlayerStateMachine组件");
         }
-        
+
         // 检查技能索引有效性
         if (skillIndex < 0 || skillIndex >= skillDataList.Count)
         {
             Debug.LogWarning($"[SkillComponent] 技能索引 {skillIndex} 超出范围，技能列表大小: {skillDataList.Count}");
             return;
         }
-        
+
         // 检查技能数据是否存在
         if (skillDataList[skillIndex] == null)
         {
             Debug.LogWarning($"[SkillComponent] 技能索引 {skillIndex} 的技能数据为空");
             return;
         }
-        
+
         Debug.Log($"[SkillComponent] 技能数据检查通过，技能名称: {skillDataList[skillIndex].skillName}");
-        
+
         // 检查是否可以使用技能
         if (!CanUseSkill(skillIndex))
         {
             Debug.LogWarning($"[SkillComponent] 无法使用技能 {skillIndex}，CanUseSkill返回false");
             return;
         }
-        
+
         Debug.Log($"[SkillComponent] 准备执行技能: {skillDataList[skillIndex].skillName}");
-        
+
         // 执行技能
         ExecuteSkill(skillIndex);
     }
-    
+
     /// <summary>
     /// 动画事件：技能伤害时间开始
     /// 由动画控制器的动画事件调用
@@ -224,6 +265,10 @@ public class SkillComponent : MonoBehaviour
         if (currentExecutingSkillIndex >= 0 && currentExecutingSkillIndex < skillDataList.Count)
         {
             var skillData = skillDataList[currentExecutingSkillIndex];
+            Debug.Log(skillData.damageTime);
+            // 播放技能音效
+            PlayerAudioConfig.Instance.PlaySound(skillData.skillTimeStartSoundName);
+
             if (skillData != null && skillData.damageTime == skillDataConfig.damageTimeType.time)
             {
                 // 调用SkillDataConfig中的持续伤害逻辑
@@ -265,28 +310,28 @@ public class SkillComponent : MonoBehaviour
             Debug.LogWarning($"[SkillComponent] 技能索引无效或技能数据为空");
             return false;
         }
-        
+
         // 检查角色是否存活
         if (characterController == null || !characterController.isAlive)
         {
             Debug.LogWarning($"[SkillComponent] 角色控制器为空或角色已死亡");
             return false;
         }
-        
+
         // 检查是否正在执行其他技能
         if (isExecutingSkill)
         {
             Debug.LogWarning($"[SkillComponent] 正在执行其他技能，当前执行技能索引: {currentExecutingSkillIndex}");
             return false;
         }
-        
+
         // 检查技能冷却
         if (IsSkillOnCooldown(skillIndex))
         {
             Debug.LogWarning($"[SkillComponent] 技能 {skillIndex} 正在冷却中，剩余时间: {GetSkillCooldownRemaining(skillIndex):F2}秒");
             return false;
         }
-        
+
         // 检查法力值
         skillDataConfig skillData = skillDataList[skillIndex];
         if (characterController.currentMana < skillData.manaCost)
@@ -294,20 +339,19 @@ public class SkillComponent : MonoBehaviour
             Debug.LogWarning($"[SkillComponent] 法力值不足，需要 {skillData.manaCost}，当前 {characterController.currentMana}");
             return false;
         }
-        
+
         // 使用状态机进行状态判断
         PlayerStateMachine stateMachine = GetComponent<PlayerStateMachine>();
         if (stateMachine != null)
         {
             bool canTransition = stateMachine.CanTransitionTo(PlayerState.Skill);
-            Debug.Log($"[SkillComponent] 状态机检查结果: {canTransition}，当前状态: {stateMachine.GetCurrentState()}");
             return canTransition;
         }
-        
+
         Debug.LogWarning("[SkillComponent] 未找到状态机组件");
         return true;
     }
-    
+
     /// <summary>
     /// 检查技能是否在冷却中
     /// </summary>
@@ -317,10 +361,10 @@ public class SkillComponent : MonoBehaviour
     {
         if (skillIndex < 0 || skillIndex >= skillDataList.Count)
             return true;
-            
+
         return skillCooldowns.ContainsKey(skillIndex) && skillCooldowns[skillIndex] > 0;
     }
-    
+
     /// <summary>
     /// 获取技能剩余冷却时间
     /// </summary>
@@ -330,10 +374,10 @@ public class SkillComponent : MonoBehaviour
     {
         if (skillIndex < 0 || skillIndex >= skillDataList.Count)
             return 0f;
-            
+
         return skillCooldowns.ContainsKey(skillIndex) ? Mathf.Max(0f, skillCooldowns[skillIndex]) : 0f;
     }
-    
+
     /// <summary>
     /// 检查技能是否准备就绪
     /// </summary>
@@ -343,7 +387,7 @@ public class SkillComponent : MonoBehaviour
     {
         return CanUseSkill(skillIndex);
     }
-    
+
     /// <summary>
     /// 获取技能数量
     /// </summary>
@@ -352,7 +396,7 @@ public class SkillComponent : MonoBehaviour
     {
         return skillDataList != null ? skillDataList.Count : 0;
     }
-    
+
     /// <summary>
     /// 设置技能配置
     /// </summary>
@@ -365,7 +409,7 @@ public class SkillComponent : MonoBehaviour
             Debug.Log($"已设置技能配置: {config.name}");
         }
     }
-    
+
     /// <summary>
     /// 设置技能数据
     /// </summary>
@@ -376,18 +420,18 @@ public class SkillComponent : MonoBehaviour
         {
             skillDataList.Clear();
             skillDataList.AddRange(skills);
-            
+
             // 重新初始化冷却字典
             skillCooldowns.Clear();
             for (int i = 0; i < skillDataList.Count; i++)
             {
                 skillCooldowns[i] = 0f;
             }
-            
+
             Debug.Log($"已设置 {skills.Length} 个技能数据");
         }
     }
-    
+
     /// <summary>
     /// 设置角色引用
     /// </summary>
@@ -399,11 +443,14 @@ public class SkillComponent : MonoBehaviour
         // 这里可以设置其他需要的引用
         Debug.Log("已设置角色引用");
     }
-    
 
-    
 
-    
+
+
+    private AudioConfig AudioConfig = new AudioConfig(1f, 1f);
+    public static int EventDrivenRate;
+
+
     /// <summary>
     /// 执行技能
     /// </summary>
@@ -411,51 +458,58 @@ public class SkillComponent : MonoBehaviour
     private void ExecuteSkill(int skillIndex)
     {
         skillDataConfig skillData = skillDataList[skillIndex];
-        
+
         // 设置技能执行状态
         isExecutingSkill = true;
         currentExecutingSkillIndex = skillIndex;
-        
+
         // 通知状态机进入技能状态
         PlayerStateMachine stateMachine = GetComponent<PlayerStateMachine>();
         if (stateMachine != null)
         {
             stateMachine.ForceChangeState(PlayerState.Skill);
         }
-        
+
         // 消耗法力值
         characterController.currentMana -= (int)skillData.manaCost;
-        
+
         // 播放技能动画
         if (characterAnimator != null && !string.IsNullOrEmpty(skillData.animationTrigger))
         {
             characterAnimator.SetTrigger(skillData.animationTrigger);
         }
-        
-        // 播放技能音效
-        if (AudioManager.Instance != null && skillData.skillSound != null)
-        {
-            AudioManager.Instance.PlaySFX(skillData.skillSound.name);
-        }
-        
+        //播放技能音效
+        StartCoroutine(playSkillSound(skillData));
+
         // 执行技能位移
         if (skillData.isMove)
         {
             var movementComponent = gameObject.GetComponent<MonoBehaviour>();
             if (movementComponent != null)
             {
-                movementComponent.StartCoroutine(skillData.ExecuteMovement(gameObject,characterController.GetFacingDirection()));
+                movementComponent.StartCoroutine(skillData.ExecuteMovement(gameObject, characterController.GetFacingDirection()));
             }
         }
-        
+
         // 开始技能冷却
         skillCooldowns[skillIndex] = skillData.cooldown;
-        
+
         Debug.Log($"执行技能: {skillData.skillName}");
     }
-    
-  
-    
+
+    private IEnumerator playSkillSound(skillDataConfig skillData)
+    {
+        PlayerAudioConfig.Instance.PlaySound(skillData.skillStartSoundName);
+        //技能开始音效0.2S左右
+        yield return new WaitForSeconds(0.2f);
+        if (AudioManager.Instance != null && skillData.skillSound != null)
+        {
+            Debug.Log(skillData.skillSound);
+            //直接调用AUDIOMANAGER播放音效
+            AudioManager.Instance.PlaySFXImmediate(skillData.skillSound, AudioConfig, 1f, 1f);
+        }
+    }
+
     /// <summary>
     /// Animation Event调用：技能伤害帧触发
     /// </summary>
@@ -465,18 +519,20 @@ public class SkillComponent : MonoBehaviour
         {
             skillDataConfig skillData = skillDataList[currentExecutingSkillIndex];
             Vector3 castPosition = transform.position;
-               // 生成技能特效
-        if (skillData.skillEffect != null)
-        {
-            GameObject effect = Instantiate(skillData.skillEffect, skillSpawnPoint.position, skillSpawnPoint.rotation);
-            Destroy(effect, 3f); // 3秒后销毁特效
-        }
-           skillData.ExecuteSkillEffect(gameObject, castPosition, skillSpawnPoint);
-        
-     
+            // 生成技能特效
+            if (skillData.skillEffect != null)
+            {
+                GameObject effect = Instantiate(skillData.skillEffect, skillSpawnPoint.position, skillSpawnPoint.rotation);
+                Destroy(effect, 3f); // 3秒后销毁特效
+            }
+            // 播放技能音效
+
+            skillData.ExecuteSkillEffect(gameObject, castPosition, skillSpawnPoint);
+
+
         }
     }
-    
+
     /// <summary>
     /// Animation Event调用：技能结束
     /// </summary>
@@ -487,10 +543,10 @@ public class SkillComponent : MonoBehaviour
         {
             skillDataList[currentExecutingSkillIndex].StopContinuousDamage(this, currentExecutingSkillIndex);
         }
-        
+
         isExecutingSkill = false;
         currentExecutingSkillIndex = -1;
-        
+
         // 通知状态机技能结束，让状态机自动转换到合适的状态
         // 状态机会根据当前条件自动选择下一个状态（如Idle或Walking）
         Debug.Log("[SkillComponent] 技能执行结束，状态机将自动转换状态");
@@ -506,7 +562,7 @@ public class SkillComponent : MonoBehaviour
         {
             return null;
         }
-        
+
         skillDataConfig skillData = skillDataList[skillIndex];
         return new SkillInfo
         {
@@ -519,44 +575,46 @@ public class SkillComponent : MonoBehaviour
             canUse = CanUseSkill(skillIndex)
         };
     }
-    
+
     /// <summary>
     /// 调试可视化
     /// </summary>
     private void OnDrawGizmosSelected()
     {
         if (!showDebugGizmos || skillDataList == null) return;
-        
+
         for (int i = 0; i < skillDataList.Count; i++)
         {
-            if (skillDataList[i] == null) continue;
-            
+            if (skillDataList[i] == null || !skillDataList[i].showHitbox) continue;
+
             var gizmoData = skillDataList[i].GetSkillGizmoData();
-            
+
             // 设置颜色
             Color gizmoColor = gizmoData.hitboxColor;
             gizmoColor.a = gizmoData.hitboxAlpha;
             Gizmos.color = gizmoColor;
-            
+
             // 根据技能类型绘制不同的Gizmo
             switch (gizmoData.skillType)
             {
                 case SkillTypeTest.SingleTargetNearest:
                     Gizmos.DrawWireSphere(skillSpawnPoint.position, gizmoData.range);
                     break;
-                    
+
                 case SkillTypeTest.SingleTargetCone:
+                case SkillTypeTest.AoeTargetCone:
                     DrawConeGizmo(skillSpawnPoint.position, gizmoData.coneRadius, gizmoData.coneAngle);
                     break;
-                    
+
                 case SkillTypeTest.SingleTargetBox:
+                case SkillTypeTest.AoeTargetBox:
                     Vector3 forward = transform.localScale.x > 0 ? Vector3.right : Vector3.left;
-                    DrawDirectionalBoxGizmo(skillSpawnPoint.position, forward, 
-                        gizmoData.boxForward, gizmoData.boxBackward, 
+                    DrawDirectionalBoxGizmo(skillSpawnPoint.position, forward,
+                        gizmoData.boxForward, gizmoData.boxBackward,
                         transform.localScale.x > 0 ? gizmoData.boxLeft : gizmoData.boxRight,
                         transform.localScale.x > 0 ? gizmoData.boxRight : gizmoData.boxLeft);
                     break;
-                    
+
                 case SkillTypeTest.AreaOfEffect:
                     if (gizmoData.isCircularAOE)
                     {
@@ -564,8 +622,8 @@ public class SkillComponent : MonoBehaviour
                     }
                     else
                     {
-                        DrawDirectionalAOEBoxGizmo(skillSpawnPoint.position, 
-                            gizmoData.aoeUp, gizmoData.aoeDown, 
+                        DrawDirectionalAOEBoxGizmo(skillSpawnPoint.position,
+                            gizmoData.aoeUp, gizmoData.aoeDown,
                             transform.localScale.x > 0 ? gizmoData.aoeLeft : gizmoData.aoeRight,
                             transform.localScale.x > 0 ? gizmoData.aoeRight : gizmoData.aoeLeft);
                     }
@@ -573,7 +631,7 @@ public class SkillComponent : MonoBehaviour
             }
         }
     }
-    
+
     /// <summary>
     /// 绘制扇形Gizmo
     /// </summary>
@@ -581,18 +639,18 @@ public class SkillComponent : MonoBehaviour
     {
         Vector3 forward = transform.localScale.x > 0 ? Vector3.right : Vector3.left;
         float halfAngle = angle * 0.5f;
-        
+
         Vector3 leftBoundary = Quaternion.Euler(0, 0, halfAngle) * forward * radius;
         Vector3 rightBoundary = Quaternion.Euler(0, 0, -halfAngle) * forward * radius;
-        
+
         Gizmos.DrawLine(origin, origin + leftBoundary);
         Gizmos.DrawLine(origin, origin + rightBoundary);
-        
+
         // 绘制扇形弧线（使用多条线段模拟）
         int segments = 20;
         float angleStep = angle / segments;
         Vector3 prevPoint = origin + leftBoundary;
-        
+
         for (int i = 1; i <= segments; i++)
         {
             float currentAngle = halfAngle - (angleStep * i);
@@ -601,7 +659,7 @@ public class SkillComponent : MonoBehaviour
             prevPoint = currentPoint;
         }
     }
-    
+
     /// <summary>
     /// 绘制矩形Gizmo
     /// </summary>
@@ -611,45 +669,45 @@ public class SkillComponent : MonoBehaviour
         Vector3 boxCenter = origin + forward * (length / 2f);
         Gizmos.DrawWireCube(boxCenter, new Vector3(length, width, 0));
     }
-    
+
     /// <summary>
     /// 绘制基于攻击点的方向性矩形（用于单体攻击）
     /// </summary>
-    private void DrawDirectionalBoxGizmo(Vector3 attackPoint, Vector3 forward, 
+    private void DrawDirectionalBoxGizmo(Vector3 attackPoint, Vector3 forward,
         float forwardDist, float backwardDist, float leftDist, float rightDist)
     {
         // 计算矩形的总尺寸
         float totalLength = forwardDist + backwardDist;
         float totalWidth = leftDist + rightDist;
-        
+
         // 计算矩形中心点（相对于攻击点的偏移）
         Vector3 centerOffset = Vector3.up * (forwardDist - backwardDist) * 0.5f + Vector3.right * (rightDist - leftDist) * 0.5f;
         Vector3 center = attackPoint + centerOffset;
         // 计算矩形的四个角点
         Gizmos.DrawWireCube(center, new Vector3(totalWidth, totalLength, 0));
-        
+
         // 绘制攻击点标记
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(attackPoint, 0.1f);
     }
-    
+
     /// <summary>
     /// 绘制基于攻击点的方向性矩形AOE（用于范围攻击）
     /// </summary>
-    private void DrawDirectionalAOEBoxGizmo(Vector3 attackPoint, 
+    private void DrawDirectionalAOEBoxGizmo(Vector3 attackPoint,
         float upDist, float downDist, float leftDist, float rightDist)
     {
         // 计算矩形的总尺寸
         float totalHeight = upDist + downDist;
         float totalWidth = leftDist + rightDist;
-        
+
         // 计算矩形中心点（相对于攻击点的偏移）
         Vector3 centerOffset = Vector3.up * (upDist - downDist) * 0.5f + Vector3.right * (rightDist - leftDist) * 0.5f;
         Vector3 center = attackPoint + centerOffset;
-        
+
         // 绘制矩形边框
         Gizmos.DrawWireCube(center, new Vector3(totalWidth, totalHeight, 0));
-        
+
         // 绘制攻击点标记
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(attackPoint, 0.1f);

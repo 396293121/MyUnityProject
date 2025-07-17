@@ -14,7 +14,7 @@ public class AudioDataConfig : ScriptableObject
 }
 [System.Serializable]public class ClassSoundEntry
 {
-    [HorizontalGroup("Group", width: 300)]
+    [HorizontalGroup("Group", width: 150)]
     [LabelText("音效名称")]
     public string className;
 

@@ -207,12 +207,6 @@ public abstract class Character : MonoBehaviour, IDamageable
     [InfoBox("攻击时对敌人的击退力度")]
     [SerializeField] protected float knockbackForce = 5f;
     
-    [VerticalGroup("攻击配置/击退与检测/右列")]
-    [LabelText("敌人图层")]
-    [InfoBox("定义哪些图层被视为敌人目标,默认11ENEMY")]
-    [ReadOnly]
-    [SerializeField] protected LayerMask enemyLayerMask = 11;
-    
     [FoldoutGroup("攻击配置")]
     [LabelText("攻击点")]
     [InfoBox("攻击判定的起始位置，如果为空则使用角色中心点")]
@@ -222,7 +216,6 @@ public abstract class Character : MonoBehaviour, IDamageable
     public virtual float AttackRange => attackRange;
     public virtual float AttackHeight => attackHeight;
     public virtual float KnockbackForce => knockbackForce;
-    public virtual LayerMask EnemyLayerMask => enemyLayerMask;
     public virtual Transform AttackPoint => attackPoint;
     
     // IDamageable接口实现
@@ -231,8 +224,9 @@ public abstract class Character : MonoBehaviour, IDamageable
     public int MaxHealth => maxHealth;
     
     // 事件系统
-    public System.Action<int> OnHealthChanged;
-    public System.Action<int> OnManaChanged;
+    public System.Action<int,int> OnHealthChanged;
+    public System.Action<int,int> OnManaChanged;
+    public System.Action<int,int> OnExpChanged;
     public System.Action<int> OnLevelUp;
     public System.Action OnDeath;
     public System.Action OnRevive;
@@ -300,9 +294,9 @@ public abstract class Character : MonoBehaviour, IDamageable
         int actualDamage = isMagical ? 
             Mathf.Max(1, damage - magicDefense) : 
             Mathf.Max(1, damage - defense);
-        
+        int oldHealth=currentHealth;
         currentHealth = Mathf.Max(0, currentHealth - actualDamage);
-        OnHealthChanged?.Invoke(currentHealth);
+        OnHealthChanged?.Invoke(oldHealth,currentHealth);
  
          // 基础击退逻辑
     if (TryGetComponent<Rigidbody2D>(out var rb) && knockbackForce != default)
@@ -343,9 +337,9 @@ public abstract class Character : MonoBehaviour, IDamageable
     public virtual void Heal(int amount)
     {
         if (!isAlive) return;
-        
+           int oldHealth=currentHealth;
         currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
-        OnHealthChanged?.Invoke(currentHealth);
+        OnHealthChanged?.Invoke(oldHealth,currentHealth);
         
         Debug.Log($"[{gameObject.name}] 恢复 {amount} 点生命值，当前生命值: {currentHealth}");
     }
@@ -356,9 +350,9 @@ public abstract class Character : MonoBehaviour, IDamageable
     public virtual bool ConsumeMana(int amount)
     {
         if (currentMana < amount) return false;
-        
+           int oldMana=currentMana;
         currentMana -= amount;
-        OnManaChanged?.Invoke(currentMana);
+        OnManaChanged?.Invoke(oldMana,currentMana);
         
         return true;
     }
@@ -368,17 +362,18 @@ public abstract class Character : MonoBehaviour, IDamageable
     /// </summary>
     public virtual void RestoreMana(int amount)
     {
+           int oldMana=currentMana;
         currentMana = Mathf.Min(maxMana, currentMana + amount);
-        OnManaChanged?.Invoke(currentMana);
+        OnManaChanged?.Invoke(oldMana,currentMana);
     }
     
     /// <summary>
     /// 获得经验值
     /// </summary>
     public virtual void GainExperience(int exp)
-    {
+    {   
         experience += exp;
-        
+        OnExpChanged?.Invoke(experienceToNext,experience);
         // 检查升级
         while (experience >= experienceToNext)
         {
@@ -479,9 +474,10 @@ public abstract class Character : MonoBehaviour, IDamageable
         isAlive = true;
         currentHealth = maxHealth;
         currentMana = maxMana;
-        
-        OnHealthChanged?.Invoke(currentHealth);
-        OnManaChanged?.Invoke(currentMana);
+           int oldHealth=currentHealth;
+           int oldMana=currentMana;
+        OnHealthChanged?.Invoke(oldHealth,currentHealth);
+        OnManaChanged?.Invoke(oldMana,currentMana);
         
         Debug.Log($"[{gameObject.name}] 复活");
     }
@@ -512,8 +508,8 @@ public abstract class Character : MonoBehaviour, IDamageable
         // 定义矩形攻击范围
         Vector2 boxSize = new Vector2(attackRange, attackHeight);
         
-        // 检测攻击范围内的所有碰撞体
-        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(attackCenter, boxSize, 0f, enemyLayerMask);
+        // 检测攻击范围内的所有碰撞体 图层默认敌人
+        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(attackCenter, boxSize, 0f, LayerMask.GetMask("Enemy"));
         int enemiesHit = 0;
         
         // 遍历所有被攻击的目标

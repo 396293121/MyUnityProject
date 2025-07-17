@@ -20,10 +20,12 @@ MonoBehaviour:
   manaCost: 20
   range: 1
   skillEffect: {fileID: 0}
-  skillSound: {fileID: 0}
+  skillSound: {fileID: 8300000, guid: 17aacc27b079f5243a00865e906cd17e, type: 3}
+  skillStartSoundName: skillStart
+  skillHitSoundName: skillHit
   animationTrigger: battleCryTrigger
   animationDuration: 1
-  skillType: 4
+  skillType: 6
   targetType: 1
   coneAngle: 90
   coneRadius: 5

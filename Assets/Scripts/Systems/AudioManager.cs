@@ -346,7 +346,7 @@ public class AudioManager : MonoBehaviour
     /// <summary>
     /// 立即播放音效
     /// </summary>
-    private void PlaySFXImmediate(AudioClip clip, AudioConfig config, float volumeMultiplier, float pitchMultiplier)
+    public void PlaySFXImmediate(AudioClip clip, AudioConfig config, float volumeMultiplier, float pitchMultiplier)
     {
         AudioSource availableSource = GetAvailableSfxSource();
         if (availableSource != null)
