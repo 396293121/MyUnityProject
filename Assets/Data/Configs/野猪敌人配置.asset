@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: "\u91CE\u732A\u654C\u4EBA\u914D\u7F6E"
   m_EditorClassIdentifier: 
   maxEnemyCount: 10
-  enemyUpdateInterval: 0.1
   aiUpdateInterval: 0.2
   wildBoarConfig:
     health: 110
@@ -32,8 +31,12 @@ MonoBehaviour:
     onScreenUpdateInterval: 0.05
     screenBoundaryExtension: 5
     expReward: 10
+    attackSound: {fileID: 0}
+    chargeSound: {fileID: 0}
+    hurtSound: {fileID: 0}
+    deadSound: {fileID: 0}
     chargeSpeed: 8
-    chargeDistance: 6
+    chargeDistance: 10
     chargeCooldown: 4
     chargeDuration: 2
     chargeDamage: 30
@@ -42,10 +45,3 @@ MonoBehaviour:
     enrageSpeedMultiplier: 1.5
     enrageDamageMultiplier: 1.3
     stunDuration: 2
-  globalDropConfig:
-    defaultDrops: []
-    defaultGoldDrop:
-      min: 1
-      max: 5
-      dropChance: 0.8
-    dropRateMultiplier: 1

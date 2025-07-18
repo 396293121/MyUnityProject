@@ -471,11 +471,12 @@ public class SkillComponent : MonoBehaviour
         }
 
         // 消耗法力值
-        characterController.currentMana -= (int)skillData.manaCost;
-
+       // characterController.currentMana -= (int)skillData.manaCost;
+        characterController.ConsumeMana((int)skillData.manaCost);
         // 播放技能动画
         if (characterAnimator != null && !string.IsNullOrEmpty(skillData.animationTrigger))
         {
+            characterAnimator.SetBool("isSkilling", true);
             characterAnimator.SetTrigger(skillData.animationTrigger);
         }
         //播放技能音效
@@ -546,7 +547,7 @@ public class SkillComponent : MonoBehaviour
 
         isExecutingSkill = false;
         currentExecutingSkillIndex = -1;
-
+        characterAnimator.SetBool("isSkilling", false);
         // 通知状态机技能结束，让状态机自动转换到合适的状态
         // 状态机会根据当前条件自动选择下一个状态（如Idle或Walking）
         Debug.Log("[SkillComponent] 技能执行结束，状态机将自动转换状态");

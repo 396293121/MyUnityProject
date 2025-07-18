@@ -175,11 +175,11 @@ public class WildBoarConfig : enmeyConfig
     public float chargeSpeed = 8f;
     
     [FoldoutGroup("冲锋属性")]
-    [LabelText("冲锋距离")]
+    [LabelText("冲锋触发距离")]
     [PropertyRange(1f, 15f)]
     [SuffixLabel("米")]
     [PropertyOrder(7)]
-    public float chargeDistance = 6f;
+    public float chargeDistance = 10f;
     
     [FoldoutGroup("冲锋属性")]
     [LabelText("冲锋冷却时间")]

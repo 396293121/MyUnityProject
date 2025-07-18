@@ -12,94 +12,70 @@ public class SkillSlotUI : MonoBehaviour
 {
     [TitleGroup("技能槽位配置", "菱形金属框技能槽位", TitleAlignments.Centered)]
     
-    [TabGroup("UI元素")]
+    // [TabGroup("UI元素")]
     // [BoxGroup("UI元素/基础组件")]
     // [LabelText("槽位背景")]
     // [Required]
     // public Image slotBackground;
-    
-    [BoxGroup("UI元素/基础组件")]
+    [BoxGroup("UI元素")]
     [LabelText("技能图标")]
     [Required]
     public Image skillIcon;
     
-    [BoxGroup("UI元素/基础组件")]
+    [BoxGroup("UI元素")]
     [LabelText("边框图像")]
     public Image borderImage;
-    
-    [BoxGroup("UI元素/冷却系统")]
+    [BoxGroup("UI元素")]
     [LabelText("冷却遮罩")]
     public Image cooldownMask;
-    
-    [BoxGroup("UI元素/冷却系统")]
+    [BoxGroup("UI元素")]
+    [LabelText("技能名称")]
+    public Text skillName;
+    [BoxGroup("UI元素")]
     [LabelText("冷却文本")]
     public TextMeshProUGUI cooldownText;
     
-    [BoxGroup("UI元素/状态指示")]
+    [BoxGroup("UI元素")]
     [LabelText("快捷键文本")]
     public TextMeshProUGUI hotkeyText;
-    
-    [BoxGroup("UI元素/状态指示")]
-    [LabelText("符文特效")]
-    public ParticleSystem runeEffect;
-    
-    [BoxGroup("UI元素/状态指示")]
-    [LabelText("觉醒光芒特效")]
-    public ParticleSystem awakeningEffect;
-    
+
+
+
+
     // [TabGroup("配置")]
     // [BoxGroup("配置/颜色设置")]
     // [LabelText("常态边框色")]
     // public Color normalBorderColor = new Color(0.5f, 0.5f, 0.5f, 1f);
-    
-    [BoxGroup("配置/颜色设置")]
-    [LabelText("就绪边框色")]
-    public Color readyBorderColor = new Color(0.3f, 0.6f, 1f, 1f);
-    
-    [BoxGroup("配置/颜色设置")]
-    [LabelText("冷却边框色")]
-    public Color cooldownBorderColor = new Color(0.3f, 0.3f, 0.3f, 1f);
-    
-    [BoxGroup("配置/颜色设置")]
-    [LabelText("禁用边框色")]
-    public Color disabledBorderColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
-    
-    [BoxGroup("配置/动画设置")]
-    [LabelText("脉冲动画速度")]
-    [PropertyRange(0.5f, 5f)]
-    public float pulseSpeed = 2f;
-    
-    [BoxGroup("配置/动画设置")]
+    [BoxGroup("配置")]
     [LabelText("悬停缩放")]
     [PropertyRange(1f, 1.5f)]
     public float hoverScale = 1.1f;
     
-    [TabGroup("状态")]
-    [FoldoutGroup("状态/运行时数据", expanded: true)]
+    [FoldoutGroup("状态", expanded: true)]
     [LabelText("技能索引")]
     [ReadOnly]
     [ShowInInspector]
     private int skillIndex = -1;
     
-    [FoldoutGroup("状态/运行时数据")]
+    [FoldoutGroup("状态")]
     [LabelText("技能组件引用")]
     [ReadOnly]
     [ShowInInspector]
     private SkillComponent skillComponent;
     
-    [FoldoutGroup("状态/运行时数据")]
+    [FoldoutGroup("状态")]
     [LabelText("是否悬停")]
     [ReadOnly]
     [ShowInInspector]
     private bool isHovered = false;
     
-    [FoldoutGroup("状态/运行时数据")]
+    [FoldoutGroup("状态")]
     [LabelText("是否选中")]
     [ReadOnly]
     [ShowInInspector]
     private bool isSelected = false;
     
-    [FoldoutGroup("状态/运行时数据")]
+    [FoldoutGroup("状态")]
     [LabelText("原始缩放")]
     [ReadOnly]
     [ShowInInspector]
@@ -165,6 +141,7 @@ public class SkillSlotUI : MonoBehaviour
         {
             skillIcon.sprite = skillInfo.skillIcon;
         }
+        skillName.text = skillInfo.skillName;
          // 注册事件监听
         component.OnSkillCooldownUpdated += OnSkillUpdated;
         component.OnSkillAvailabilityChanged += OnSkillUpdated;
@@ -203,10 +180,10 @@ public class SkillSlotUI : MonoBehaviour
         UpdateStatusDisplay(skillInfo);
 
         // 更新边框颜色
-        UpdateBorderColor(skillInfo);
+        // UpdateBorderColor(skillInfo);
 
         // 更新特效
-        UpdateEffects(skillInfo);
+        // UpdateEffects(skillInfo);
     }
     
     /// <summary>
@@ -253,142 +230,15 @@ public class SkillSlotUI : MonoBehaviour
             button.interactable = skillInfo.canUse;
         }
         
-        // 更新图标透明度
-        if (skillIcon != null)
-        {
-            Color iconColor = skillIcon.color;
-            iconColor.a = skillInfo.canUse ? 1f : 0.5f;
-            skillIcon.color = iconColor;
-        }
+     
     }
     
-    /// <summary>
-    /// 更新边框颜色
-    /// </summary>
-    private void UpdateBorderColor(SkillInfo skillInfo)
-    {
-        if (borderImage == null) return;
-        
-        Color targetColor;
-        
-        if (!skillInfo.canUse)
-        {
-            targetColor = disabledBorderColor;
-        }
-        else if (skillInfo.remainingCooldown > 0)
-        {
-            targetColor = cooldownBorderColor;
-        }
-        else
-        {
-            targetColor = readyBorderColor;
-        }
-        
-        borderImage.color = targetColor;
-    }
+
+
+
     
-    /// <summary>
-    /// 更新特效
-    /// </summary>
-    private void UpdateEffects(SkillInfo skillInfo)
-    {
-        // 符文特效
-        if (runeEffect != null)
-        {
-            if (skillInfo.canUse && skillInfo.remainingCooldown <= 0)
-            {
-                if (!runeEffect.isPlaying)
-                {
-                    runeEffect.Play();
-                }
-            }
-            else
-            {
-                if (runeEffect.isPlaying)
-                {
-                    runeEffect.Stop();
-                }
-            }
-        }
-        
-        // 觉醒光芒特效（技能就绪时）
-        if (awakeningEffect != null)
-        {
-            if (skillInfo.canUse && skillInfo.remainingCooldown <= 0 && isSelected)
-            {
-                if (!awakeningEffect.isPlaying)
-                {
-                    awakeningEffect.Play();
-                }
-            }
-            else
-            {
-                if (awakeningEffect.isPlaying)
-                {
-                    awakeningEffect.Stop();
-                }
-            }
-        }
-        
-        // 脉冲动画（技能就绪时）
-        if (skillInfo.canUse && skillInfo.remainingCooldown <= 0)
-        {
-            StartPulseAnimation();
-        }
-        else
-        {
-            StopPulseAnimation();
-        }
-    }
-    
-    /// <summary>
-    /// 开始脉冲动画
-    /// </summary>
-    private void StartPulseAnimation()
-    {
-        if (borderImage != null)
-        {
-            // 使用LeanTween或DOTween实现脉冲动画
-            // 这里使用简单的协程实现
-            StartCoroutine(PulseCoroutine());
-        }
-    }
-    
-    /// <summary>
-    /// 停止脉冲动画
-    /// </summary>
-    private void StopPulseAnimation()
-    {
-        StopAllCoroutines();
-        if (borderImage != null)
-        {
-            borderImage.color = readyBorderColor;
-        }
-    }
-    
-    /// <summary>
-    /// 脉冲动画协程
-    /// </summary>
-    private System.Collections.IEnumerator PulseCoroutine()
-    {
-        while (true)
-        {
-            float time = 0f;
-            while (time < 1f / pulseSpeed)
-            {
-                time += Time.deltaTime;
-                float alpha = Mathf.PingPong(time * pulseSpeed * 2f, 1f);
-                Color color = readyBorderColor;
-                color.a = Mathf.Lerp(0.5f, 1f, alpha);
-                if (borderImage != null)
-                {
-                    borderImage.color = color;
-                }
-                yield return null;
-            }
-        }
-    }
-    
+ 
+
     /// <summary>
     /// 鼠标进入事件
     /// </summary>
@@ -449,11 +299,7 @@ public class SkillSlotUI : MonoBehaviour
                 AudioManager.Instance.PlaySFX("ui_click", 0.7f);
             }
             
-            // 技能释放特效
-            if (awakeningEffect != null)
-            {
-                awakeningEffect.Play();
-            }
+    
         }
     }
     

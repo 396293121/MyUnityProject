@@ -679,7 +679,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     /// <summary>
     /// 退出当前状态的清理工作
     /// </summary>
-    private void ExitCurrentState()
+    protected virtual void ExitCurrentState()
     {
         switch (currentState)
         {
@@ -864,7 +864,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     /// <summary>
     /// 执行追击状态逻辑 - 优化版本
     /// </summary>
-    private void ExecuteChaseState()
+    protected virtual void ExecuteChaseState()
     {
         if (!canMove || player == null) return;
            // 修改为攻击点检测
@@ -1263,20 +1263,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     /// </summary>
     public abstract void ExecutePatrol();
 
-    /// <summary>
-    /// 执行追击行为
-    /// </summary>
-    public virtual void ExecuteChase()
-    {
-        if (!canMove || isDead) return;
-        if (player == null) return;
-        
-        // 计算朝向玩家的方向
-        Vector2 directionToPlayer = (player.position - transform.position).normalized;
-        
-        // 执行移动
-        MoveInDirection(directionToPlayer);
-    }
+ 
 
     /// <summary>
     /// 执行攻击行为
