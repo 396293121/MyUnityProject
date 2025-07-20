@@ -109,3 +109,11 @@ MonoBehaviour:
       delay: 0
       pitchVariation: 0.1
       cooldown: 0
+  - className: mage_jump
+    sound:
+      audioClip: {fileID: 8300000, guid: aa6c2f668b4de7441abadfdb249f484d, type: 3}
+      volume: 1
+      pitch: 1
+      delay: 0
+      pitchVariation: 0
+      cooldown: 0

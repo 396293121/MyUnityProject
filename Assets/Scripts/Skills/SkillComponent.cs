@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Collections;
 using Sirenix.OdinInspector;
 using System;
+using NUnit.Framework;
+using static skillDataConfig;
 
 /// <summary>
 /// 技能组件 - 独立的技能系统，从角色脚本中分离技能逻辑
@@ -43,6 +45,7 @@ public class SkillComponent : MonoBehaviour
     [InfoBox("角色控制器引用，用于获取角色状态")]
     public Character characterController;
 
+    private PlayerStateMachine stateMachine;
     [TitleGroup("技能状态监控", "实时技能状态信息", TitleAlignments.Centered)]
     [FoldoutGroup("技能状态监控/冷却状态", expanded: true)]
     [LabelText("技能冷却时间")]
@@ -88,7 +91,6 @@ public class SkillComponent : MonoBehaviour
 
         if (characterController == null)
             characterController = GetComponent<Character>();
-
         // 检查技能数据配置
         Debug.Log($"[SkillComponent] Awake - 技能数据列表数量: {skillDataList?.Count ?? 0}");
         if (skillDataList != null && skillDataList.Count > 0)
@@ -111,6 +113,12 @@ public class SkillComponent : MonoBehaviour
         }
     }
 
+    private void Start()
+    {      
+          stateMachine =GetComponent<PlayerStateMachine>();
+
+        
+ }
     private void OnEnable()
     {
         // 启用输入动作
@@ -211,12 +219,12 @@ public class SkillComponent : MonoBehaviour
     /// 尝试使用技能
     /// </summary>
     /// <param name="skillIndex">技能索引</param>
-    public void TryUseSkill(int skillIndex)
+    ///   /// <param name="isForse">是否无视状态机强制执行技能</param>
+    public void TryUseSkill(int skillIndex,bool isForse=false)
     {
         Debug.Log($"[SkillComponent] TryUseSkill 被调用，技能索引: {skillIndex}");
 
         // 性能优化：通知状态机技能输入
-        PlayerStateMachine stateMachine = GetComponent<PlayerStateMachine>();
         if (stateMachine != null)
         {
             stateMachine.NotifySkillInput();
@@ -244,7 +252,7 @@ public class SkillComponent : MonoBehaviour
         Debug.Log($"[SkillComponent] 技能数据检查通过，技能名称: {skillDataList[skillIndex].skillName}");
 
         // 检查是否可以使用技能
-        if (!CanUseSkill(skillIndex))
+        if (!CanUseSkill(skillIndex,isForse))
         {
             Debug.LogWarning($"[SkillComponent] 无法使用技能 {skillIndex}，CanUseSkill返回false");
             return;
@@ -302,14 +310,8 @@ public class SkillComponent : MonoBehaviour
     /// </summary>
     /// <param name="skillIndex">技能索引</param>
     /// <returns>是否可以使用</returns>
-    public bool CanUseSkill(int skillIndex)
+    public bool CanUseSkill(int skillIndex,bool isForse=false)
     {
-        // 检查技能索引是否有效
-        if (skillIndex < 0 || skillIndex >= skillDataList.Count || skillDataList[skillIndex] == null)
-        {
-            Debug.LogWarning($"[SkillComponent] 技能索引无效或技能数据为空");
-            return false;
-        }
 
         // 检查角色是否存活
         if (characterController == null || !characterController.isAlive)
@@ -341,10 +343,10 @@ public class SkillComponent : MonoBehaviour
         }
 
         // 使用状态机进行状态判断
-        PlayerStateMachine stateMachine = GetComponent<PlayerStateMachine>();
-        if (stateMachine != null)
+        if (stateMachine != null && !isForse)
         {
             bool canTransition = stateMachine.CanTransitionTo(PlayerState.Skill);
+
             return canTransition;
         }
 
@@ -464,7 +466,6 @@ public class SkillComponent : MonoBehaviour
         currentExecutingSkillIndex = skillIndex;
 
         // 通知状态机进入技能状态
-        PlayerStateMachine stateMachine = GetComponent<PlayerStateMachine>();
         if (stateMachine != null)
         {
             stateMachine.ForceChangeState(PlayerState.Skill);
@@ -542,7 +543,11 @@ public class SkillComponent : MonoBehaviour
         // 停止当前技能的持续伤害效果
         if (currentExecutingSkillIndex >= 0 && skillDataList[currentExecutingSkillIndex] != null)
         {
-            skillDataList[currentExecutingSkillIndex].StopContinuousDamage(this, currentExecutingSkillIndex);
+            if (skillDataList[currentExecutingSkillIndex].damageTime == damageTimeType.time)
+            {
+                            skillDataList[currentExecutingSkillIndex].StopContinuousDamage(this, currentExecutingSkillIndex);
+
+            }
         }
 
         isExecutingSkill = false;

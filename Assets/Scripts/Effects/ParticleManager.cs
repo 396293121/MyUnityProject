@@ -291,6 +291,62 @@ public class ParticleManager : MonoBehaviour
     }
     
     /// <summary>
+    /// 在目标身上播放燃烧特效
+    /// </summary>
+    public BurnEffect PlayBurnEffectOnTarget(Transform target, float duration = 3f)
+    {
+        if (target == null) return null;
+        
+        // 检查目标是否已经有燃烧特效
+        BurnEffect existingBurn = target.GetComponent<BurnEffect>();
+        if (existingBurn != null)
+        {
+            // 如果已经在燃烧，重新开始
+            existingBurn.StopBurnEffect();
+            existingBurn.StartBurnEffect();
+            return existingBurn;
+        }
+        
+        // 创建新的燃烧特效
+        GameObject burnObj = new GameObject("BurnEffect");
+        burnObj.transform.SetParent(target);
+        burnObj.transform.localPosition = Vector3.zero;
+        
+        BurnEffect burnEffect = burnObj.AddComponent<BurnEffect>();
+        burnEffect.burnDuration = duration;
+        burnEffect.StartBurnEffect();
+        
+        // 播放燃烧音效
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX("burn_sound");
+        }
+        
+        return burnEffect;
+    }
+    
+    /// <summary>
+    /// 播放火焰击中特效（简化版）
+    /// </summary>
+    public void PlayFireHitEffect(Vector3 position, Transform target = null)
+    {
+        // 播放击中特效
+        PlayEffect("fire_hit_effect", position);
+        
+        // 如果有目标，在目标身上添加燃烧效果
+        if (target != null)
+        {
+            PlayBurnEffectOnTarget(target, 3f);
+        }
+        
+        // 播放音效
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX("fire_hit_sound");
+        }
+    }
+    
+    /// <summary>
     /// 停止特效
     /// </summary>
     public void StopEffect(ParticleSystem particles)

@@ -3,6 +3,7 @@ using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System.Collections;
 using Sirenix.Utilities;
+using static SkillProjectile;
 
 // 技能类型枚举
 public enum SkillTypeTest
@@ -13,9 +14,9 @@ public enum SkillTypeTest
     SingleTargetCone,
     [LabelText("单体攻击(矩形)")]
     SingleTargetBox,
-      [LabelText("范围攻击(矩形)")]
+    [LabelText("范围攻击(矩形)")]
     AoeTargetBox,
-      [LabelText("范围攻击(扇形)")]
+    [LabelText("范围攻击(扇形)")]
     AoeTargetCone,
     [LabelText("范围伤害")]
     AreaOfEffect,
@@ -24,7 +25,9 @@ public enum SkillTypeTest
     [LabelText("治疗")]
     Heal,
     [LabelText("召唤")]
-    Summon
+    Summon,
+    [LabelText("远程投射物")]
+    Projectile
 }
 
 // 目标类型枚举
@@ -45,37 +48,46 @@ public class skillDataConfig : ScriptableObject
 {
     [TabGroup("基础信息")]
     [LabelText("技能名称")]
+    [InfoBox("技能的显示名称")]
     public string skillName = "技能名称";
 
     [TabGroup("基础信息")]
     [PreviewField(100, ObjectFieldAlignment.Left)]
     [LabelText("技能图标")]
+    [InfoBox("技能在UI中显示的图标")]
     public Sprite skillIcon;
 
     [TabGroup("基础信息")]
     [TextArea(2, 4)]
     [LabelText("技能描述")]
+    [InfoBox("技能的详细描述")]
     public string description = "技能描述";
 
     [TabGroup("属性配置")]
-    [Range(1f, 200f)]
+    [ShowIf("@skillType != SkillTypeTest.Buff && skillType != SkillTypeTest.Heal && skillType != SkillTypeTest.Summon")]
+    [Range(1f, 500f)]
     [LabelText("伤害值")]
-    public float damage = 30f;
+    [InfoBox("技能造成的基础伤害值")]
+    public float damage = 50f;
 
     [TabGroup("属性配置")]
     [Range(0.5f, 30f)]
     [LabelText("冷却时间(秒)")]
+    [InfoBox("技能使用后的冷却时间")]
     public float cooldown = 3f;
 
     [TabGroup("属性配置")]
     [Range(0f, 100f)]
     [LabelText("法力消耗")]
+    [InfoBox("释放技能消耗的魔法值")]
     public float manaCost = 20f;
 
     [TabGroup("属性配置")]
+    [ShowIf("@skillType == SkillTypeTest.SingleTargetNearest || skillType == SkillTypeTest.SingleTargetCone || skillType == SkillTypeTest.SingleTargetBox || skillType == SkillTypeTest.AoeTargetCone || skillType == SkillTypeTest.AoeTargetBox || skillType == SkillTypeTest.AreaOfEffect")]
     [Range(1f, 20f)]
-    [LabelText("技能范围")]
-    public float range = 8f;
+    [LabelText("攻击范围")]
+    [InfoBox("技能的有效攻击范围")]
+    public float range = 5f;
 
     [TabGroup("特效配置")]
     [AssetsOnly]
@@ -103,8 +115,8 @@ public class skillDataConfig : ScriptableObject
     [LabelText("持续伤害技能开始音效名称")]
     [ShowIf("damageTime", damageTimeType.time)]
     [InfoBox("在PLAYERAUDIOCONFIG配置的音效名称")]
-    public string skillTimeStartSoundName ;
-    
+    public string skillTimeStartSoundName;
+
     [TabGroup("动画配置")]
     [LabelText("技能动画触发器")]
     [InfoBox("在Animator Controller中对应的技能动画触发器名称")]
@@ -117,37 +129,42 @@ public class skillDataConfig : ScriptableObject
 
     [TabGroup("技能效果")]
     [LabelText("技能类型")]
+    [InfoBox("选择技能的攻击类型")]
+    [OnValueChanged("OnSkillTypeChanged")]
     public SkillTypeTest skillType = SkillTypeTest.SingleTargetNearest;
 
     [TabGroup("技能效果")]
     [LabelText("目标类型")]
+    [InfoBox("选择技能的目标类型")]
+    [ShowIf("@skillType != SkillTypeTest.Buff && skillType != SkillTypeTest.Heal")]
     public TargetType targetType = TargetType.Enemy;
 
     [TabGroup("技能效果")]
-    [ShowIf("skillType", SkillTypeTest.SingleTargetCone)]
-        [ShowIf("@skillType == SkillTypeTest.SingleTargetCone ||skillType==SkillTypeTest.AoeTargetCone")]
+    [ShowIf("@skillType == SkillTypeTest.SingleTargetCone || skillType == SkillTypeTest.AoeTargetCone")]
     [LabelText("扇形角度")]
     [Range(1f, 360f)]
+    [InfoBox("扇形攻击的角度范围")]
     public float coneAngle = 90f;
 
     [TabGroup("技能效果")]
-   [ShowIf("@skillType == SkillTypeTest.SingleTargetCone ||skillType==SkillTypeTest.AoeTargetCone")]
-
+    [ShowIf("@skillType == SkillTypeTest.SingleTargetCone || skillType == SkillTypeTest.AoeTargetCone")]
     [LabelText("扇形半径")]
     [Range(1f, 20f)]
+    [InfoBox("扇形攻击的半径范围")]
     public float coneRadius = 5f;
 
     [TabGroup("技能效果")]
     [ShowIf("@skillType == SkillTypeTest.SingleTargetBox || skillType == SkillTypeTest.AoeTargetBox")]
     [LabelText("向上距离")]
     [Range(0f, 20f)]
+    [InfoBox("矩形攻击范围向上延伸的距离")]
     public float boxForward = 3f;
 
     [TabGroup("技能效果")]
-        [ShowIf("@skillType == SkillTypeTest.SingleTargetBox || skillType == SkillTypeTest.AoeTargetBox")]
-
+    [ShowIf("@skillType == SkillTypeTest.SingleTargetBox || skillType == SkillTypeTest.AoeTargetBox")]
     [LabelText("向下距离")]
     [Range(0f, 20f)]
+    [InfoBox("矩形攻击范围向下延伸的距离")]
     public float boxBackward = 1f;
 
     [TabGroup("技能效果")]
@@ -165,31 +182,37 @@ public class skillDataConfig : ScriptableObject
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.AreaOfEffect)]
     [LabelText("AOE形状是否为圆形")]
+    [InfoBox("选择AOE攻击的形状：圆形或矩形")]
+    [PropertySpace(SpaceBefore = 5)]
     public bool isCircularAOE = true;
 
     [TabGroup("技能效果")]
     [ShowIf("@skillType == SkillTypeTest.AreaOfEffect && !isCircularAOE")]
-    [LabelText("向上距离")]
+    [LabelText("AOE向上距离")]
     [Range(0f, 20f)]
-    public float aoeUp = 2.5f;
+    [InfoBox("矩形AOE向上延伸的距离")]
+    public float aoeUp = 3f;
 
     [TabGroup("技能效果")]
     [ShowIf("@skillType == SkillTypeTest.AreaOfEffect && !isCircularAOE")]
-    [LabelText("向下距离")]
+    [LabelText("AOE向下距离")]
     [Range(0f, 20f)]
-    public float aoeDown = 2.5f;
+    [InfoBox("矩形AOE向下延伸的距离")]
+    public float aoeDown = 1f;
 
     [TabGroup("技能效果")]
     [ShowIf("@skillType == SkillTypeTest.AreaOfEffect && !isCircularAOE")]
-    [LabelText("向左距离")]
+    [LabelText("AOE向左距离")]
     [Range(0f, 20f)]
-    public float aoeLeft = 2.5f;
+    [InfoBox("矩形AOE向左延伸的距离")]
+    public float aoeLeft = 2f;
 
     [TabGroup("技能效果")]
     [ShowIf("@skillType == SkillTypeTest.AreaOfEffect && !isCircularAOE")]
-    [LabelText("向右距离")]
+    [LabelText("AOE向右距离")]
     [Range(0f, 20f)]
-    public float aoeRight = 2.5f;
+    [InfoBox("矩形AOE向右延伸的距离")]
+    public float aoeRight = 2f;
 
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Buff)]
@@ -226,12 +249,15 @@ public class skillDataConfig : ScriptableObject
     public float summonDuration = 30f;
     [TabGroup("技能效果")]
     [LabelText("是否位移")]
+    [InfoBox("技能释放时是否包含位移效果")]
+    [PropertySpace(SpaceBefore = 10)]
     public bool isMove = false;
 
     [TabGroup("技能效果")]
     [ShowIf("isMove")]
     [LabelText("位移距离")]
     [Range(0f, 20f)]
+    [InfoBox("位移的距离，单位为Unity单位")]
     public float moveDistance = 5f;
 
     [TabGroup("技能效果")]
@@ -244,6 +270,7 @@ public class skillDataConfig : ScriptableObject
     [TabGroup("技能效果")]
     [ShowIf("isMove")]
     [LabelText("位移类型")]
+    [InfoBox("选择位移的方向类型")]
     public MoveType moveType;
 
     [TabGroup("技能效果")]
@@ -255,12 +282,64 @@ public class skillDataConfig : ScriptableObject
     [TabGroup("技能效果")]
     [ShowIf("isMove")]
     [LabelText("位移时是否无敌")]
+    [InfoBox("位移过程中是否获得无敌状态")]
     public bool invincibleDuringMove = false;
 
     [TabGroup("技能效果")]
     [ShowIf("isMove")]
     [LabelText("碰撞中断位移")]
+    [InfoBox("遇到障碍物时是否停止位移")]
     public bool stopOnCollision = true;
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [LabelText("投射物预制体")]
+    [AssetsOnly]
+    [Required("必须指定投射物预制体")]
+    [InfoBox("技能发射的投射物预制体")]
+    [PropertySpace(SpaceBefore = 10)]
+    public GameObject projectilePrefab;
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [LabelText("投射物类型")]
+    public ProjectileType type = ProjectileType.Standard;
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [LabelText("持续伤害间隔")]
+    [ShowIf("type", ProjectileType.DoT)]
+    public float projectileDamageInterval = 0.5f;
+      [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [LabelText("持续伤害持续时间")]
+    [ShowIf("type", ProjectileType.DoT)]
+    public float projectileDamageTime = 1f;
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [LabelText("自动索敌范围")]
+    [ShowIf("type", ProjectileType.Homing)]
+    public float homingRadius = 5f;
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [LabelText("生成位置偏移")]
+    [ShowIf("type", ProjectileType.Homing)]
+ public Vector2 spawnOffset;
+
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [LabelText("投射速度")]
+    [Range(5f, 30f)]
+      [ShowIf("type", ProjectileType.Standard)]
+    [InfoBox("投射物的飞行速度")]
+    
+
+    public float projectileSpeed = 15f;
+
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [LabelText("最大射程")]
+    [Range(5f, 50f)]
+        [ShowIf("type", ProjectileType.Standard)]
+    [InfoBox("投射物的最大飞行距离")]
+    public float projectileRange = 20f;
 
     public enum MoveType
     {
@@ -283,33 +362,83 @@ public class skillDataConfig : ScriptableObject
     }
     [TabGroup("技能效果")]
     [LabelText("伤害判定时长")]
+     [ShowIf("@skillType == SkillTypeTest.SingleTargetNearest || skillType == SkillTypeTest.SingleTargetCone||skillType == SkillTypeTest.SingleTargetBox||skillType == SkillTypeTest.AoeTargetCone||skillType == SkillTypeTest.AoeTargetBox||skillType == SkillTypeTest.AreaOfEffect||skillType == SkillTypeTest.AoeTargetCone")]
+
+
+
+
+
     [InfoBox("关键帧：关键帧触发伤害\n时间段：在这段时间内触发伤害")]
+    [PropertySpace(SpaceBefore = 10)]
     public damageTimeType damageTime = damageTimeType.frame;
+
     [TabGroup("技能效果")]
     [ShowIf("damageTime", damageTimeType.time)]
     [LabelText("是否对同一个敌人触发多段伤害")]
+    [InfoBox("在持续时间内，是否可以对同一敌人造成多次伤害")]
     public bool isMultiDamage = false;
+
     [TabGroup("技能效果")]
-    [ShowIf("isMultiDamage", true)]
+    [ShowIf("@damageTime == damageTimeType.time && isMultiDamage")]
     [LabelText("伤害触发频率")]
     [Range(0.01f, 1f)]
     [InfoBox("伤害触发的频率，单位秒")]
     public float damageInterval = 0.05f;
     [TabGroup("碰撞框显示")]
     [LabelText("显示技能碰撞框")]
-    [InfoBox("在Scene视图中显示技能的攻击范围，便于调试")]
+    [InfoBox("在Scene视图中显示技能的攻击范围，便于调试和可视化")]
+    [PropertySpace(SpaceBefore = 10)]
     public bool showHitbox = true;
 
     [TabGroup("碰撞框显示")]
-    [ShowIf("@showHitbox && (skillType == SkillTypeTest.SingleTargetNearest || skillType == SkillTypeTest.SingleTargetCone || skillType == SkillTypeTest.SingleTargetBox||skillType == SkillTypeTest.AoeTargetCone ||skillType==SkillTypeTest.AoeTargetBox|| skillType == SkillTypeTest.AreaOfEffect)")]
+    [ShowIf("@showHitbox && HasVisualHitbox()")]
     [LabelText("碰撞框颜色")]
+    [InfoBox("碰撞框在Scene视图中的显示颜色")]
     public Color hitboxColor = Color.red;
 
     [TabGroup("碰撞框显示")]
-    [ShowIf("@showHitbox && (skillType == SkillTypeTest.SingleTargetNearest || skillType == SkillTypeTest.SingleTargetCone || skillType == SkillTypeTest.SingleTargetBox||skillType == SkillTypeTest.AoeTargetCone ||skillType==SkillTypeTest.AoeTargetBox|| skillType == SkillTypeTest.AreaOfEffect)")]
+    [ShowIf("@showHitbox && HasVisualHitbox()")]
     [LabelText("碰撞框透明度")]
     [Range(0.1f, 1f)]
+    [InfoBox("碰撞框的透明度，0.1为几乎透明，1为完全不透明")]
     public float hitboxAlpha = 0.3f;
+
+    /// <summary>
+    /// 检查当前技能类型是否有可视化碰撞框
+    /// </summary>
+    private bool HasVisualHitbox()
+    {
+        return skillType == SkillTypeTest.SingleTargetNearest ||
+               skillType == SkillTypeTest.SingleTargetCone ||
+               skillType == SkillTypeTest.SingleTargetBox ||
+               skillType == SkillTypeTest.AoeTargetCone ||
+               skillType == SkillTypeTest.AoeTargetBox ||
+               skillType == SkillTypeTest.AreaOfEffect;
+    }
+
+    /// <summary>
+    /// 技能类型改变时的回调方法
+    /// </summary>
+    private void OnSkillTypeChanged()
+    {
+        // 根据技能类型自动调整默认值
+        switch (skillType)
+        {
+            case SkillTypeTest.Buff:
+            case SkillTypeTest.Heal:
+                targetType = TargetType.Self;
+                break;
+            case SkillTypeTest.Summon:
+                targetType = TargetType.Self;
+                break;
+            default:
+                if (targetType == TargetType.Self && skillType != SkillTypeTest.Buff && skillType != SkillTypeTest.Heal)
+                {
+                    targetType = TargetType.Enemy;
+                }
+                break;
+        }
+    }
 
     /// <summary>
     /// 执行技能效果的核心方法
@@ -327,18 +456,18 @@ public class skillDataConfig : ScriptableObject
                 ExecuteSingleTargetNearestAttack(caster, castPosition);
                 break;
             case SkillTypeTest.SingleTargetCone:
-                ExecuteSingleTargetConeAttack(caster, castPosition, Vector3.zero,true);
+                ExecuteSingleTargetConeAttack(caster, castPosition, Vector3.zero, true);
                 break;
             case SkillTypeTest.SingleTargetBox:
-                ExecuteSingleTargetBoxAttack(caster, castPosition, Vector3.zero,true);
+                ExecuteSingleTargetBoxAttack(caster, castPosition, Vector3.zero, true);
 
                 break;
             case SkillTypeTest.AoeTargetBox:
-                ExecuteSingleTargetBoxAttack(caster, castPosition, Vector3.zero,false);
+                ExecuteSingleTargetBoxAttack(caster, castPosition, Vector3.zero, false);
 
                 break;
-                  case SkillTypeTest.AoeTargetCone:
-                ExecuteSingleTargetConeAttack(caster, castPosition, Vector3.zero,false);
+            case SkillTypeTest.AoeTargetCone:
+                ExecuteSingleTargetConeAttack(caster, castPosition, Vector3.zero, false);
 
                 break;
             case SkillTypeTest.AreaOfEffect:
@@ -352,6 +481,9 @@ public class skillDataConfig : ScriptableObject
                 break;
             case SkillTypeTest.Summon:
                 ExecuteSummonEffect(caster, skillSpawnPoint);
+                break;
+            case SkillTypeTest.Projectile:
+                ExecuteProjectileAttack(caster, skillSpawnPoint);
                 break;
         }
     }
@@ -474,11 +606,11 @@ public class skillDataConfig : ScriptableObject
         }
     }
 
-    private void ExecuteSingleTargetConeAttack(GameObject caster, Vector3 castPosition, Vector3 forwardDirection,bool isSingle)
+    private void ExecuteSingleTargetConeAttack(GameObject caster, Vector3 castPosition, Vector3 forwardDirection, bool isSingle)
     {
         // 扇形攻击，根据角色朝向确定方向
         Vector3 forward = caster.transform.localScale.x > 0 ? Vector3.right : Vector3.left;
-        List<Collider2D> targets = FindTargetsInCone(castPosition, forward, coneRadius, coneAngle, GetTargetLayerMask(),isSingle);
+        List<Collider2D> targets = FindTargetsInCone(castPosition, forward, coneRadius, coneAngle, GetTargetLayerMask(), isSingle);
         int hitCount = 0;
         foreach (var target in targets)
         {
@@ -491,7 +623,7 @@ public class skillDataConfig : ScriptableObject
         Debug.Log($"单体攻击(扇形)命中 {hitCount} 个目标，每个造成 {damage} 点伤害");
     }
 
-    private void ExecuteSingleTargetBoxAttack(GameObject caster, Vector3 castPosition, Vector3 forwardDirection,bool isSingle)
+    private void ExecuteSingleTargetBoxAttack(GameObject caster, Vector3 castPosition, Vector3 forwardDirection, bool isSingle)
     {
         // 获取攻击点位置
         Vector3 attackPosition = GetAttackPosition(caster, castPosition);
@@ -501,7 +633,7 @@ public class skillDataConfig : ScriptableObject
 
         // 使用新的方向性矩形配置
         List<Collider2D> targets = FindTargetsInDirectionalBox(attackPosition, forward,
-            boxForward, boxBackward, caster.transform.localScale.x > 0 ? boxLeft : boxRight, caster.transform.localScale.x > 0 ? boxRight : boxLeft, GetTargetLayerMask(),isSingle);
+            boxForward, boxBackward, caster.transform.localScale.x > 0 ? boxLeft : boxRight, caster.transform.localScale.x > 0 ? boxRight : boxLeft, GetTargetLayerMask(), isSingle);
 
 
         int hitCount = 0;
@@ -586,7 +718,33 @@ public class skillDataConfig : ScriptableObject
             Debug.Log($"召唤了 {summonPrefab.name}，存在时间: {summonDuration}秒");
         }
     }
+    // 新增投射物攻击执行方法 技能动画结束后执行
+    private void ExecuteProjectileAttack(GameObject caster, Transform spawnPoint)
+    {
+        if (projectilePrefab == null || spawnPoint == null) return;
 
+        var projectile = Instantiate(projectilePrefab, spawnPoint.position, spawnPoint.rotation);
+        var projectileScript = projectile.GetComponent<SkillProjectile>();
+
+        if (projectileScript != null)
+        {
+            projectileScript.Initialize(
+                damage: damage,
+                speed: projectileSpeed,
+                maxDistance: projectileRange,
+                owner: caster,
+                targetType: targetType,
+                hitSound: skillHitSoundName,
+                 casterTransform: caster.transform, // 新增参数
+                 projectileType: type,
+                 damageInterval: projectileDamageInterval,
+                 homingRadius: homingRadius,
+                 spawnOffset: spawnOffset,
+                 damageTime: projectileDamageTime
+
+            );
+        }
+    }
     private Collider2D FindNearestTargetInDirection(Vector3 position, Transform casterTransform, TargetType targetType)
     {
         Collider2D[] potentialTargets = Physics2D.OverlapCircleAll(position, range, GetTargetLayerMask());
@@ -624,30 +782,30 @@ public class skillDataConfig : ScriptableObject
         //如果是单体获取最近的目标
         if (isSingle)
         {
-         Collider2D nearestTarget = null;
-        float minSqrDistance = float.MaxValue;
-        Vector3 cachedOrigin = origin; // 缓存原点坐标
-        
-        foreach (var target in potentialTargets)
-        {
-            // 提前过滤无效目标
-            if (!IsValidTarget(target.gameObject)) continue;
+            Collider2D nearestTarget = null;
+            float minSqrDistance = float.MaxValue;
+            Vector3 cachedOrigin = origin; // 缓存原点坐标
 
-            Vector3 directionToTarget = (target.transform.position - cachedOrigin).normalized;
-            if (Vector3.Dot(forward, directionToTarget) > Mathf.Cos(angle * 0.5f * Mathf.Deg2Rad))
+            foreach (var target in potentialTargets)
             {
-                // 使用平方距离比较
-                float sqrDistance = (target.transform.position - cachedOrigin).sqrMagnitude;
-                if (sqrDistance < minSqrDistance)
+                // 提前过滤无效目标
+                if (!IsValidTarget(target.gameObject)) continue;
+
+                Vector3 directionToTarget = (target.transform.position - cachedOrigin).normalized;
+                if (Vector3.Dot(forward, directionToTarget) > Mathf.Cos(angle * 0.5f * Mathf.Deg2Rad))
                 {
-                    minSqrDistance = sqrDistance;
-                    nearestTarget = target;
+                    // 使用平方距离比较
+                    float sqrDistance = (target.transform.position - cachedOrigin).sqrMagnitude;
+                    if (sqrDistance < minSqrDistance)
+                    {
+                        minSqrDistance = sqrDistance;
+                        nearestTarget = target;
+                    }
                 }
             }
-        }
 
-        if (nearestTarget != null)
-            targetsInCone.Add(nearestTarget);
+            if (nearestTarget != null)
+                targetsInCone.Add(nearestTarget);
         }
         else
         {
@@ -716,18 +874,25 @@ public class skillDataConfig : ScriptableObject
 
     private void DealDamageToTarget(GameObject target, float damageAmount)
     {
+        // 投射物互撞保护
+        if (target.GetComponent<SkillProjectile>() != null) return;
+
         // 尝试对敌人造成伤害
         var enemy = target.GetComponent<Enemy>();
         if (enemy != null)
         {
             PlayerAudioConfig.Instance.PlaySound(skillHitSoundName);
             enemy.TakeDamage(damageAmount);
+
+
             return;
         }
 
         // 如果目标有其他生命值组件，可以在这里添加
         Debug.Log($"对 {target.name} 造成 {damageAmount} 点伤害");
     }
+
+
 
     /// <summary>
     /// 获取攻击点位置
@@ -749,7 +914,7 @@ public class skillDataConfig : ScriptableObject
     /// 基于攻击点的方向性矩形攻击检测（用于单体攻击）
     /// </summary>
     private List<Collider2D> FindTargetsInDirectionalBox(Vector3 attackPoint, Vector3 forward,
-        float forwardDist, float backwardDist, float leftDist, float rightDist, LayerMask layerMask,bool isSingle=false)
+        float forwardDist, float backwardDist, float leftDist, float rightDist, LayerMask layerMask, bool isSingle = false)
     {
         List<Collider2D> targets = new List<Collider2D>();
 
@@ -766,8 +931,8 @@ public class skillDataConfig : ScriptableObject
         // float rotationAngle = Vector2.SignedAngle(Vector2.up, new Vector2(forward.x, forward.y));
 
         // 使用Physics2D.OverlapBoxAll检测
-            Collider2D[] potentialTargets = Physics2D.OverlapBoxAll(boxCenter,
-            new Vector2(totalWidth, totalLength), 0f, layerMask);
+        Collider2D[] potentialTargets = Physics2D.OverlapBoxAll(boxCenter,
+        new Vector2(totalWidth, totalLength), 0f, layerMask);
         if (!isSingle)
         {
             targets.AddRange(potentialTargets);
@@ -775,27 +940,27 @@ public class skillDataConfig : ScriptableObject
         else
         {
             Collider2D nearestTarget = null;
-        float minSqrDistance = float.MaxValue;
-        Vector3 attackPosition = attackPoint; // 缓存攻击点坐标
-        
-        foreach (var target in potentialTargets)
-        {
-            // 提前过滤无效目标
-            if (!IsValidTarget(target.gameObject)) continue;
+            float minSqrDistance = float.MaxValue;
+            Vector3 attackPosition = attackPoint; // 缓存攻击点坐标
 
-            // 使用平方距离比较避免开方运算
-            float sqrDistance = (target.transform.position - attackPosition).sqrMagnitude;
-            if (sqrDistance < minSqrDistance)
+            foreach (var target in potentialTargets)
             {
-                minSqrDistance = sqrDistance;
-                nearestTarget = target;
+                // 提前过滤无效目标
+                if (!IsValidTarget(target.gameObject)) continue;
+
+                // 使用平方距离比较避免开方运算
+                float sqrDistance = (target.transform.position - attackPosition).sqrMagnitude;
+                if (sqrDistance < minSqrDistance)
+                {
+                    minSqrDistance = sqrDistance;
+                    nearestTarget = target;
+                }
             }
+
+            if (nearestTarget != null)
+                targets.Add(nearestTarget);
         }
 
-        if (nearestTarget != null)
-            targets.Add(nearestTarget);
-        }
-  
         return targets;
     }
 
@@ -1000,19 +1165,19 @@ public class skillDataConfig : ScriptableObject
                 PerformContinuousAOEDamage(damageKey, caster, castPosition, damagedEnemies);
                 break;
             case SkillTypeTest.SingleTargetCone:
-                PerformContinuousConeTargetDamage(damageKey, caster, castPosition, damagedEnemies,true);
+                PerformContinuousConeTargetDamage(damageKey, caster, castPosition, damagedEnemies, true);
 
                 break;
             case SkillTypeTest.SingleTargetBox:
-                PerformContinuousBoxTargetDamage(damageKey, caster, castPosition, damagedEnemies,true);
+                PerformContinuousBoxTargetDamage(damageKey, caster, castPosition, damagedEnemies, true);
 
                 break;
             case SkillTypeTest.AoeTargetBox:
-                PerformContinuousBoxTargetDamage(damageKey, caster, castPosition, damagedEnemies,false);
+                PerformContinuousBoxTargetDamage(damageKey, caster, castPosition, damagedEnemies, false);
 
                 break;
-                case SkillTypeTest.AoeTargetCone:
-                PerformContinuousConeTargetDamage(damageKey, caster, castPosition, damagedEnemies,false);
+            case SkillTypeTest.AoeTargetCone:
+                PerformContinuousConeTargetDamage(damageKey, caster, castPosition, damagedEnemies, false);
 
                 break;
         }
@@ -1068,10 +1233,10 @@ public class skillDataConfig : ScriptableObject
     /// <summary>
     /// 执行持续扇形伤害
     /// </summary>
-    private void PerformContinuousConeTargetDamage(string damageKey, GameObject caster, Vector3 castPosition, HashSet<GameObject> damagedEnemies,bool isSingle)
+    private void PerformContinuousConeTargetDamage(string damageKey, GameObject caster, Vector3 castPosition, HashSet<GameObject> damagedEnemies, bool isSingle)
     {
         Vector3 forward = caster.transform.localScale.x > 0 ? Vector3.right : Vector3.left;
-        List<Collider2D> enemies = FindTargetsInCone(castPosition, forward, coneRadius, coneAngle, GetTargetLayerMask(),isSingle);
+        List<Collider2D> enemies = FindTargetsInCone(castPosition, forward, coneRadius, coneAngle, GetTargetLayerMask(), isSingle);
 
         foreach (var enemy in enemies)
         {
@@ -1088,14 +1253,14 @@ public class skillDataConfig : ScriptableObject
     /// <summary>
     /// 执行持续矩形伤害
     /// </summary>
-    private void PerformContinuousBoxTargetDamage(string damageKey, GameObject caster, Vector3 castPosition, HashSet<GameObject> damagedEnemies,bool isSingle)
+    private void PerformContinuousBoxTargetDamage(string damageKey, GameObject caster, Vector3 castPosition, HashSet<GameObject> damagedEnemies, bool isSingle)
 
     {
         Vector3 attackPosition = GetAttackPosition(caster, castPosition);
         Vector3 forward = caster.transform.localScale.x > 0 ? Vector3.right : Vector3.left;
 
         List<Collider2D> enemies = FindTargetsInDirectionalBox(attackPosition, forward,
-            boxForward, boxBackward, boxLeft, boxRight, GetTargetLayerMask(),isSingle);
+            boxForward, boxBackward, boxLeft, boxRight, GetTargetLayerMask(), isSingle);
 
 
         foreach (var enemy in enemies)

@@ -491,64 +491,8 @@ public class UIManager : MonoBehaviour
     //     }
     // }
     
-    /// <summary>
-    /// 更新法师技能UI
-    /// </summary>
-    private void UpdateMageSkillUI(Mage mage)
-    {
-        var skillStatus = mage.GetSkillStatus();
-        
-        // 更新技能按钮状态
-        if (skillButtons.Length > 0 && skillButtons[0] != null)
-        {
-            skillButtons[0].interactable = skillStatus.canUseFireball && skillStatus.currentMana >= 15;
-        }
-        
-        if (skillButtons.Length > 1 && skillButtons[1] != null)
-        {
-            skillButtons[1].interactable = skillStatus.canUseLightningBolt && skillStatus.currentMana >= 25;
-        }
-        
-        if (skillButtons.Length > 2 && skillButtons[2] != null)
-        {
-            skillButtons[2].interactable = skillStatus.canUseHeal && skillStatus.currentMana >= 20;
-        }
-        
-        if (skillButtons.Length > 3 && skillButtons[3] != null)
-        {
-            skillButtons[3].interactable = skillStatus.canUseTeleport && skillStatus.currentMana >= 30;
-        }
-    }
-    
-    /// <summary>
-    /// 更新射手技能UI
-    /// </summary>
-    private void UpdateArcherSkillUI(Archer archer)
-    {
-        var skillStatus = archer.GetSkillStatus();
-        
-        // 更新技能按钮状态
-        if (skillButtons.Length > 0 && skillButtons[0] != null)
-        {
-            skillButtons[0].interactable = skillStatus.canUseMultiShot && skillStatus.currentArrows >= 3;
-        }
-        
-        if (skillButtons.Length > 1 && skillButtons[1] != null)
-        {
-            skillButtons[1].interactable = skillStatus.canUsePiercingShot && skillStatus.currentArrows > 0;
-        }
-        
-        if (skillButtons.Length > 2 && skillButtons[2] != null)
-        {
-            skillButtons[2].interactable = skillStatus.canUseRapidFire;
-        }
-        
-        if (skillButtons.Length > 3 && skillButtons[3] != null)
-        {
-            skillButtons[3].interactable = skillStatus.canUseExplosiveArrow && skillStatus.currentArrows > 0;
-        }
-    }
-    
+
+
     /// <summary>
     /// 使用技能
     /// </summary>
@@ -596,83 +540,9 @@ public class UIManager : MonoBehaviour
     //     }
     // }
     
-    /// <summary>
-    /// 使用法师技能
-    /// </summary>
-    private void UseMageSkill(Mage mage, int skillIndex)
-    {
-        switch (skillIndex)
-        {
-            case 0:
-                // 火球术需要目标位置，这里使用鼠标位置
-                Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                mage.CastFireball(mousePos);
-                break;
-            case 1:
-                // 闪电术需要目标，这里查找最近的敌人
-                GameObject nearestEnemy = FindNearestEnemy();
-                if (nearestEnemy != null)
-                {
-                    mage.CastLightningBolt(nearestEnemy.transform);
-                }
-                break;
-            case 2:
-                mage.CastHeal();
-                break;
-            case 3:
-                // 传送术使用鼠标位置
-                Vector2 teleportPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                mage.CastTeleport(teleportPos);
-                break;
-        }
-    }
-    
-    /// <summary>
-    /// 使用射手技能
-    /// </summary>
-    private void UseArcherSkill(Archer archer, int skillIndex)
-    {
-        Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        
-        switch (skillIndex)
-        {
-            case 0:
-                archer.PerformMultiShot(mousePos);
-                break;
-            case 1:
-                archer.PerformPiercingShot(mousePos);
-                break;
-            case 2:
-                archer.PerformRapidFire();
-                break;
-            case 3:
-                archer.PerformExplosiveArrow(mousePos);
-                break;
-        }
-    }
-    
-    /// <summary>
-    /// 查找最近的敌人
-    /// </summary>
-    private GameObject FindNearestEnemy()
-    {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        GameObject nearest = null;
-        float minDistance = float.MaxValue;
-        
-        foreach (GameObject enemy in enemies)
-        {
-            float distance = Vector2.Distance(currentCharacter.transform.position, enemy.transform.position);
-            if (distance < minDistance)
-            {
-                minDistance = distance;
-                nearest = enemy;
-            }
-        }
-        
-        return nearest;
-    }
-    
+
+
+
     // Duplicate methods removed - using earlier definitions
     
     /// <summary>

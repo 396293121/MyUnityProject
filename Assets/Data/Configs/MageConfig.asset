@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97a512bb2ae49c54ab41d702c0ca9249, type: 3}
+  m_Name: MageConfig
+  m_EditorClassIdentifier: 
+  strength: 8
+  agility: 10
+  stamina: 8
+  intelligence: 18
+  spellCastRange: 12
+  manaRegenRate: 2
+  attackRange: 1.5
+  attackHeight: 1.5
+  attackCooldown: 0.3
+  knockbackForce: 3
+  fireballCooldown: 3
+  lightningBoltCooldown: 5
+  frostNovaCooldown: 12
+  healCooldown: 8
+  teleportCooldown: 15
+  fireballManaCost: 15
+  lightningBoltManaCost: 20
+  frostNovaManaCost: 30
+  healManaCost: 20
+  teleportManaCost: 25
+  fireballDamageMultiplier: 1.2
+  lightningBoltDamageMultiplier: 1.5
+  frostNovaDamageMultiplier: 1
+  fireballExplosionRadius: 2.5
+  fireballSpeed: 12
+  lightningBoltChainTargets: 3
+  lightningBoltChainRange: 5
+  frostNovaRadius: 6
+  frostNovaSlowEffect: 0.5
+  frostNovaSlowDuration: 4
+  healMultiplier: 0.8
+  intelligenceHealBonus: 2
+  healEffectDuration: 2
+  teleportMaxDistance: 8
+  fireballCastTime: 0.5
+  lightningBoltCastTime: 0.3
+  frostNovaCastTime: 0.8
+  healCastTime: 0.4
+  teleportCastTime: 0.6
+  normalAttackRecoveryTime: 0.3
+  spellRecoveryTime: 0.4

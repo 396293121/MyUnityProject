@@ -79,7 +79,7 @@ public class TestSceneController : MonoBehaviour
     [ReadOnly]
     [ShowInInspector]
     private GameObject currentPlayer;
-    
+
     [FoldoutGroup("状态/游戏对象/实例引用")]
     [LabelText("活跃敌人列表")]
     [ReadOnly]
@@ -128,7 +128,7 @@ public class TestSceneController : MonoBehaviour
     [LabelText("玩家角色组件")]
     [ReadOnly]
     [ShowInInspector]
-    private Character playerCharacter;
+    private Character character;
     
     [FoldoutGroup("状态/组件引用/控制器组件")]
     [LabelText("摄像机跟随组件")]
@@ -380,7 +380,6 @@ public class TestSceneController : MonoBehaviour
         {
             if (currentPlayer != null)
             {
-                var character = currentPlayer.GetComponent<Character>();
                 return character != null ? character.currentHealth : 0f;
             }
             return 0f;
@@ -399,7 +398,6 @@ public class TestSceneController : MonoBehaviour
         {
             if (currentPlayer != null)
             {
-                var character = currentPlayer.GetComponent<Character>();
                 return character != null ? character.currentMana : 0f;
             }
             return 0f;
@@ -447,7 +445,6 @@ public class TestSceneController : MonoBehaviour
         float healthPercent = 0f;
         if (currentPlayer != null)
         {
-            var character = currentPlayer.GetComponent<Character>();
             if (character != null && character.maxHealth > 0)
             {
                 healthPercent = character.currentHealth / character.maxHealth;
@@ -464,7 +461,6 @@ public class TestSceneController : MonoBehaviour
         float manaPercent = 0f;
         if (currentPlayer != null)
         {
-            var character = currentPlayer.GetComponent<Character>();
             if (character != null && character.maxMana > 0)
             {
                 manaPercent = character.currentMana / character.maxMana;
@@ -504,6 +500,7 @@ public static TestSceneController Instance { get; private set; }
         
         // 记录场景开始时间
         sceneStartTime = Time.time;
+
     }
     
     private void Start()
@@ -643,7 +640,7 @@ public static TestSceneController Instance { get; private set; }
         
         // 步骤4: 创建玩家
         yield return StartCoroutine(CreatePlayerAsync());
-        
+
         // 步骤5: 生成敌人
         yield return StartCoroutine(SpawnEnemiesAsync());
         
@@ -735,7 +732,6 @@ public static TestSceneController Instance { get; private set; }
         
         if (currentPlayer != null)
         {
-            var character = currentPlayer.GetComponent<Character>();
             if (character != null)
             {
                 uiManager.SetPlayerCharacter(character);
@@ -811,7 +807,6 @@ public static TestSceneController Instance { get; private set; }
         // 检查玩家是否死亡
         if (currentPlayer != null)
         {
-            var character = currentPlayer.GetComponent<Character>();
             if (character != null && character.currentHealth <= 0 && !isPlayerDead)
             {
             }
@@ -850,12 +845,11 @@ public static TestSceneController Instance { get; private set; }
             {
                 playerController = currentPlayer.AddComponent<PlayerController>();
             }
-              playerCharacter = currentPlayer.GetComponent<Character>();
-        
+             character=currentPlayer.GetComponent<Character>();
         // 让角色自己初始化属性
-        if (playerCharacter != null)
+        if (character != null)
         {
-            playerCharacter.InitializeWithConfig(selectedCharacterType);
+            character.InitializeWithConfig(selectedCharacterType);
         }
             // 配置玩家属性 在角色脚本配置
         //    ConfigurePlayer();
@@ -878,37 +872,6 @@ public static TestSceneController Instance { get; private set; }
     {
         return unifiedConfig.GetCharacterPrefab(characterType) ?? unifiedConfig.GetCharacterPrefab(unifiedConfig.defaultCharacterType);
     }
-    
-    /// <summary>
-    /// 配置玩家属性
-    /// </summary>
-    // void ConfigurePlayer()
-    // {
-    //     if (playerController == null) return;
-        
-    //     // 从配置文件获取角色属性
-    //     var characterConfig = ConfigManager.Instance?.GetCharacterConfig(selectedCharacterType);
-    //     if (characterConfig != null)
-    //     {
-    //         // 设置角色属性（这里需要根据实际的PlayerController接口调整）
-    //         var character = playerController.GetComponent<Character>();
-    //         if (character != null)
-    //         {
-    //             character.maxHealth = characterConfig.health;
-    //             character.maxMana = characterConfig.mana;
-    //             character.currentHealth = characterConfig.health;
-    //             character.currentMana = characterConfig.mana;
-    //         }
-            
-    //         // 设置移动速度等属性
-    //         var rigidbody = currentPlayer.GetComponent<Rigidbody2D>();
-    //         if (rigidbody != null)
-    //         {
-    //             // 可以在这里设置物理属性
-    //         }
-    //     }
-    // }
-    
     /// <summary>
     /// 创建敌人
     /// </summary>
@@ -1019,7 +982,7 @@ public static TestSceneController Instance { get; private set; }
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowPanel("Gameplay");
-            UIManager.Instance.SetCurrentCharacter(currentPlayer?.GetComponent<Character>());
+            UIManager.Instance.SetCurrentCharacter(character);
         }
     }
     
