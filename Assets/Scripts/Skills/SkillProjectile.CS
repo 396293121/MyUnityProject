@@ -36,10 +36,10 @@ public class SkillProjectile : MonoBehaviour
     [Tooltip("投射物伤害应用的时间间隔")]
     [Range(0.1f, 2f)]
     [SerializeField] private float damageInterval = 0.5f;
-        [BoxGroup("投射物配置/基础属性")]
-    [LabelText("伤害间隔")]
+    [BoxGroup("投射物配置/基础属性")]
+    [LabelText("投射物持续时间")]
     [ShowIf("projectileType", ProjectileType.DoT)]
-    [Tooltip("投射物持续时间")]
+    [Tooltip("")]
     [Range(0.1f, 2f)]
     [SerializeField] private float damageTime = 1f;
     [BoxGroup("投射物配置/基础属性")]
@@ -91,15 +91,29 @@ public class SkillProjectile : MonoBehaviour
     private float damage;
 
     [BoxGroup("战斗属性/音效设置")]
-    [LabelText("撞击音效")]
+    [LabelText("命中音效")]
+    [ShowInInspector]
+    public string hitSound;
+   [BoxGroup("战斗属性/音效设置")]
+    [LabelText("生命周期内音效（最好设置为循环播放）")]
+    [ShowInInspector]
+    public string allSound;
+      [BoxGroup("战斗属性/动画控制")]
+    [LabelText("施法者Animator")]
     [ReadOnly]
     [ShowInInspector]
-    private string hitSound;
-
+    private Animator casterAnimator;
+    [BoxGroup("战斗属性/动画控制")]
+    [LabelText("是否施法动画")]
+    [ReadOnly]
+    [ShowInInspector]
+    private bool isCastAnimation;
+    private Transform spellPoint; // 新增法术施放点引用
     // DoT 伤害相关变量
     private Dictionary<GameObject, Coroutine> activeDoTCoroutines = new Dictionary<GameObject, Coroutine>();
     private HashSet<GameObject> damagedTargets = new HashSet<GameObject>();
-
+ // 新增销毁事件
+    public event Action OnProjectileDestroyed;
     /// <summary>
     /// 初始化投射物参数
     /// </summary>
@@ -112,27 +126,49 @@ public class SkillProjectile : MonoBehaviour
     [TitleGroup("初始化方法")]
     [Button("初始化投射物", ButtonSizes.Medium)]
     [GUIColor(0.4f, 0.8f, 1f)]
-    public void Initialize(float damage, float speed, float maxDistance, GameObject owner, TargetType targetType, string hitSound, Transform casterTransform, ProjectileType projectileType, float damageInterval, float homingRadius,Vector2 spawnOffset,float damageTime)
+    public void Initialize(float damage, float speed, float maxDistance, GameObject owner, TargetType targetType, Transform casterTransform, ProjectileType projectileType, float damageInterval, float homingRadius, Vector2 spawnOffset, float damageTime, Transform spellPoint, bool isCastAnimation)
+
     {
         this.damage = damage;
         this.speed = speed;
         this.maxDistance = maxDistance;
         this.owner = owner;
         this.targetType = targetType;
-        this.hitSound = hitSound;
         this.projectileType = projectileType;
         this.damageInterval = damageInterval;
         this.homingRadius = homingRadius;
         this.spawnOffset = spawnOffset;
         this.damageTime = damageTime;
-        
-      
+        this.spellPoint = spellPoint;
+        this.isCastAnimation = isCastAnimation;
         startPosition = transform.position;
         if (casterTransform != null)
         {
             Vector3 scale = transform.localScale;
             scale.x = Mathf.Sign(casterTransform.localScale.x);
             transform.localScale = scale;
+        }
+            
+         // 法杖跟随逻辑
+        if (projectileType == ProjectileType.DoT && spellPoint != null)
+        {
+            // 将投射物绑定到法杖顶端
+            transform.SetParent(spellPoint);
+            transform.localPosition = Vector3.zero;
+            //播放持续施法动画
+            if (isCastAnimation )
+            {
+                casterAnimator = casterTransform.GetComponent<Animator>();
+
+                casterAnimator.SetTrigger("castTrigger");
+                casterAnimator.SetBool("isCasting", true);
+            }    
+            //开始持续时间倒计时
+            StartCoroutine(CountdownDamageTime());
+
+        }
+        if(allSound != ""){
+            PlayerAudioConfig.Instance.PlaySound(allSound);
         }
     }
 
@@ -151,44 +187,72 @@ public class SkillProjectile : MonoBehaviour
     private IEnumerator ApplyDoTDamage(GameObject target)
     {
         float elapsedTime = 0f;
-        while (elapsedTime < damageTime && target != null)
+        while (target != null)
         {
             ApplyDamage(target);
             yield return new WaitForSeconds(damageInterval);
             elapsedTime += damageInterval;
         }
-        
         // 清理协程记录
-        if (activeDoTCoroutines.ContainsKey(target))
-        {
-            activeDoTCoroutines.Remove(target);
-        }
-        
+        // if (activeDoTCoroutines.ContainsKey(target))
+        // {
+        //     activeDoTCoroutines.Remove(target);
+        // }
+
         Destroy(gameObject);
     }
+    private IEnumerator  CountdownDamageTime()
 
+    {
+        yield return new WaitForSeconds(damageTime);
+        // 伤害应用完成，清理所有DoT协程
+        foreach (Coroutine coroutine in activeDoTCoroutines.Values)
+        {
+            StopCoroutine(coroutine);
+        }
+        activeDoTCoroutines.Clear();
+        if (isCastAnimation)
+        {  casterAnimator?.SetBool("isCasting",false); }
+      
+        Destroy(gameObject);
+    }
     private void Update()
     {
         // 新增自动索敌逻辑
         if (projectileType == ProjectileType.Homing)
         {
-          //  AcquireHomingTarget();
+            //  AcquireHomingTarget();
         }
-        else if(projectileType == ProjectileType.DoT)
+        else if (projectileType == ProjectileType.DoT)
         {
-    
         }
-        else if(projectileType == ProjectileType.Standard)
+        else if (projectileType == ProjectileType.Standard)
         {
             ApplyStandardDamage();
         }
     }
+    private void LateUpdate()
+{
+    if (projectileType == ProjectileType.DoT && spellPoint != null)
+    {
+        // 强制同步位置和旋转
+        transform.position = spellPoint.position;
+        transform.rotation = spellPoint.rotation;
+        
+        // 保持缩放一致性（根据需求选择其中一种方案）
+        // 方案1：继承父级缩放
+       // transform.localScale = spellPoint.lossyScale; 
+        
+        // 方案2：保持原始缩放
+        // transform.localScale = Vector3.one;
+    }
+}
     private void ApplyStandardDamage()
 
     {
-        Debug.Log(transform.localScale.x+":啊实打实大大");
+        Debug.Log(transform.localScale.x + ":啊实打实大大");
 
-           // 原有移动逻辑
+        // 原有移动逻辑
         transform.Translate(transform.localScale.x * speed * Time.deltaTime, 0, 0);
 
         // 计算已飞行距离
@@ -224,6 +288,7 @@ public class SkillProjectile : MonoBehaviour
                 Coroutine dotCoroutine = StartCoroutine(ApplyDoTDamage(other.gameObject));
                 activeDoTCoroutines[other.gameObject] = dotCoroutine;
                 PlayImpactEffect();
+                BurnEffect burnEffect = ParticleManager.Instance.PlayBurnEffectOnTarget(other.transform, 1f);
             }
         }
 
@@ -288,6 +353,8 @@ public class SkillProjectile : MonoBehaviour
     private void OnDestroy()
     {
         StopAllDoTCoroutines();
+          // 触发销毁事件
+        OnProjectileDestroyed?.Invoke();
     }
 
     #region 调试和验证方法

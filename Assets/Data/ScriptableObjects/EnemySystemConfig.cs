@@ -155,18 +155,7 @@ public class enmeyConfig{
 [InlineProperty]
 public class WildBoarConfig : enmeyConfig
 {
-    [FoldoutGroup("音频配置", expanded: true)]
-    [LabelText("攻击音效")]
-    public AudioClip attackSound;
-    [FoldoutGroup("音频配置", expanded: true)]
-    [LabelText("冲撞音效")]
-    public AudioClip chargeSound;
-    [FoldoutGroup("音频配置", expanded: true)]
-    [LabelText("受伤音效")]
-    public AudioClip hurtSound;
-    [FoldoutGroup("音频配置", expanded: true)]
-    [LabelText("死亡音效")]
-    public AudioClip deadSound;
+
     [FoldoutGroup("冲锋属性", expanded: true)]
     [LabelText("冲锋速度")]
     [PropertyRange(1f, 20f)]

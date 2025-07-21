@@ -239,7 +239,6 @@ public abstract class Character : MonoBehaviour, IDamageable
         spriteRenderer = GetComponent<SpriteRenderer>();
         
         // 初始化属性
-        InitializeStats();
     }
     
     protected virtual void Start()
@@ -256,11 +255,7 @@ public abstract class Character : MonoBehaviour, IDamageable
     /// <summary>
     /// 初始化基础属性
     /// </summary>
-    protected virtual void InitializeStats()
-    {
-        currentHealth = maxHealth;
-        currentMana = maxMana;
-    }
+   
     
     /// <summary>
     /// 计算衍生属性

@@ -67,7 +67,7 @@ public class ParticleManager : MonoBehaviour
         // 初始化效果数据库
         foreach (ParticleEffectData effectData in particleEffects)
         {
-            if (!string.IsNullOrEmpty(effectData.effectName))
+            if (!string.IsNullOrEmpty(effectData.effectName) && effectData.particlePrefab != null)
             {
                 effectDatabase[effectData.effectName] = effectData;
                 InitializeEffectPool(effectData);
@@ -75,7 +75,7 @@ public class ParticleManager : MonoBehaviour
         }
         
         // 添加默认效果
-        AddDefaultEffects();
+     //   AddDefaultEffects();
     }
     
     /// <summary>
@@ -84,7 +84,7 @@ public class ParticleManager : MonoBehaviour
     private void AddDefaultEffects()
     {
         // 如果没有配置效果，创建一些默认效果
-        if (particleEffects.Count == 0)
+        if (particleEffects.Count == 0 && effectDatabase.Count == 0)
         {
             CreateDefaultEffect("hit_effect", Color.red, 20, 0.5f);
             CreateDefaultEffect("heal_effect", Color.green, 15, 1f);
@@ -142,7 +142,8 @@ public class ParticleManager : MonoBehaviour
             particlePrefab = effectObject,
             duration = duration,
             autoDestroy = true,
-            followTarget = false
+            followTarget = false,
+            initialPoolSize = particleCount
         };
         
         effectDatabase[name] = effectData;
@@ -161,14 +162,13 @@ public class ParticleManager : MonoBehaviour
         
         Queue<ParticleSystem> pool = new Queue<ParticleSystem>();
         
-        for (int i = 0; i < poolSize / particleEffects.Count; i++)
+        for (int i = 0; i < effectData.initialPoolSize; i++)
         {
             GameObject obj = Instantiate(effectData.particlePrefab, poolParent);
             ParticleSystem particles = obj.GetComponent<ParticleSystem>();
             obj.SetActive(false);
             pool.Enqueue(particles);
         }
-        
         effectPools[effectData.effectName] = pool;
     }
     
@@ -564,6 +564,7 @@ public class ParticleEffectData
     [Header("行为设置")]
     public bool autoDestroy = true;         // 自动销毁
     public bool followTarget = false;       // 跟随目标
+    public int initialPoolSize = 50; // 新增字段，用于指定初始对象池大小，默认值为50
     public bool looping = false;            // 循环播放
     
     [Header("音效设置")]

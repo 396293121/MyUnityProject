@@ -57,7 +57,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 1d9594ae6fab0ae44bb0444063bea70b, type: 3}
   characterSounds:
   - {fileID: 8300000, guid: aa6c2f668b4de7441abadfdb249f484d, type: 3}
-  - {fileID: 8300000, guid: 011eba4bf76ffe6478be579641bdc00a, type: 3}
+  - {fileID: 8300000, guid: ffc12a725b0881748bc725b00fb4e6d8, type: 3}
   - {fileID: 8300000, guid: 9be7884ac01923e41bfad083faf9a03c, type: 3}
   - {fileID: 8300000, guid: aa98120c010fc98448b10f56d46dc325, type: 3}
   enemySounds:

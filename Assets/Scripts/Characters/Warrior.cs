@@ -68,7 +68,8 @@ public class Warrior : Character
         agility = config != null ? config.agility : 8;        // 较低敏捷
         stamina = config != null ? config.stamina : 12;       // 高体力
         intelligence = config != null ? config.intelligence : 5;   // 低智力
-        
+        maxHealth = config != null ? config.maxHealth : 100;
+        maxMana = config != null ? config.maxMana : 100;
         // 重新计算衍生属性
         CalculateDerivedStats();
         
@@ -93,21 +94,6 @@ public class Warrior : Character
         base.Update();
         
     }
-    public override void InitializeWithConfig(string characterType)
-{
-    var config = ConfigManager.Instance?.GetCharacterConfig(characterType);
-    if (config != null)
-    {
-        maxHealth = config.health;
-        maxMana = config.mana;
-        currentHealth = maxHealth;
-        currentMana = maxMana;
-    }
-    
-    // 应用战士特有属性
-    CalculateDerivedStats();
-}
-
 
     
     /// <summary>

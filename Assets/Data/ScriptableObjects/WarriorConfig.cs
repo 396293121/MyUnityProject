@@ -39,7 +39,19 @@ public class WarriorConfig : ScriptableObject
     [SuffixLabel("INT")]
     [InfoBox("战士的智力属性，影响魔法攻击力")]
     public int intelligence = 5;
+        [VerticalGroup("战士基础配置/核心属性/数值/右列")]
+    [LabelText("生命值")]
+    [PropertyRange(1, 200)]
+    [SuffixLabel("HP")]
+    [InfoBox("战士的生命值，影响生命值")]
+    public int maxHealth = 100;
     
+    [VerticalGroup("战士基础配置/核心属性/数值/右列")]
+    [LabelText("魔法值")]
+    [PropertyRange(1, 200)]
+    [SuffixLabel("MP")]
+    [InfoBox("战士的魔法值，影响魔法值")]
+    public int maxMana = 100;
     // 技能相关配置已移至CharacterSkillConfig
     
     [TitleGroup("攻击系统配置", "战士攻击相关参数设置", TitleAlignments.Centered)]

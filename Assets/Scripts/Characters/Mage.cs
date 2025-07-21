@@ -55,8 +55,8 @@ public class Mage : Character
         agility = config != null ? config.agility : 10;
         stamina = config != null ? config.stamina : 8;
         intelligence = config != null ? config.intelligence : 15;
-
-
+        maxMana = config != null ? config.maxMana : 100;
+        maxHealth = config != null ? config.maxHealth : 100;
 
         // 重新计算衍生属性
         CalculateDerivedStats();
@@ -67,20 +67,6 @@ public class Mage : Character
         }
     }
 
-    public override void InitializeWithConfig(string characterType)
-    {
-        var config = ConfigManager.Instance?.GetCharacterConfig(characterType);
-        if (config != null)
-        {
-            maxHealth = config.health;
-            maxMana = config.mana;
-            currentHealth = maxHealth;
-            currentMana = maxMana;
-        }
-
-        // 应用法师特有属性
-        CalculateDerivedStats();
-    }
 
     public override void CalculateDerivedStats()
     {
@@ -93,8 +79,8 @@ public class Mage : Character
         maxMana += 20;        // 额外魔法值
 
         // 确保当前生命值和魔法值不超过最大值
-        currentHealth = Mathf.Min(currentHealth, maxHealth);
-        currentMana = Mathf.Min(currentMana, maxMana);
+        currentHealth = maxHealth;
+        currentMana = maxMana;
     }
 
     protected override void Update()

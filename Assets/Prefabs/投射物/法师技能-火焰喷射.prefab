@@ -180,6 +180,8 @@ MonoBehaviour:
   homingRadius: 0
   spawnOffset: {x: 0, y: 0}
   impactEffect: {fileID: 0}
+  hitSound: 
+  allSound: "\u706B\u7130\u71C3\u70E7"
 --- !u!95 &3041944308459560522
 Animator:
   serializedVersion: 5

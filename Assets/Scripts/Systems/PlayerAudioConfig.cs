@@ -37,6 +37,8 @@ public class AudioClipConfig
     [SuffixLabel("秒")]
     [InfoBox("防止音效播放过于频繁")]
     public float cooldown = 0f;
+    [LabelText("是否循环播放")]
+    public bool isLoop = false;
 }
 public class PlayerAudioConfig : MonoBehaviour
 {
@@ -214,7 +216,7 @@ public class PlayerAudioConfig : MonoBehaviour
             finalPitch += Random.Range(-config.pitchVariation, config.pitchVariation);
         }
         audioSource.pitch = finalPitch;
-
+        audioSource.loop = config.isLoop;
         // 播放音效
         audioSource.Play();
 

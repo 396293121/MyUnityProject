@@ -34,7 +34,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1.22, y: 3.1500006}
+  m_AnchoredPosition: {x: 4.52, y: 3.49}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3224185162611734814
@@ -204,9 +204,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19dc363eec73a5b48bc3d976d5b7581d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCharacter: {fileID: 0}
+  playerCharacter: {fileID: 6693522671979923042}
   aamoveSpeed: 0
-  jumpForce: 20.2
+  jumpForce: 15
   groundCheckDistance: 0.1
   groundLayerMask:
     serializedVersion: 2
@@ -272,23 +272,22 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5332153218383502975}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 72f6046a1ab0e544490ef380db1c6dcd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   skillDataList:
-  - {fileID: 11400000, guid: 07e3bf528516a5743a9b449de1fb1c21, type: 2}
-  - {fileID: 11400000, guid: 35857258402495d40811263c9fcb19a8, type: 2}
-  - {fileID: 11400000, guid: 59345cb70c7c65444a639f9e8163d8af, type: 2}
-  - {fileID: 11400000, guid: a54d7a77f39bc7b46b625762b2bdb61f, type: 2}
+  - {fileID: 11400000, guid: ae8196f1fa02a82429ce2ee2c33e617a, type: 2}
+  - {fileID: 11400000, guid: cd28b67ef89e9804e90d9d8727fcbe6d, type: 2}
+  - {fileID: 11400000, guid: 53754f97dc6dc0045b60350972ebe232, type: 2}
   skillInputActions:
+  - {fileID: -2095381808898864860, guid: 54c44c021f8817542a70cde8e1406f69, type: 3}
   - {fileID: 9138152033273414294, guid: 54c44c021f8817542a70cde8e1406f69, type: 3}
   - {fileID: 2607892318586337012, guid: 54c44c021f8817542a70cde8e1406f69, type: 3}
-  - {fileID: 8580453335593883066, guid: 54c44c021f8817542a70cde8e1406f69, type: 3}
   skillSpawnPoint: {fileID: 2122437360670417740}
   characterAnimator: {fileID: 1234094422006537599}
-  characterController: {fileID: 0}
+  characterController: {fileID: 6693522671979923042}
   showDebugGizmos: 1
   isExecutingSkill: 0
 --- !u!114 &6378622902067727011
@@ -351,7 +350,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 7.02, y: 4.97}
+  m_Size: {x: 2.37, y: 4.75}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -415,7 +414,7 @@ BoxCollider2D:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0}
     oldSize: {x: 2.37, y: 4.75}
-    newSize: {x: 7.02, y: 4.97}
+    newSize: {x: 2.37, y: 4.75}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0

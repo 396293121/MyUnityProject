@@ -41,8 +41,19 @@ public class MageConfig : ScriptableObject
     public int intelligence = 5;
     
     // 技能相关配置已移至CharacterSkillConfig
-
-
+    [VerticalGroup("法师基础配置/核心属性/数值/右列")]
+    [LabelText("生命值")]
+    [PropertyRange(1, 200)]
+    [SuffixLabel("HP")]
+    [InfoBox("法师的生命值，影响生命值")]
+    public int maxHealth = 100;
+    
+    [VerticalGroup("法师基础配置/核心属性/数值/右列")]
+    [LabelText("魔法值")]
+    [PropertyRange(1, 200)]
+    [SuffixLabel("MP")]
+    [InfoBox("法师的魔法值，影响魔法值")]
+    public int maxMana = 100;
     
 
     [LabelText("魔法值回复速度")]

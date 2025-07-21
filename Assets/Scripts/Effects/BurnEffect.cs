@@ -33,7 +33,6 @@ public class BurnEffect : MonoBehaviour
     public void StartBurnEffect()
     {
         if (isPlaying) return;
-        
         isPlaying = true;
         
         // 播放粒子效果
@@ -59,26 +58,27 @@ public class BurnEffect : MonoBehaviour
         burnCoroutine = StartCoroutine(BurnCoroutine());
     }
     
+    
     /// <summary>
     /// 停止燃烧特效
     /// </summary>
     public void StopBurnEffect()
     {
         if (!isPlaying) return;
-        
+
         isPlaying = false;
-        
+
         // 停止粒子效果
         if (fireParticles != null)
         {
             fireParticles.Stop();
         }
-        
+
         if (smokeParticles != null)
         {
             smokeParticles.Stop();
         }
-        
+
         // 停止协程
         if (burnCoroutine != null)
         {
@@ -166,7 +166,10 @@ public class BurnEffect : MonoBehaviour
         var velocityOverLifetime = fireParticles.velocityOverLifetime;
         velocityOverLifetime.enabled = true;
         velocityOverLifetime.space = ParticleSystemSimulationSpace.Local;
-        velocityOverLifetime.y = new ParticleSystem.MinMaxCurve(1f, 3f); // 向上飘动
+        // 使用常量模式确保所有速度曲线模式一致
+        velocityOverLifetime.x = new ParticleSystem.MinMaxCurve(0f);
+        velocityOverLifetime.y = new ParticleSystem.MinMaxCurve(2f); // 向上飘动
+        velocityOverLifetime.z = new ParticleSystem.MinMaxCurve(0f);
         
         // 颜色渐变
         var colorOverLifetime = fireParticles.colorOverLifetime;
@@ -196,6 +199,10 @@ public class BurnEffect : MonoBehaviour
         sizeCurve.AddKey(0.3f, 1f);
         sizeCurve.AddKey(1f, 0.2f);
         sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, sizeCurve);
+        
+        // 设置渲染器材质 - 使用Unity内置的默认粒子材质
+        var renderer = fireParticles.GetComponent<ParticleSystemRenderer>();
+        renderer.material = CreateDefaultParticleMaterial();
         
         fireObj.SetActive(false);
     }
@@ -233,8 +240,10 @@ public class BurnEffect : MonoBehaviour
         var velocityOverLifetime = smokeParticles.velocityOverLifetime;
         velocityOverLifetime.enabled = true;
         velocityOverLifetime.space = ParticleSystemSimulationSpace.Local;
-        velocityOverLifetime.y = new ParticleSystem.MinMaxCurve(0.5f, 1.5f); // 缓慢向上
-        velocityOverLifetime.x = new ParticleSystem.MinMaxCurve(-0.5f, 0.5f); // 左右摆动
+        // 使用常量模式确保所有速度曲线模式一致
+        velocityOverLifetime.x = new ParticleSystem.MinMaxCurve(0f);
+        velocityOverLifetime.y = new ParticleSystem.MinMaxCurve(1f); // 缓慢向上
+        velocityOverLifetime.z = new ParticleSystem.MinMaxCurve(0f);
         
         // 颜色渐变
         var colorOverLifetime = smokeParticles.colorOverLifetime;
@@ -265,7 +274,42 @@ public class BurnEffect : MonoBehaviour
         smokeSizeCurve.AddKey(1f, 1.5f);
         sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, smokeSizeCurve);
         
+        // 设置渲染器材质 - 使用Unity内置的默认粒子材质
+        var renderer = smokeParticles.GetComponent<ParticleSystemRenderer>();
+        renderer.material = CreateDefaultParticleMaterial();
+        
         smokeObj.SetActive(false);
+    }
+    
+    /// <summary>
+    /// 创建默认粒子材质
+    /// </summary>
+    private Material CreateDefaultParticleMaterial()
+    {
+        // 尝试使用Unity内置的默认粒子着色器
+        Shader particleShader = Shader.Find("Sprites/Default");
+        if (particleShader == null)
+        {
+            // 如果找不到Sprites/Default，使用Legacy Particles/Additive
+            particleShader = Shader.Find("Legacy Shaders/Particles/Additive");
+        }
+        if (particleShader == null)
+        {
+            // 最后的备选方案，使用标准着色器
+            particleShader = Shader.Find("Standard");
+        }
+        
+        Material material = new Material(particleShader);
+        material.name = "DefaultParticleMaterial";
+        
+        // 设置混合模式为加法混合，适合火焰效果
+        if (particleShader.name.Contains("Additive"))
+        {
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+        }
+        
+        return material;
     }
     
     /// <summary>

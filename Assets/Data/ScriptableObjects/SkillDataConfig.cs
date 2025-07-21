@@ -96,11 +96,11 @@ public class skillDataConfig : ScriptableObject
 
     [TabGroup("特效配置")]
     [AssetsOnly]
-    [LabelText("技能音效")]
+    [LabelText("技能开始音效（在技能触发音效0.2S后播放）")]
     public AudioClip skillSound;
     [TabGroup("特效配置")]
     [AssetsOnly]
-    [LabelText("技能开始音效名称")]
+    [LabelText("技能触发音效名称")]
     [InfoBox("在PLAYERAUDIOCONFIG配置的音效名称，默认SKILLSTART")]
     public string skillStartSoundName = "skillStart";
 
@@ -307,6 +307,11 @@ public class skillDataConfig : ScriptableObject
     [LabelText("持续伤害间隔")]
     [ShowIf("type", ProjectileType.DoT)]
     public float projectileDamageInterval = 0.5f;
+        [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [LabelText("持续期间是否播放动画（动画控制需配置castTrigger和isCasting)")]
+    [ShowIf("type", ProjectileType.DoT)]
+    public bool isCastAnimation = false;
       [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Projectile)]
     [LabelText("持续伤害持续时间")]
@@ -446,7 +451,8 @@ public class skillDataConfig : ScriptableObject
     /// <param name="caster">施法者</param>
     /// <param name="castPosition">施法位置/param>
     /// <param name="skillSpawnPoint">技能释放点</param>
-    public void ExecuteSkillEffect(GameObject caster, Vector3 castPosition, Transform skillSpawnPoint)
+    public void ExecuteSkillEffect(GameObject caster, Vector3 castPosition, Transform skillSpawnPoint,SkillComponent skillComponent=null)
+
     {
 
 
@@ -483,7 +489,7 @@ public class skillDataConfig : ScriptableObject
                 ExecuteSummonEffect(caster, skillSpawnPoint);
                 break;
             case SkillTypeTest.Projectile:
-                ExecuteProjectileAttack(caster, skillSpawnPoint);
+                ExecuteProjectileAttack(caster, skillSpawnPoint,skillComponent);
                 break;
         }
     }
@@ -719,13 +725,13 @@ public class skillDataConfig : ScriptableObject
         }
     }
     // 新增投射物攻击执行方法 技能动画结束后执行
-    private void ExecuteProjectileAttack(GameObject caster, Transform spawnPoint)
+    private void ExecuteProjectileAttack(GameObject caster, Transform spawnPoint,SkillComponent skillComponent)
     {
         if (projectilePrefab == null || spawnPoint == null) return;
 
         var projectile = Instantiate(projectilePrefab, spawnPoint.position, spawnPoint.rotation);
         var projectileScript = projectile.GetComponent<SkillProjectile>();
-
+projectileScript.OnProjectileDestroyed += skillComponent.HandleProjectileDestroyed;
         if (projectileScript != null)
         {
             projectileScript.Initialize(
@@ -734,14 +740,14 @@ public class skillDataConfig : ScriptableObject
                 maxDistance: projectileRange,
                 owner: caster,
                 targetType: targetType,
-                hitSound: skillHitSoundName,
                  casterTransform: caster.transform, // 新增参数
                  projectileType: type,
                  damageInterval: projectileDamageInterval,
                  homingRadius: homingRadius,
                  spawnOffset: spawnOffset,
-                 damageTime: projectileDamageTime
-
+                 damageTime: projectileDamageTime,
+                 spellPoint:spawnPoint,
+                 isCastAnimation:isCastAnimation
             );
         }
     }

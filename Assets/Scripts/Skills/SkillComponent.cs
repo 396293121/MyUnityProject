@@ -6,6 +6,7 @@ using Sirenix.OdinInspector;
 using System;
 using NUnit.Framework;
 using static skillDataConfig;
+using static SkillProjectile;
 
 /// <summary>
 /// 技能组件 - 独立的技能系统，从角色脚本中分离技能逻辑
@@ -25,7 +26,7 @@ public class SkillComponent : MonoBehaviour
     [LabelText("技能输入动作")]
     [Required]
     [InfoBox("新输入系统的技能按键配置")]
-    public InputActionReference[] skillInputActions = new InputActionReference[4];
+    public InputActionReference[] skillInputActions;
 
     [FoldoutGroup("技能系统配置/组件引用", expanded: false)]
     [LabelText("技能释放点")]
@@ -73,6 +74,7 @@ public class SkillComponent : MonoBehaviour
     public event Action<int> OnSkillAvailabilityChanged;
     private Dictionary<int, float> previousCooldowns = new Dictionary<int, float>();
     private Dictionary<int, bool> previousAvailabilities = new Dictionary<int, bool>();
+private SkillProjectile activeProjectile;
 
     private void Awake()
     {
@@ -81,7 +83,10 @@ public class SkillComponent : MonoBehaviour
         {
             skillCooldowns[i] = 0f;
         }
-
+    if(skillInputActions == null || skillInputActions.Length != skillDataList.Count)
+    {
+        skillInputActions = new InputActionReference[skillDataList.Count];
+    }
         // 自动获取组件引用
         if (skillSpawnPoint == null)
             skillSpawnPoint = transform;
@@ -122,15 +127,17 @@ public class SkillComponent : MonoBehaviour
     private void OnEnable()
     {
         // 启用输入动作
-        for (int i = 0; i < skillInputActions.Length; i++)
+         // 启用输入动作
+    for (int i = 0; i < skillDataList.Count; i++)
+    {
+        if (i < skillInputActions.Length && skillInputActions[i] != null)
         {
-            if (skillInputActions[i] != null)
-            {
-                int skillIndex = i; // 捕获循环变量
-                skillInputActions[i].action.performed += _ => TryUseSkill(skillIndex);
-                skillInputActions[i].action.Enable();
-            }
+            int capturedIndex = i;
+                Debug.Log("caonima" + capturedIndex);
+            skillInputActions[i].action.performed += _ => TryUseSkill(capturedIndex);
+            skillInputActions[i].action.Enable();
         }
+    }
     }
 
     private void OnDisable()
@@ -492,13 +499,11 @@ public class SkillComponent : MonoBehaviour
                 movementComponent.StartCoroutine(skillData.ExecuteMovement(gameObject, characterController.GetFacingDirection()));
             }
         }
-
         // 开始技能冷却
         skillCooldowns[skillIndex] = skillData.cooldown;
 
         Debug.Log($"执行技能: {skillData.skillName}");
     }
-
     private IEnumerator playSkillSound(skillDataConfig skillData)
     {
         PlayerAudioConfig.Instance.PlaySound(skillData.skillStartSoundName);
@@ -512,6 +517,18 @@ public class SkillComponent : MonoBehaviour
         }
     }
 
+    public void HandleProjectileDestroyed()
+{
+    if (isExecutingSkill)
+    {
+        // 直接调用技能结束逻辑
+        OnSkillEnd();
+        
+        // 清理状态
+        currentExecutingSkillIndex = -1;
+        isExecutingSkill = false;
+    }
+}
     /// <summary>
     /// Animation Event调用：技能伤害帧触发
     /// </summary>
@@ -529,7 +546,7 @@ public class SkillComponent : MonoBehaviour
             }
             // 播放技能音效
 
-            skillData.ExecuteSkillEffect(gameObject, castPosition, skillSpawnPoint);
+            skillData.ExecuteSkillEffect(gameObject, castPosition, skillSpawnPoint,this);
 
 
         }
@@ -553,6 +570,12 @@ public class SkillComponent : MonoBehaviour
         isExecutingSkill = false;
         currentExecutingSkillIndex = -1;
         characterAnimator.SetBool("isSkilling", false);
+           // 新增投射物引用清理
+    if (activeProjectile != null)
+    {
+        activeProjectile.OnProjectileDestroyed -= HandleProjectileDestroyed;
+        activeProjectile = null;
+    }
         // 通知状态机技能结束，让状态机自动转换到合适的状态
         // 状态机会根据当前条件自动选择下一个状态（如Idle或Walking）
         Debug.Log("[SkillComponent] 技能执行结束，状态机将自动转换状态");

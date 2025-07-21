@@ -878,49 +878,6 @@ public class PlayerController : MonoBehaviour, IInputListener
             TestSceneController.Instance.OnPlayerDied();
         }
     }
-
-
-
-
-    [TabGroup("控制面板", "状态信息")]
-    [BoxGroup("控制面板/状态信息/实时状态")]
-    [LabelText("当前速度")]
-    [ShowInInspector]
-    [ReadOnly]
-    private Vector2 CurrentVelocity => rb != null ? rb.velocity : Vector2.zero;
-
-    [BoxGroup("控制面板/状态信息/角色信息")]
-    [LabelText("角色类型")]
-    [ShowInInspector]
-    [ReadOnly]
-    private string CharacterType => playerCharacter != null ? playerCharacter.GetType().Name : "无";
-
-    [BoxGroup("控制面板/状态信息/角色信息")]
-    [LabelText("当前生命值")]
-    [ShowInInspector]
-    [ReadOnly]
-    [ProgressBar(0, "MaxHealth", ColorGetter = "GetHealthBarColor")]
-    private int CurrentHealth => playerCharacter != null ? playerCharacter.currentHealth : 0;
-
-    [BoxGroup("控制面板/状态信息/角色信息")]
-    [LabelText("最大生命值")]
-    [ShowInInspector]
-    [ReadOnly]
-    private int MaxHealth => playerCharacter != null ? playerCharacter.maxHealth : 0;
-
-    [BoxGroup("控制面板/状态信息/角色信息")]
-    [LabelText("当前魔法值")]
-    [ShowInInspector]
-    [ReadOnly]
-    [ProgressBar(0, "MaxMana", 0.2f, 0.8f, 1f)]
-    private int CurrentMana => playerCharacter != null ? playerCharacter.currentMana : 0;
-
-    [BoxGroup("控制面板/状态信息/角色信息")]
-    [LabelText("最大魔法值")]
-    [ShowInInspector]
-    [ReadOnly]
-    private int MaxMana => playerCharacter != null ? playerCharacter.maxMana : 0;
-
     /// <summary>
     /// 获取生命值进度条颜色
     /// </summary>
@@ -1066,16 +1023,6 @@ public class PlayerController : MonoBehaviour, IInputListener
     public void OnSkillInput()
     {
 
-        if (skillComponent != null)
-        {
-            // 默认使用第一个技能（索引0），可以根据需要扩展为多技能选择
-            skillComponent.TryUseSkill(0);
-            Debug.Log("[PlayerController] 技能输入处理：尝试使用技能0");
-        }
-        else
-        {
-            Debug.LogWarning("[PlayerController] 未找到SkillComponent组件");
-        }
     }
 
     /// <summary>

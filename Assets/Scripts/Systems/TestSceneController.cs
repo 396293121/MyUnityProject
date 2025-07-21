@@ -202,19 +202,7 @@ public class TestSceneController : MonoBehaviour
     #endregion
     
     #region Odin Inspector 控制面板
-    [TabGroup("控制面板", "场景管理")]
-    [FoldoutGroup("控制面板/场景管理/场景控制", expanded: true)]
-    [Button("重新初始化场景", ButtonSizes.Medium)]
-    [GUIColor(0.8f, 1f, 0.8f)]
-    [EnableIf("isSceneInitialized")]
-    private void ReinitializeScene()
-    {
-        if (Application.isPlaying)
-        {
-            StartCoroutine(ReinitializeSceneCoroutine());
-        }
-    }
-    
+
     [FoldoutGroup("控制面板/场景管理/场景控制")]
     [Button("清理场景", ButtonSizes.Medium)]
     [GUIColor(1f, 0.8f, 0.8f)]
@@ -368,122 +356,13 @@ public class TestSceneController : MonoBehaviour
     [ShowIf("HasPlayer")]
     private Vector3 PlayerPosition => currentPlayer != null ? currentPlayer.transform.position : Vector3.zero;
     
-    [FoldoutGroup("实时状态/玩家信息/角色状态")]
-    [LabelText("玩家生命值")]
-    [ShowInInspector]
-    [ReadOnly]
-    [ShowIf("HasPlayer")]
-    [ProgressBar(0, 100, ColorGetter = "GetPlayerHealthColor")]
-    private float PlayerHealth
-    {
-        get
-        {
-            if (currentPlayer != null)
-            {
-                return character != null ? character.currentHealth : 0f;
-            }
-            return 0f;
-        }
-    }
+ 
     
-    [FoldoutGroup("实时状态/玩家信息/角色状态")]
-    [LabelText("玩家魔法值")]
-    [ShowInInspector]
-    [ReadOnly]
-    [ShowIf("HasPlayer")]
-    [ProgressBar(0, 100, ColorGetter = "GetPlayerManaColor")]
-    private float PlayerMana
-    {
-        get
-        {
-            if (currentPlayer != null)
-            {
-                return character != null ? character.currentMana : 0f;
-            }
-            return 0f;
-        }
-    }
+
     #endregion
     
-    #region Odin Inspector 辅助方法
-    private bool CanSpawnEnemy => isSceneInitialized && currentPlayer != null && !isGamePaused;
-    private bool HasActiveEnemies => activeEnemies.Count > 0 || enemies.Count > 0;
-    
-    private Color GetSceneTimeColor()
-    {
-        float time = SceneRunTime;
-        if (time < 60f) return Color.green;
-        if (time < 180f) return Color.yellow;
-        return Color.red;
-    }
-    
-    private Color GetFPSColor()
-    {
-        if (fps >= 60f) return Color.green;
-        if (fps >= 30f) return Color.yellow;
-        return Color.red;
-    }
-    
-    private Color GetTimeScaleColor()
-    {
-        if (Mathf.Approximately(Time.timeScale, 1f)) return Color.green;
-        if (Time.timeScale > 0f) return Color.yellow;
-        return Color.red;
-    }
-    
-    private Color GetEnemyCountColor()
-    {
-        int count = ActiveEnemyCount;
-        if (count == 0) return Color.gray;
-        if (count <= 3) return Color.green;
-        if (count <= 8) return Color.yellow;
-        return Color.red;
-    }
-    
-    private Color GetPlayerHealthColor()
-    {
-        float healthPercent = 0f;
-        if (currentPlayer != null)
-        {
-            if (character != null && character.maxHealth > 0)
-            {
-                healthPercent = character.currentHealth / character.maxHealth;
-            }
-        }
-        
-        if (healthPercent > 0.6f) return Color.green;
-        if (healthPercent > 0.3f) return Color.yellow;
-        return Color.red;
-    }
-    
-    private Color GetPlayerManaColor()
-    {
-        float manaPercent = 0f;
-        if (currentPlayer != null)
-        {
-            if (character != null && character.maxMana > 0)
-            {
-                manaPercent = character.currentMana / character.maxMana;
-            }
-        }
-        
-        if (manaPercent > 0.6f) return Color.cyan;
-        if (manaPercent > 0.3f) return Color.blue;
-        return Color.magenta;
-    }
-    
-    private Color GetDebugTimerColor()
-    {
-        return Color.Lerp(Color.green, Color.yellow, debugUpdateTimer);
-    }
-    
-    private IEnumerator ReinitializeSceneCoroutine()
-    {
-        CleanupTestScene();
-        yield return new WaitForSeconds(0.5f);
-        isSceneInitialized = false;
-        yield return StartCoroutine(InitializeTestSceneAsync());
-    }
+ 
+
     // 添加单例引用
 public static TestSceneController Instance { get; private set; }
     #endregion
@@ -846,11 +725,6 @@ public static TestSceneController Instance { get; private set; }
                 playerController = currentPlayer.AddComponent<PlayerController>();
             }
              character=currentPlayer.GetComponent<Character>();
-        // 让角色自己初始化属性
-        if (character != null)
-        {
-            character.InitializeWithConfig(selectedCharacterType);
-        }
             // 配置玩家属性 在角色脚本配置
         //    ConfigurePlayer();
             
@@ -1143,5 +1017,4 @@ public static TestSceneController Instance { get; private set; }
     }
     
     // OnDestroy方法已在第133行定义，此处移除重复定义
-    #endregion
 }
