@@ -15,9 +15,9 @@ MonoBehaviour:
   skillName: "\u7EC8\u6781\u6FC0\u5149"
   skillIcon: {fileID: 0}
   description: "\u6280\u80FD\u63CF\u8FF0"
-  damage: 50
-  cooldown: 3
-  manaCost: 20
+  damage: 100
+  cooldown: 10
+  manaCost: 50
   range: 5
   skillEffect: {fileID: 0}
   skillSound: {fileID: 0}
@@ -75,11 +75,13 @@ MonoBehaviour:
     m_RotationOrder: 4
   invincibleDuringMove: 0
   stopOnCollision: 1
-  projectilePrefab: {fileID: 0}
-  type: 1
+  projectilePrefab: {fileID: 6805788744440260291, guid: dd85b0833629b4343945d7c794d8fbf8, type: 3}
+  type: 2
   projectileDamageInterval: 0.2
+  isCastAnimation: 0
   projectileDamageTime: 0.5
-  homingRadius: 5
+  homingRadius: 10
+  homingProjectileCount: 1
   spawnOffset: {x: 0, y: 0}
   projectileSpeed: 15
   projectileRange: 20

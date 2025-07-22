@@ -15,10 +15,18 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     [Required]
     [SerializeField]
     public EnemySystemConfig enemySystem;
+    [LabelText("敌人技能系统")]
+    [SerializeField]
+    [ReadOnly]
+    protected SkillComponent skillComponent=null;
+    [LabelText("敌人状态系统")]
+   [SerializeField]
+    [ReadOnly]
+    protected BuffManager buffManager;
   [LabelText("敌人配置/攻击点")]
     [Required]
     [SerializeField]
-    public GameObject attackPoint;
+    public Transform attackPoint;
     #region 性能优化配置
     [FoldoutGroup("敌人配置/性能优化", expanded: false)]
     [HorizontalGroup("敌人配置/性能优化/优化设置")]
@@ -65,7 +73,15 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     [LabelText("上次状态改变时间")]
     [ReadOnly]
     [ShowInInspector]
-    protected float lastStateChangeTime = 0f;
+    protected bool isSkill;
+    public bool IsSkill {
+        set {
+            isSkill = value;
+        }
+    }   
+     // 新增技能打断事件
+    public event Action OnSkillEnd;
+     protected float lastStateChangeTime = 0f;
     protected float lastPatrolPointUpdateTime = 0f;
     #endregion
 
@@ -130,13 +146,19 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     [ReadOnly]
     [ShowInInspector]
     public float moveSpeed = 3f;
-
+      [HorizontalGroup("敌人配置/基础属性/移动设置")]
+    [VerticalGroup("敌人配置/基础属性/移动设置/移动属性")]
+    [LabelText("追击速度倍率")]
+    [ReadOnly]
+    [ShowInInspector]
+    public float chaseSpeedRate = 1.2f;
 
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int isHurtHash = Animator.StringToHash("isHurt");
     private static readonly int dieHash = Animator.StringToHash("Die");
     
     private static readonly int AttackHash = Animator.StringToHash("Attack");
+    private static readonly int isSkillingHash = Animator.StringToHash("isSkilling");
     [VerticalGroup("敌人配置/基础属性/移动设置/检测范围")]
     [LabelText("攻击范围")]
     //[ReadOnly]
@@ -290,7 +312,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     [LabelText("面向右侧")]
     [ReadOnly]
     [ShowInInspector]
-    protected bool facingRight = true;
+    public bool facingRight = true;
     #endregion
     
     #region 目标和导航
@@ -373,7 +395,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     
     [ShowInInspector, ReadOnly, LabelText("当前位置")]
     public Vector3 Position => transform.position;
-    
+
     /// <summary>
     /// 获取生命值进度条颜色
     /// </summary>
@@ -404,6 +426,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable
         // 从系统配置初始化参数
         InitializeFromSystemConfig();
         
+        // 初始化技能组件
+        InitializeSkillComponent();
+        InitializeBuffManager();
         // 配置敌人属性
      //   ConfigureEnemy(this, enemyType);
         // 初始化属性
@@ -429,7 +454,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
-            Debug.Log($"[Enemy] {gameObject.name} 初始化完成 - 生命值: {currentHealth}/{maxHealth}, 位置: {initialPosition}");
+          //  Debug.Log($"[Enemy] {gameObject.name} 初始化完成 - 生命值: {currentHealth}/{maxHealth}, 位置: {initialPosition}");
         }
     }
     
@@ -459,7 +484,24 @@ public abstract class Enemy : MonoBehaviour, IDamageable
         // 更新最后更新时间
         lastUpdateTime = Time.time;
     }
-
+    protected virtual void InitializeSkillComponent()
+    {
+        skillComponent = GetComponent<SkillComponent>();
+        if (skillComponent != null)
+        {
+            // 配置技能组件引用
+            skillComponent.SetEnemyReferences(this, null);
+        }
+    }
+protected virtual void InitializeBuffManager()
+    {
+        buffManager = GetComponent<BuffManager>();
+        if (buffManager != null)
+        {
+            // 配置BUFF组件引用
+            buffManager.SetEnemyController(this);
+        }
+    }
     private void updatePatrolPoints()
     {
         if (Time.time - lastPatrolPointUpdateTime > 5f)
@@ -567,6 +609,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
                 physicalAttack = baseConfig.physicalAttack;
                 defense = baseConfig.defense;
                 moveSpeed = baseConfig.moveSpeed;
+                chaseSpeedRate=baseConfig.chaseSpeedRate;
                 attackRange = baseConfig.attackRange;
                 detectionRange = baseConfig.detectionRange;
                 loseTargetRange = baseConfig.loseTargetRange;
@@ -886,7 +929,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
         
         // 追击移动
         Vector2 directionToPlayer = (player.position - transform.position).normalized;
-        rb2D.velocity = new Vector2(directionToPlayer.x * moveSpeed, rb2D.velocity.y);
+        rb2D.velocity = new Vector2(directionToPlayer.x * moveSpeed * chaseSpeedRate, rb2D.velocity.y);
         UpdateFacing(directionToPlayer.x > 0);
     }
     
@@ -900,9 +943,11 @@ public abstract class Enemy : MonoBehaviour, IDamageable
         StopMovement();
         
         // 受伤状态持续时间
-        if (stateTimer > 0.5f)
-        {
-            if (player != null && Vector2.Distance(transform.position, player.position) <= detectionRange)
+        
+    }
+      public virtual void onHurtEnd()
+    {
+          if (player != null && Vector2.Distance(transform.position, player.position) <= detectionRange)
             {
                 ChangeState(EnemyState.Chase);
             }
@@ -910,9 +955,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
             {
                 ChangeState(EnemyState.Patrol);
             }
-        }
     }
-    
     #endregion
     
     #region 玩家检测系统
@@ -1036,6 +1079,14 @@ public abstract class Enemy : MonoBehaviour, IDamageable
             Die();
             return;
           }
+        //技能可以被打断
+        if (isSkill)
+        {
+            OnSkillEnd?.Invoke();
+            Debug.Log("技能被打断");
+            InterruptSkill();
+        }
+      
         // 触发受伤状态
         ChangeState(EnemyState.Hurt);
            if (animator != null)
@@ -1045,7 +1096,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable
           PlayerAudioConfig.Instance.PlaySound(enemyType+"_hurt");
         // 死亡检查
     
-        
         // 调试日志
         if (GameManager.Instance?.debugMode ?? false)
         {
@@ -1053,7 +1103,35 @@ public abstract class Enemy : MonoBehaviour, IDamageable
         }
     }
 
+    protected virtual void InterruptSkill()
+    {
+        // 供子类扩展的技能被打断方法
+          if (!isSkill) return;
     
+    // 核心打断流程
+    StopAllCoroutines();
+    rb2D.velocity = Vector2.zero; // 立即停止技能位移
+    
+    if (skillComponent != null)
+    {
+        skillComponent.InterruptCurrentSkill(); // 通知技能组件中断
+    }
+    
+    // if (buffManager != null)
+    // {
+    //     buffManager.RemoveSkillBuffs(); // 移除技能相关BUFF
+    // }
+    
+    // 动画控制
+    if (animator != null)
+    {
+          animator.SetTrigger(isHurtHash); // 强制切换到受伤动画
+    }
+    
+    // 状态机控制
+    ChangeState(EnemyState.Hurt);
+    isSkill = false;
+    }
     /// <summary>
     /// 敌人死亡
     /// </summary>
@@ -1275,7 +1353,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
         if (attackPoint == null) return false;
         
         Collider2D[] hits = Physics2D.OverlapCircleAll(
-            attackPoint.transform.position, 
+            attackPoint.position, 
             attackRange
         );
         
@@ -1319,7 +1397,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable
         OnAttack?.Invoke(this);
            if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
-            Debug.Log($"[WildBoar] {gameObject.name} 攻击玩家，伤害: {damage}");
+        //    Debug.Log($"[WildBoar] {gameObject.name} 攻击玩家，伤害: {damage}");
         }
     }
 

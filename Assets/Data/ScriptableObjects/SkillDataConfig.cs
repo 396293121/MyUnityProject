@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Collections;
 using Sirenix.Utilities;
 using static SkillProjectile;
-
 // 技能类型枚举
 public enum SkillTypeTest
 {
@@ -29,7 +28,16 @@ public enum SkillTypeTest
     [LabelText("远程投射物")]
     Projectile
 }
-
+    /// <summary>
+    /// 投射物类型枚举
+    /// </summary>
+    public enum ProjectileType
+    {
+        Standard,
+        DoT,
+        Homing,
+        AOE
+    }
 // 目标类型枚举
 public enum TargetType
 {
@@ -109,7 +117,11 @@ public class skillDataConfig : ScriptableObject
     [LabelText("技能命中音效名称")]
     [InfoBox("在PLAYERAUDIOCONFIG配置的音效名称，默认skillHit")]
     public string skillHitSoundName = "skillHit";
-
+    [TabGroup("特效配置")]
+    [LabelText("增益BUFF触发音效名称")]
+    [ShowIf("@skillType == SkillTypeTest.Buff")]
+    [InfoBox("在PLAYERAUDIOCONFIG配置的音效名称")]
+    public string buffSoundName = "";
     [TabGroup("特效配置")]
     [AssetsOnly]
     [LabelText("持续伤害技能开始音效名称")]
@@ -301,18 +313,18 @@ public class skillDataConfig : ScriptableObject
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Projectile)]
     [LabelText("投射物类型")]
-    public ProjectileType type = ProjectileType.Standard;
+    public ProjectileType type ;
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Projectile)]
     [LabelText("持续伤害间隔")]
     [ShowIf("type", ProjectileType.DoT)]
     public float projectileDamageInterval = 0.5f;
-        [TabGroup("技能效果")]
+    [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Projectile)]
     [LabelText("持续期间是否播放动画（动画控制需配置castTrigger和isCasting)")]
     [ShowIf("type", ProjectileType.DoT)]
     public bool isCastAnimation = false;
-      [TabGroup("技能效果")]
+    [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Projectile)]
     [LabelText("持续伤害持续时间")]
     [ShowIf("type", ProjectileType.DoT)]
@@ -324,25 +336,25 @@ public class skillDataConfig : ScriptableObject
     public float homingRadius = 5f;
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [LabelText("索敌投射物数量")]
+    [ShowIf("type", ProjectileType.Homing)]
+    public int homingProjectileCount = 1;
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Projectile)]
     [LabelText("生成位置偏移")]
     [ShowIf("type", ProjectileType.Homing)]
- public Vector2 spawnOffset;
+    public Vector2 spawnOffset;
 
     [TabGroup("技能效果")]
-    [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [ShowIf("@skillType == SkillTypeTest.Projectile && type == ProjectileType.Standard")]
     [LabelText("投射速度")]
     [Range(5f, 30f)]
-      [ShowIf("type", ProjectileType.Standard)]
-    [InfoBox("投射物的飞行速度")]
-    
-
-    public float projectileSpeed = 15f;
+    [InfoBox("投射物的飞行速度")]    public float projectileSpeed = 15f;
 
     [TabGroup("技能效果")]
-    [ShowIf("skillType", SkillTypeTest.Projectile)]
+    [ShowIf("@skillType == SkillTypeTest.Projectile && type == ProjectileType.Standard")]
     [LabelText("最大射程")]
     [Range(5f, 50f)]
-        [ShowIf("type", ProjectileType.Standard)]
     [InfoBox("投射物的最大飞行距离")]
     public float projectileRange = 20f;
 
@@ -367,7 +379,7 @@ public class skillDataConfig : ScriptableObject
     }
     [TabGroup("技能效果")]
     [LabelText("伤害判定时长")]
-     [ShowIf("@skillType == SkillTypeTest.SingleTargetNearest || skillType == SkillTypeTest.SingleTargetCone||skillType == SkillTypeTest.SingleTargetBox||skillType == SkillTypeTest.AoeTargetCone||skillType == SkillTypeTest.AoeTargetBox||skillType == SkillTypeTest.AreaOfEffect||skillType == SkillTypeTest.AoeTargetCone")]
+    [ShowIf("@skillType == SkillTypeTest.SingleTargetNearest || skillType == SkillTypeTest.SingleTargetCone||skillType == SkillTypeTest.SingleTargetBox||skillType == SkillTypeTest.AoeTargetCone||skillType == SkillTypeTest.AoeTargetBox||skillType == SkillTypeTest.AreaOfEffect||skillType == SkillTypeTest.AoeTargetCone")]
 
 
 
@@ -451,7 +463,7 @@ public class skillDataConfig : ScriptableObject
     /// <param name="caster">施法者</param>
     /// <param name="castPosition">施法位置/param>
     /// <param name="skillSpawnPoint">技能释放点</param>
-    public void ExecuteSkillEffect(GameObject caster, Vector3 castPosition, Transform skillSpawnPoint,SkillComponent skillComponent=null)
+    public void ExecuteSkillEffect(GameObject caster, Vector3 castPosition, Transform skillSpawnPoint, SkillComponent skillComponent = null)
 
     {
 
@@ -489,7 +501,7 @@ public class skillDataConfig : ScriptableObject
                 ExecuteSummonEffect(caster, skillSpawnPoint);
                 break;
             case SkillTypeTest.Projectile:
-                ExecuteProjectileAttack(caster, skillSpawnPoint,skillComponent);
+                ExecuteProjectileAttack(caster, skillSpawnPoint, skillComponent);
                 break;
         }
     }
@@ -695,7 +707,11 @@ public class skillDataConfig : ScriptableObject
         {
             buffComponent = caster.AddComponent<BuffManager>();
         }
-
+        // 播放增益BUFF音效
+        if (!string.IsNullOrEmpty(buffSoundName))
+        {
+            PlayerAudioConfig.Instance.PlaySound(buffSoundName);
+        }
         buffComponent.ApplyBuff(skillName, attackBonus, speedBonus, buffDuration);
         Debug.Log($"对 {caster.name} 施加BUFF: 攻击力+{attackBonus}, 速度+{speedBonus}, 持续{buffDuration}秒");
     }
@@ -725,31 +741,173 @@ public class skillDataConfig : ScriptableObject
         }
     }
     // 新增投射物攻击执行方法 技能动画结束后执行
-    private void ExecuteProjectileAttack(GameObject caster, Transform spawnPoint,SkillComponent skillComponent)
+    private void ExecuteProjectileAttack(GameObject caster, Transform spawnPoint, SkillComponent skillComponent)
     {
         if (projectilePrefab == null || spawnPoint == null) return;
 
-        var projectile = Instantiate(projectilePrefab, spawnPoint.position, spawnPoint.rotation);
-        var projectileScript = projectile.GetComponent<SkillProjectile>();
-projectileScript.OnProjectileDestroyed += skillComponent.HandleProjectileDestroyed;
-        if (projectileScript != null)
+        // 如果是追踪型投射物，需要先查找目标
+        if (type == ProjectileType.Homing)
         {
-            projectileScript.Initialize(
-                damage: damage,
-                speed: projectileSpeed,
-                maxDistance: projectileRange,
-                owner: caster,
-                targetType: targetType,
-                 casterTransform: caster.transform, // 新增参数
-                 projectileType: type,
-                 damageInterval: projectileDamageInterval,
-                 homingRadius: homingRadius,
-                 spawnOffset: spawnOffset,
-                 damageTime: projectileDamageTime,
-                 spellPoint:spawnPoint,
-                 isCastAnimation:isCastAnimation
-            );
+            // 查找索敌半径内的目标
+            List<Transform> targets = FindHomingTargets(caster, spawnPoint.position);
+
+            // 如果没有找到目标，仍然创建一个普通投射物
+            if (targets.Count == 0)
+            {
+                Debug.Log("[SkillDataConfig] 未找到追踪目标，不创建普通投射物");
+                return;
+            }
+
+            // 限制投射物数量不超过找到的目标数量和配置的最大数量
+            int projectileCount = Mathf.Min(targets.Count, homingProjectileCount);
+
+            // 创建多个追踪投射物，每个指向一个目标
+            if (projectileCount > 1)
+            {
+                // 使用协程延迟创建多个投射物，避免同一帧创建过多对象
+                skillComponent.StartCoroutine(CreateMultipleProjectiles(caster, spawnPoint, skillComponent, targets, projectileCount));
+            }
+            else
+            {
+                // 只有一个目标时直接创建
+                CreateSingleProjectile(caster, spawnPoint, skillComponent, targets[0]);
+            }
+
+            Debug.Log($"[SkillDataConfig] 准备创建 {projectileCount} 个追踪投射物，目标数量: {targets.Count}");
         }
+        else
+        {
+            // 非追踪型投射物，直接创建单个投射物
+            CreateSingleProjectile(caster, spawnPoint, skillComponent, null);
+        }
+    }
+
+    /// <summary>
+    /// 协程：创建多个追踪投射物
+    /// </summary>
+    private IEnumerator CreateMultipleProjectiles(GameObject caster, Transform spawnPoint, SkillComponent skillComponent, List<Transform> targets, int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            CreateSingleProjectile(caster, spawnPoint, skillComponent, targets[i]);
+
+            // 每创建3个投射物添加一个小延迟，避免同一帧创建过多对象
+            if (i > 0 && i % 3 == 0)
+            {
+                yield return new WaitForSeconds(0.05f);
+            }
+
+            Debug.Log($"[SkillDataConfig] 创建了第 {i + 1}/{count} 个追踪投射物，目标: {targets[i].name}");
+        }
+    }
+
+    /// <summary>
+    /// 创建单个投射物并初始化
+    /// </summary>
+    private void CreateSingleProjectile(GameObject caster, Transform spawnPoint, SkillComponent skillComponent, Transform homingTarget)
+    {
+        // 计算生成位置（考虑偏移量）
+        Vector3 spawnPosition = spawnPoint.position;
+        if (type == ProjectileType.Homing && spawnOffset != Vector2.zero)
+        {
+            // 根据角色朝向调整偏移方向
+            float directionMultiplier = caster.transform.localScale.x > 0 ? 1 : -1;
+            spawnPosition += new Vector3(spawnOffset.x * directionMultiplier, spawnOffset.y, 0);
+        }
+
+        var projectile = Instantiate(projectilePrefab, spawnPosition, spawnPoint.rotation);
+        var projectileScript = projectile.GetComponent<SkillProjectile>();
+
+        if (projectileScript == null)
+        {
+            Debug.LogError($"[SkillDataConfig] 投射物预制体 {projectilePrefab.name} 缺少 SkillProjectile 组件");
+            Destroy(projectile);
+            return;
+        }
+
+        // 绑定销毁事件
+        projectileScript.OnProjectileDestroyed += skillComponent.HandleProjectileDestroyed;
+
+        // 设置追踪目标（如果有）
+        if (homingTarget != null)
+        {
+            // 通过反射设置目标（避免修改SkillProjectile类的公共接口）
+            var homingTargetField = typeof(SkillProjectile).GetField("homingTarget",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            if (homingTargetField != null)
+            {
+                homingTargetField.SetValue(projectileScript, homingTarget);
+                Debug.Log($"[SkillDataConfig] 设置追踪目标: {homingTarget.name}");
+            }
+        }
+
+        // 调用投射物的统一初始化方法
+        projectileScript.Initialize(
+            damage: damage,
+            speed: projectileSpeed,
+            maxDistance: projectileRange,
+            owner: caster,
+            targetType: targetType,
+            casterTransform: caster.transform,
+            projectileType: type,
+            damageInterval: projectileDamageInterval,
+            homingRadius: homingRadius,
+            homingProjectileCount: homingProjectileCount,
+            spawnOffset: spawnOffset,
+            damageTime: projectileDamageTime,
+            spellPoint: spawnPoint,
+            isCastAnimation: isCastAnimation
+        );
+    }
+
+    /// <summary>
+    /// 查找追踪投射物的目标
+    /// </summary>
+    private List<Transform> FindHomingTargets(GameObject caster, Vector3 position)
+    {
+        List<Transform> targets = new List<Transform>();
+
+        // 使用OverlapCircleNonAlloc优化性能，避免GC
+        Collider2D[] results = new Collider2D[20]; // 预分配合理大小的数组
+        int count = Physics2D.OverlapCircleNonAlloc(position, homingRadius, results, GetTargetLayerMask());
+
+        // 根据角色的朝向确定前方方向
+        Vector3 forwardDirection = caster.transform.localScale.x > 0 ? Vector3.right : Vector3.left;
+
+        // 处理找到的目标
+        for (int i = 0; i < count; i++)
+        {
+            Collider2D collider = results[i];
+
+            // 跳过无效目标
+            if (collider == null || !IsValidTarget(collider.gameObject) || collider.gameObject == caster)
+                continue;
+
+            // 优先选择前方的目标
+            Vector3 directionToTarget = (collider.transform.position - position).normalized;
+            float dotProduct = Vector3.Dot(forwardDirection, directionToTarget);
+
+            // 如果目标在前方或者我们不限制方向
+            if (dotProduct > 0 || homingProjectileCount > 1)
+            {
+                targets.Add(collider.transform);
+
+                // 如果只需要一个目标且已找到，提前返回
+                if (homingProjectileCount == 1)
+                    break;
+            }
+        }
+
+        // 按距离排序，确保最近的目标优先被选择
+        if (targets.Count > 1)
+        {
+            Vector3 finalPosition = position; // 捕获闭包变量
+            targets.Sort((a, b) =>
+                Vector3.SqrMagnitude(a.position - finalPosition)
+                .CompareTo(Vector3.SqrMagnitude(b.position - finalPosition)));
+        }
+
+        return targets;
     }
     private Collider2D FindNearestTargetInDirection(Vector3 position, Transform casterTransform, TargetType targetType)
     {
@@ -854,7 +1012,7 @@ projectileScript.OnProjectileDestroyed += skillComponent.HandleProjectileDestroy
             case TargetType.Self:
                 return target.CompareTag("Player");
             case TargetType.Ally:
-                return target.CompareTag("Player") || target.CompareTag("Ally");
+                return target.CompareTag("Player")|| target.CompareTag("Ally");
             case TargetType.All:
                 return true;
             default:
@@ -872,7 +1030,7 @@ projectileScript.OnProjectileDestroyed += skillComponent.HandleProjectileDestroy
             case TargetType.Ally:
                 return LayerMask.GetMask("Player", "Ally");
             case TargetType.All:
-                return LayerMask.GetMask("Enemy", "Player", "Ally");
+                return LayerMask.GetMask("Enemy","Player", "Ally");
             default:
                 return LayerMask.GetMask("Enemy");
         }
@@ -883,19 +1041,28 @@ projectileScript.OnProjectileDestroyed += skillComponent.HandleProjectileDestroy
         // 投射物互撞保护
         if (target.GetComponent<SkillProjectile>() != null) return;
 
-        // 尝试对敌人造成伤害
-        var enemy = target.GetComponent<Enemy>();
-        if (enemy != null)
+        // 尝试对敌人/玩家造成伤害
+        if (target.CompareTag("Enemy"))
         {
-            PlayerAudioConfig.Instance.PlaySound(skillHitSoundName);
-            enemy.TakeDamage(damageAmount);
+            var enmey = target.GetComponent<Enemy>();
+            enmey?.TakeDamage(damageAmount);
 
-
-            return;
         }
+        else if (target.CompareTag("Player"))
+        {
+                //调用控制器的TAKEDAMAGE方法
+            var player = target.GetComponent<PlayerController>();
+            player?.TakeDamage((int)damageAmount);
 
+        }
+        if (!string.IsNullOrEmpty(skillHitSoundName))
+        {
+            
+        PlayerAudioConfig.Instance.PlaySound(skillHitSoundName);
+        }
         // 如果目标有其他生命值组件，可以在这里添加
         Debug.Log($"对 {target.name} 造成 {damageAmount} 点伤害");
+           return;
     }
 
 

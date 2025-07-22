@@ -21,8 +21,13 @@ public class BuffManager : MonoBehaviour
     [LabelText("角色控制器")]
     [Required]
     [InfoBox("需要应用BUFF效果的角色控制器")]
-    public Character characterController;
-    
+    public Character characterController;   
+    [LabelText("敌人控制器")]
+    [Required]
+    [InfoBox("需要应用BUFF效果的敌人控制器")]
+    public Enemy enemyController;
+
+    private bool isCharacter = true;
     [FoldoutGroup("BUFF系统/调试设置", expanded: false)]
     [LabelText("显示调试信息")]
     [InfoBox("在控制台显示BUFF相关的调试信息")]
@@ -243,9 +248,8 @@ public class BuffManager : MonoBehaviour
     /// <param name="buff">BUFF效果</param>
     private void ApplyBuffToCharacter(BuffEffect buff)
     {
-        if (characterController == null) return;
-        
-        // 应用攻击力加成
+        if(isCharacter&&characterController != null){
+   // 应用攻击力加成
         if (buff.attackBonus != 0)
         {
             characterController.physicalAttack += Mathf.RoundToInt(buff.attackBonus);
@@ -256,15 +260,28 @@ public class BuffManager : MonoBehaviour
         {
             characterController.speed += buff.speedBonus;
         }
+        }else if(!isCharacter&&enemyController != null){
+     if (buff.attackBonus != 0)
+        {
+            enemyController.attackDamage += Mathf.RoundToInt(buff.attackBonus);
+        }
+        
+        // 应用速度加成
+        if (buff.speedBonus != 0)
+        {
+            enemyController.moveSpeed += buff.speedBonus;
+        }
+        }
+        
+     
     }
-    
     /// <summary>
     /// 从角色身上移除BUFF效果
     /// </summary>
     /// <param name="buff">BUFF效果</param>
     private void RemoveBuffFromCharacter(BuffEffect buff)
     {
-        if (characterController == null) return;
+        if (isCharacter&&characterController != null) {
         
         // 移除攻击力加成
         if (buff.attackBonus != 0)
@@ -277,8 +294,21 @@ public class BuffManager : MonoBehaviour
         {
             characterController.speed -= buff.speedBonus;
         }
+        }else if(!isCharacter&&enemyController != null){
+  // 移除攻击力加成
+        if (buff.attackBonus != 0)
+        {
+            enemyController.attackDamage -= Mathf.RoundToInt(buff.attackBonus);
+        }
+        
+        // 移除速度加成
+        if (buff.speedBonus != 0)
+        {
+            enemyController.moveSpeed -= buff.speedBonus;
+        }
+        }
+      
     }
-    
     /// <summary>
     /// 设置角色控制器引用
     /// </summary>
@@ -286,7 +316,19 @@ public class BuffManager : MonoBehaviour
     public void SetCharacterController(Character character)
     {
         this.characterController = character;
+        this.isCharacter = true;
         Debug.Log("已设置BuffManager的角色控制器引用");
+    }
+    
+    /// <summary>
+    /// 设置敌人控制器引用
+    /// </summary>
+    /// <param name="enemy">敌人控制器</param>
+    public void SetEnemyController(Enemy enemy)
+    {
+        this.enemyController = enemy;
+        this.isCharacter = false;
+        Debug.Log("已设置BuffManager的敌人控制器引用");
     }
     
     /// <summary>

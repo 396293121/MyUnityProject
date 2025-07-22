@@ -53,6 +53,12 @@ public class enmeyConfig{
     [SuffixLabel("单位/秒")]
     [PropertyOrder(2)]
     public float moveSpeed = 2f;
+        
+    [FoldoutGroup("基础属性")]
+    [LabelText("追击速度倍率")]
+    [PropertyRange(0.1f, 5f)]
+    [SuffixLabel("倍")]
+    public float chaseSpeedRate = 1.2f;
     
     [FoldoutGroup("基础属性")]
     [LabelText("攻击伤害")]
@@ -155,76 +161,33 @@ public class enmeyConfig{
 [InlineProperty]
 public class WildBoarConfig : enmeyConfig
 {
-
-    [FoldoutGroup("冲锋属性", expanded: true)]
-    [LabelText("冲锋速度")]
-    [PropertyRange(1f, 20f)]
-    [SuffixLabel("单位/秒")]
-    [PropertyOrder(6)]
-    public float chargeSpeed = 8f;
-    
-    [FoldoutGroup("冲锋属性")]
+    [FoldoutGroup("技能触发条件", expanded: true)]
     [LabelText("冲锋触发距离")]
     [PropertyRange(1f, 15f)]
     [SuffixLabel("米")]
-    [PropertyOrder(7)]
-    public float chargeDistance = 10f;
+    [PropertyOrder(6)]
+    [InfoBox("当玩家在此距离内时可能触发冲锋技能")]
+    public float chargeDistance = 6f;
     
-    [FoldoutGroup("冲锋属性")]
-    [LabelText("冲锋冷却时间")]
-    [PropertyRange(0.5f, 10f)]
-    [SuffixLabel("秒")]
-    [PropertyOrder(8)]
-    public float chargeCooldown = 3f;
-    
-    [FoldoutGroup("冲锋属性")]
-    [LabelText("冲锋持续时间")]
-    [PropertyRange(0.5f, 5f)]
-    [SuffixLabel("秒")]
-    [PropertyOrder(9)]
-    public float chargeDuration = 2f;
-    
-    [FoldoutGroup("冲锋属性")]
-    [LabelText("冲锋伤害")]
-    [PropertyRange(10, 100)]
-    [PropertyOrder(10)]
-    public int chargeDamage = 25;
-    
-    [FoldoutGroup("冲锋属性")]
-    [LabelText("冲锋准备时间")]
-    [PropertyRange(0.1f, 2f)]
-    [SuffixLabel("秒")]
-    [PropertyOrder(11)]
-    public float chargePreparationTime = 0.5f;
-    
-    [FoldoutGroup("狂暴属性", expanded: true)]
+    [FoldoutGroup("技能触发条件")]
     [LabelText("狂暴血量阈值")]
     [PropertyRange(0.1f, 0.8f)]
     [SuffixLabel("%")]
-    [PropertyOrder(20)]
+    [PropertyOrder(7)]
+    [InfoBox("血量低于此百分比时触发狂暴技能")]
     public float enrageHealthThreshold = 0.3f;
     
-    [FoldoutGroup("狂暴属性")]
-    [LabelText("狂暴速度倍数")]
-    [PropertyRange(1f, 3f)]
-    [PropertyOrder(21)]
-    public float enrageSpeedMultiplier = 1.5f;
-    
-    [FoldoutGroup("狂暴属性")]
-    [LabelText("狂暴伤害倍数")]
-    [PropertyRange(1f, 3f)]
-    [PropertyOrder(22)]
-    public float enrageDamageMultiplier = 1.3f;
-    
-    [FoldoutGroup("眩晕属性", expanded: true)]
+    [FoldoutGroup("技能触发条件")]
     [LabelText("眩晕持续时间")]
-    [PropertyRange(1f, 5f)]
+    [PropertyRange(0.5f, 4f)]
     [SuffixLabel("秒")]
-    [PropertyOrder(30)]
+    [PropertyOrder(8)]
+    [InfoBox("眩晕持续时间")]
     public float stunDuration = 2f;
-    
-  
-    
+
+
+
+
 #if UNITY_EDITOR
     private Color GetHealthBarColor()
     {
@@ -310,8 +273,6 @@ public enum EnemyStateType
     Patrol,     // 巡逻
     Chase,      // 追击
     Attack,     // 攻击
-    Charge,     // 冲锋
-    Stunned,    // 眩晕
     Death       // 死亡
 }
 

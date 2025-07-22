@@ -1,0 +1,94 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88d4516ea41d539408c492ba3473857f, type: 3}
+  m_Name: "\u91CE\u732A\u51B2\u649E"
+  m_EditorClassIdentifier: 
+  skillName: "\u6280\u80FD\u540D\u79F0"
+  skillIcon: {fileID: 0}
+  description: "\u6280\u80FD\u63CF\u8FF0"
+  damage: 1
+  cooldown: 4
+  manaCost: 20
+  range: 5
+  skillEffect: {fileID: 0}
+  skillSound: {fileID: 8300000, guid: 16e9eb30ec45d2f408746818d1b7e4dd, type: 3}
+  skillStartSoundName: skillStart
+  skillHitSoundName: skillHit
+  buffSoundName: 
+  skillTimeStartSoundName: 
+  animationTrigger: Charge
+  animationDuration: 1
+  skillType: 2
+  targetType: 1
+  coneAngle: 90
+  coneRadius: 5
+  boxForward: 4.4
+  boxBackward: 0.2
+  boxLeft: 3.4
+  boxRight: 3.2
+  isCircularAOE: 1
+  aoeUp: 3
+  aoeDown: 1
+  aoeLeft: 2
+  aoeRight: 2
+  buffDuration: 10
+  attackBonus: 0
+  speedBonus: 0
+  healAmount: 50
+  summonPrefab: {fileID: 0}
+  summonDuration: 30
+  isMove: 1
+  moveDistance: 8
+  moveDuration: 2
+  moveType: 0
+  moveCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  invincibleDuringMove: 0
+  stopOnCollision: 1
+  projectilePrefab: {fileID: 0}
+  type: 0
+  projectileDamageInterval: 0.5
+  isCastAnimation: 0
+  projectileDamageTime: 1
+  homingRadius: 5
+  homingProjectileCount: 1
+  spawnOffset: {x: 0, y: 0}
+  projectileSpeed: 15
+  projectileRange: 20
+  damageTime: 0
+  isMultiDamage: 0
+  damageInterval: 0.05
+  showHitbox: 1
+  hitboxColor: {r: 0.2035012, g: 0.101044156, b: 0.8238993, a: 1}
+  hitboxAlpha: 0.3

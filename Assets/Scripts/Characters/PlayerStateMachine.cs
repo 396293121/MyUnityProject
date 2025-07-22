@@ -128,7 +128,6 @@ public class PlayerStateMachine : MonoBehaviour
     private bool damageReceived = false;
     
     // 性能监控
-    private StateMachinePerformanceMonitor performanceMonitor;
     
     private void Awake()
     {
@@ -139,7 +138,6 @@ public class PlayerStateMachine : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         
         // 初始化性能监控器
-        performanceMonitor = FindObjectOfType<StateMachinePerformanceMonitor>();
         
         // 初始化状态转换规则
         InitializeStateTransitions();
@@ -172,7 +170,6 @@ public class PlayerStateMachine : MonoBehaviour
         if (groundedStateChanged || movementInputChanged || attackInputReceived || 
             skillInputReceived || damageReceived)
         {
-            performanceMonitor?.RecordEventDrivenTrigger();
             return true;
         }
         
@@ -197,7 +194,6 @@ public class PlayerStateMachine : MonoBehaviour
         }
         
         // 其他情况跳过检查
-        performanceMonitor?.RecordSkippedStateCheck();
         return false;
     }
     
@@ -425,7 +421,6 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     private void CheckStateTransitions()
     {
-        performanceMonitor?.RecordStateCheck();
         
         foreach (var transition in stateTransitions)
         {

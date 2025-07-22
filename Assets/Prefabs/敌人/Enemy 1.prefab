@@ -11,9 +11,11 @@ GameObject:
   - component: {fileID: 3421088613690464847}
   - component: {fileID: -913438118966649204}
   - component: {fileID: 6514647051638812066}
+  - component: {fileID: 3842344859021258402}
   - component: {fileID: 1679717144642552907}
   - component: {fileID: 1091650191997895833}
   - component: {fileID: 2988484490234454051}
+  - component: {fileID: 1810859530590885112}
   m_Layer: 11
   m_Name: Enemy 1
   m_TagString: Enemy
@@ -51,7 +53,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemySystem: {fileID: 11400000, guid: 2870bf038ca305e4a99ae517772557e0, type: 2}
-  attackPoint: {fileID: 1628782249987326345}
+  skillComponent: {fileID: 3842344859021258402}
+  attackPoint: {fileID: 5352600647827666082}
   enemyName: Enemy
   level: 1
   maxHealth: 100
@@ -60,6 +63,7 @@ MonoBehaviour:
   physicalAttack: 15
   defense: 5
   moveSpeed: 3
+  chaseSpeedRate: 1.2
   attackRange: 2
   detectionRange: 8
   loseTargetRange: 12
@@ -77,19 +81,13 @@ MonoBehaviour:
   patrolSpeed: 1
   patrolRange: 8
   patrolWaitTime: 2
+  facingRight: 1
   player: {fileID: 0}
   attackCooldown: 2
   lastAttackTime: 0
   isPlayerInAttackRange: 0
-  chargeSpeed: 8
-  chargeDuration: 2
-  chargeDistance: 6
-  chargeCooldown: 5
-  chargeDamage: 25
-  enrageHealthThreshold: 0.3
-  enrageSpeedMultiplier: 1.5
-  enrageDamageMultiplier: 1.3
-  stunDuration: 2
+  chargeSkillTriggerDistance: 6
+  enrageSkillTriggerThreshold: 0.3
 --- !u!95 &6514647051638812066
 Animator:
   serializedVersion: 5
@@ -111,6 +109,28 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &3842344859021258402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1485609283496898506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72f6046a1ab0e544490ef380db1c6dcd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  skillDataList:
+  - {fileID: 11400000, guid: c1f370e0ec0be9f42923078598a67766, type: 2}
+  - {fileID: 11400000, guid: 0e01a7d1d2fb1194a8da6b4b05b7f54d, type: 2}
+  skillInputActions: []
+  skillSpawnPoint: {fileID: 3421088613690464847}
+  characterAnimator: {fileID: 6514647051638812066}
+  characterController: {fileID: 0}
+  enmeyController: {fileID: 0}
+  showDebugGizmos: 1
+  isExecutingSkill: 0
 --- !u!212 &1679717144642552907
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -235,6 +255,21 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 6.3, y: 4.0832796}
   m_EdgeRadius: 0
+--- !u!114 &1810859530590885112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1485609283496898506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6554743cc6173da46971bf4fb581fa92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  characterController: {fileID: 0}
+  enemyController: {fileID: -913438118966649204}
+  showDebugInfo: 1
 --- !u!1 &1628782249987326345
 GameObject:
   m_ObjectHideFlags: 0

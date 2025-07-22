@@ -223,21 +223,7 @@ public class ParticleManager : MonoBehaviour
         return particles;
     }
     
-    /// <summary>
-    /// 播放攻击特效
-    /// </summary>
-    public void PlayHitEffect(Vector3 position, DamageType damageType = DamageType.Normal)
-    {
-        string effectName = GetHitEffectName(damageType);
-        PlayEffect(effectName, position);
-        
-        // 播放音效
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlaySFX("hit_sound");
-        }
-    }
-    
+
     /// <summary>
     /// 播放治疗特效
     /// </summary>
@@ -496,27 +482,7 @@ public class ParticleManager : MonoBehaviour
             }
         }
     }
-    
-    /// <summary>
-    /// 根据伤害类型获取击中特效名称
-    /// </summary>
-    private string GetHitEffectName(DamageType damageType)
-    {
-        switch (damageType)
-        {
-            case DamageType.Fire:
-                return "fire_hit_effect";
-            case DamageType.Ice:
-                return "ice_hit_effect";
-            case DamageType.Magic:
-                return "magic_hit_effect";
-            case DamageType.Poison:
-                return "poison_hit_effect";
-            default:
-                return "hit_effect";
-        }
-    }
-    
+
     /// <summary>
     /// 添加新的粒子效果
     /// </summary>

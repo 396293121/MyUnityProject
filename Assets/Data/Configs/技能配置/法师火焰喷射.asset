@@ -79,7 +79,7 @@ MonoBehaviour:
   type: 1
   projectileDamageInterval: 0.5
   isCastAnimation: 1
-  projectileDamageTime: 2
+  projectileDamageTime: 5
   homingRadius: 5
   spawnOffset: {x: 0, y: 0}
   projectileSpeed: 15

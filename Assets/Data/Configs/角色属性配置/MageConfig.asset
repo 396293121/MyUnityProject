@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MageConfig
   m_EditorClassIdentifier: 
   strength: 8
-  agility: 10
+  agility: 50
   stamina: 8
   intelligence: 18
   maxHealth: 80

@@ -110,11 +110,7 @@ public class TestSceneController : MonoBehaviour
     [TabGroup("状态", "系统管理器")]
 
     
-    [FoldoutGroup("状态/系统管理器/核心管理器")]
-    [LabelText("UI管理器")]
-    [ReadOnly]
-    [ShowInInspector]
-    private TestSceneUIManager uiManager;
+
     
     
     [TabGroup("状态", "组件引用")]
@@ -170,12 +166,7 @@ public class TestSceneController : MonoBehaviour
     [InfoBox("从PlayerPrefs中读取的角色类型")]
     private string selectedCharacterType;
     
-    [TabGroup("状态", "事件系统")]
-    [FoldoutGroup("状态/事件系统/事件总线", expanded: true)]
-    [LabelText("测试场景事件总线")]
-    [ReadOnly]
-    [ShowInInspector]
-    private TestSceneEventBus eventBus;
+
     
     [TabGroup("状态", "调试信息")]
     [FoldoutGroup("状态/调试信息/性能统计", expanded: true)]
@@ -375,7 +366,6 @@ public static TestSceneController Instance { get; private set; }
         ValidateConfigurations();
         
         // 初始化事件系统
-        eventBus = new TestSceneEventBus();
         
         // 记录场景开始时间
         sceneStartTime = Time.time;
@@ -408,12 +398,6 @@ public static TestSceneController Instance { get; private set; }
             // 检查游戏结束条件
             //   CheckGameEndConditions();
         }
-            // 更新UI系统
-            if(currentTime - lastUIUpdateTime >= uiUpdateInterval)
-            {
-                uiManager?.UpdateUI();
-                lastUIUpdateTime = currentTime;
-            }
             // 更新调试信息
             if(currentTime - lastDebugUpdateTime >= debugUpdateInterval)
             {
@@ -442,13 +426,8 @@ public static TestSceneController Instance { get; private set; }
 {
     Debug.Log("[TestSceneController] 玩家死亡，游戏结束");
       // 停止游戏
-    isGamePaused = true;
-    Time.timeScale = 0f;
-    // 显示游戏结束界面
-    if (UIManager.Instance != null)
-    {
-     //   UIManager.Instance.ShowGameOverScreen();
-    }
+   // isGamePaused = true;
+  //  Time.timeScale = 0f;
     
     // 可以添加其他游戏结束逻辑
 }
@@ -470,11 +449,6 @@ public static TestSceneController Instance { get; private set; }
         enemies.Clear();
         enemyControllers.Clear();
         
-        // 清理UI管理器
-        if (uiManager != null)
-        {
-            uiManager.SetHUDVisible(false);
-        }
         
         
         // 停止所有协程
@@ -523,8 +497,6 @@ public static TestSceneController Instance { get; private set; }
         // 步骤5: 生成敌人
         yield return StartCoroutine(SpawnEnemiesAsync());
         
-        // 步骤6: 初始化UI系统
-        yield return StartCoroutine(InitializeUISystemAsync());
         
         // 步骤7: 设置摄像机
         yield return StartCoroutine(SetupCameraAsync());
@@ -536,8 +508,6 @@ public static TestSceneController Instance { get; private set; }
         
         Debug.Log("[TestSceneController] 测试场景异步初始化完成");
         
-        // 触发场景初始化完成事件
-        eventBus?.TriggerEvent("SceneInitialized", new { sceneName = unifiedConfig.sceneName });
     }
     
     /// <summary>
@@ -589,38 +559,6 @@ public static TestSceneController Instance { get; private set; }
         
         yield return null;
         Debug.Log("[TestSceneController] 敌人生成完成");
-    }
-    
-    /// <summary>
-    /// 异步初始化UI系统
-    /// </summary>
-    private IEnumerator InitializeUISystemAsync()
-    {
-        Debug.Log("[TestSceneController] 初始化UI系统...");
-        
-        if (uiManager == null)
-        {
-            GameObject uiManagerObj = new GameObject("TestSceneUIManager");
-            uiManagerObj.transform.SetParent(transform);
-            uiManager = uiManagerObj.AddComponent<TestSceneUIManager>();
-        }
-        
-        // 创建临时的HUD配置
-        var tempHudConfig = CreateTempHudConfig();
-        uiManager.Initialize(tempHudConfig, eventBus);
-        
-        if (currentPlayer != null)
-        {
-            if (character != null)
-            {
-                uiManager.SetPlayerCharacter(character);
-            }
-        }
-        
-        InitializeUI();
-        
-        yield return null;
-        Debug.Log("[TestSceneController] UI系统初始化完成");
     }
     
     /// <summary>
@@ -832,34 +770,11 @@ public static TestSceneController Instance { get; private set; }
         Debug.Log("[TestSceneController] 所有敌人被消灭！");
         
         // 显示胜利消息
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.ShowMessage("胜利！所有敌人已被消灭！");
-        }
-        
+ 
         // 可以在这里添加胜利逻辑，比如显示胜利界面或返回主菜单
     }
     
-    /// <summary>
-    /// 初始化UI
-    /// </summary>
-    void InitializeUI()
-    {
-        // UI初始化通过UIManager处理
-        if (uiManager != null)
-        {
-            // uiManager.ShowHUD();
-            // uiManager.HidePauseMenu();
-        }
-        
-        // 注册UI到UIManager
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.ShowPanel("Gameplay");
-            UIManager.Instance.SetCurrentCharacter(character);
-        }
-    }
-    
+
     /// <summary>
     /// 设置摄像机
     /// </summary>
@@ -928,14 +843,7 @@ public static TestSceneController Instance { get; private set; }
         Time.timeScale = 1f;
         
         // 加载主菜单场景
-        if (SceneController.Instance != null)
-        {
-            SceneController.Instance.LoadScene("MainMenuScene");
-        }
-        else
-        {
             SceneManager.LoadScene("MainMenuScene");
-        }
     }
     
     void OnGUI()

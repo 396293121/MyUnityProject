@@ -479,7 +479,6 @@ public class PlayerController : MonoBehaviour, IInputListener
         // 播放攻击音效 - 优先使用配置化音频系统
         PlayerAudioConfig.Instance.PlaySound(playerCharacter.playerType + "_attack");
 
-        Debug.Log("玩家开始攻击动画");
     }
 
     /// <summary>
@@ -495,7 +494,6 @@ public class PlayerController : MonoBehaviour, IInputListener
             {
                 PlayerAudioConfig.Instance.PlaySound(playerCharacter.playerType + "_attackHit");
             });
-            Debug.Log("攻击动画伤害帧触发 - Animation Event");
         }
     }
 
@@ -505,7 +503,6 @@ public class PlayerController : MonoBehaviour, IInputListener
     public void OnAttackEnd()
     {
         EndAttack();
-        Debug.Log("攻击动画结束 - Animation Event");
     }
 
     /// <summary>
@@ -516,7 +513,6 @@ public class PlayerController : MonoBehaviour, IInputListener
         // 防止重复调用
         if (!isAttacking)
         {
-            Debug.Log("EndAttack被重复调用，攻击状态已为false");
             return;
         }
 
@@ -525,7 +521,6 @@ public class PlayerController : MonoBehaviour, IInputListener
 
         // 通知状态机攻击结束，让状态机自动转换到合适的状态
         // 状态机会根据当前条件自动选择下一个状态（如Idle或Walking）
-        Debug.Log("攻击状态已重置，状态机将自动转换状态");
     }
 
     /// <summary>
@@ -556,7 +551,7 @@ public class PlayerController : MonoBehaviour, IInputListener
 
             // 检查是否在攻击或技能状态 - 这些状态下受伤不触发受伤动画
             bool shouldPlayHurtAnimation = currentState != PlayerState.Attacking &&
-                                         currentState != PlayerState.Skill;
+                                         currentState != PlayerState.Skill&&currentState!=PlayerState.Death&& playerCharacter.isAlive;
 
             if (shouldPlayHurtAnimation)
             {
@@ -602,7 +597,7 @@ public class PlayerController : MonoBehaviour, IInputListener
 
         // 播放受伤音效 - 优先使用配置化音频系统
         PlayerAudioConfig.Instance.PlaySound(playerCharacter.playerType + "_hurt");
-        Debug.Log("角色进入受伤状态");
+     
     }
 
     /// <summary>
@@ -610,15 +605,12 @@ public class PlayerController : MonoBehaviour, IInputListener
     /// </summary>
     public void OnHurtEnd()
     {
-        Debug.Log("受伤动画结束");
 
         // 结束受伤状态
         isHurt = false;
         animator.SetBool(animIsHurting, false);
         // 通知状态机受伤结束，让状态机自动转换到合适的状态
         // 状态机会根据当前条件自动选择下一个状态（如Idle或Walking）
-        Debug.Log("受伤状态结束，状态机将自动转换状态");
-
         // 启动无敌时间倒计时
         StartCoroutine(EndInvincibilityAfterDelay(invincibilityTime));
     }
@@ -636,7 +628,6 @@ public class PlayerController : MonoBehaviour, IInputListener
         isInvincible = false;
         // 通知状态机无敌状态结束，让状态机自动转换到合适的状态
         // 状态机会根据当前条件自动选择下一个状态（如Idle或Walking）
-        Debug.Log($"无敌状态结束，持续时间: {delay:F1}秒，状态机将自动转换状态");
     }
 
 
@@ -784,7 +775,6 @@ public class PlayerController : MonoBehaviour, IInputListener
         // 下落检测逻辑保持不变
         if (rb.velocity.y < -0.1 && !isFalling)
         {
-            Debug.Log("下落888");
             animator.SetTrigger(animFalling);
             isFalling = true;
         }
@@ -871,7 +861,7 @@ public class PlayerController : MonoBehaviour, IInputListener
         // 通知游戏管理器
         if (GameManager.Instance != null)
         {
-            GameManager.Instance.OnPlayerDeath();
+          //  GameManager.Instance.OnPlayerDeath();
         }
         if (TestSceneController.Instance != null)
         {

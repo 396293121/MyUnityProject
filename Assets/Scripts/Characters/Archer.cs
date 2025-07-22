@@ -241,14 +241,14 @@ public class Archer : Character
     
     public override void InitializeWithConfig(string characterType)
     {
-        var config = ConfigManager.Instance?.GetCharacterConfig(characterType);
-        if (config != null)
-        {
-            maxHealth = config.health;
-            maxMana = config.mana;
-            currentHealth = maxHealth;
-            currentMana = maxMana;
-        }
+        // var config = ConfigManager.Instance?.GetCharacterConfig(characterType);
+        // if (config != null)
+        // {
+        //     maxHealth = config.health;
+        //     maxMana = config.mana;
+        //     currentHealth = maxHealth;
+        //     currentMana = maxMana;
+        // }
         
         // 应用射手特有属性
         CalculateDerivedStats();
@@ -486,12 +486,7 @@ StartCoroutine(nameof(ReloadArrows));
             GameObject arrow = Instantiate(arrowPrefab, transform.position, Quaternion.identity);
             
             // 设置箭矢属性（假设箭矢有Arrow组件）
-            var arrowComponent = arrow.GetComponent<Arrow>();
-            if (arrowComponent != null)
-            {
-                Vector2 direction = (targetPosition - (Vector2)transform.position).normalized;
-                arrowComponent.Initialize(direction, damage, this);
-            }
+        
         }
         
         // 恢复攻击能力（考虑快速射击效果）
@@ -529,12 +524,7 @@ StartCoroutine(nameof(ReloadArrows));
                 Vector2 arrowTarget = (Vector2)transform.position + arrowDirection * shootRange;
                 
                 GameObject arrow = Instantiate(arrowPrefab, transform.position, Quaternion.identity);
-                var arrowComponent = arrow.GetComponent<Arrow>();
-                if (arrowComponent != null)
-                {
-                    Vector2 arrowDir = (arrowTarget - (Vector2)transform.position).normalized;
-                    arrowComponent.Initialize(arrowDir, physicalAttack, this);
-                }
+            
             }
         }
         

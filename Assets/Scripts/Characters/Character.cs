@@ -292,19 +292,20 @@ public abstract class Character : MonoBehaviour, IDamageable
         int oldHealth=currentHealth;
         currentHealth = Mathf.Max(0, currentHealth - actualDamage);
         OnHealthChanged?.Invoke(oldHealth,currentHealth);
- 
+        // 检查死亡
+        if (currentHealth <= 0)
+        {
+            Die();
+            return;
+        }
+        
          // 基础击退逻辑
     if (TryGetComponent<Rigidbody2D>(out var rb) && knockbackForce != default)
     {
         rb.AddForce(knockbackForce, ForceMode2D.Impulse);
     }
 
-        // 检查死亡
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
-        
+    
         Debug.Log($"[{gameObject.name}] 受到 {actualDamage} 点伤害，剩余生命值: {currentHealth}");
     }
     

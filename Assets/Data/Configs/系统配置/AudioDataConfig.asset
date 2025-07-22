@@ -157,3 +157,12 @@ MonoBehaviour:
       pitchVariation: 0
       cooldown: 0
       isLoop: 0
+  - className: "\u91CE\u732A\u72C2\u66B4\u97F3\u6548"
+    sound:
+      audioClip: {fileID: 8300000, guid: 4cdc8330185156a4d9b65e5f9d05562e, type: 3}
+      volume: 1
+      pitch: 1
+      delay: 0
+      pitchVariation: 0
+      cooldown: 0
+      isLoop: 0

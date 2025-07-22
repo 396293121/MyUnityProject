@@ -45,7 +45,14 @@ public class SkillComponent : MonoBehaviour
     [Required]
     [InfoBox("角色控制器引用，用于获取角色状态")]
     public Character characterController;
+   [FoldoutGroup("技能系统配置/组件引用")]
+    [LabelText("敌人控制器")]
+    [Required]
+    [InfoBox("敌人控制器引用，用于获取角色状态")]
+    public Enemy enmeyController;
 
+//是否是角色技能组件，否则是敌人技能组件
+    private bool isCharacter=true;
     private PlayerStateMachine stateMachine;
     [TitleGroup("技能状态监控", "实时技能状态信息", TitleAlignments.Centered)]
     [FoldoutGroup("技能状态监控/冷却状态", expanded: true)]
@@ -95,7 +102,11 @@ private SkillProjectile activeProjectile;
             characterAnimator = GetComponent<Animator>();
 
         if (characterController == null)
-            characterController = GetComponent<Character>();
+        {
+            var character = GetComponent<Character>();
+            if (character != null)
+                characterController = character;
+        }
         // 检查技能数据配置
         Debug.Log($"[SkillComponent] Awake - 技能数据列表数量: {skillDataList?.Count ?? 0}");
         if (skillDataList != null && skillDataList.Count > 0)
@@ -154,7 +165,7 @@ private SkillProjectile activeProjectile;
         // 停止所有持续伤害协程
         for (int i = 0; i < skillDataList.Count; i++)
         {
-            if (skillDataList[i] != null)
+            if (skillDataList[i] != null&&skillDataList[i].damageTime==damageTimeType.time)
             {
                 skillDataList[i].StopContinuousDamage(this, i);
             }
@@ -227,7 +238,8 @@ private SkillProjectile activeProjectile;
     /// </summary>
     /// <param name="skillIndex">技能索引</param>
     ///   /// <param name="isForse">是否无视状态机强制执行技能</param>
-    public void TryUseSkill(int skillIndex,bool isForse=false)
+    /// <returns>是否成功使用技能</returns>
+    public bool TryUseSkill(int skillIndex,bool isForse=false)
     {
         Debug.Log($"[SkillComponent] TryUseSkill 被调用，技能索引: {skillIndex}");
 
@@ -246,14 +258,14 @@ private SkillProjectile activeProjectile;
         if (skillIndex < 0 || skillIndex >= skillDataList.Count)
         {
             Debug.LogWarning($"[SkillComponent] 技能索引 {skillIndex} 超出范围，技能列表大小: {skillDataList.Count}");
-            return;
+            return false;
         }
 
         // 检查技能数据是否存在
         if (skillDataList[skillIndex] == null)
         {
             Debug.LogWarning($"[SkillComponent] 技能索引 {skillIndex} 的技能数据为空");
-            return;
+            return false; 
         }
 
         Debug.Log($"[SkillComponent] 技能数据检查通过，技能名称: {skillDataList[skillIndex].skillName}");
@@ -262,13 +274,14 @@ private SkillProjectile activeProjectile;
         if (!CanUseSkill(skillIndex,isForse))
         {
             Debug.LogWarning($"[SkillComponent] 无法使用技能 {skillIndex}，CanUseSkill返回false");
-            return;
+            return false;
         }
 
         Debug.Log($"[SkillComponent] 准备执行技能: {skillDataList[skillIndex].skillName}");
 
         // 执行技能
         ExecuteSkill(skillIndex);
+        return true;
     }
 
     /// <summary>
@@ -286,8 +299,19 @@ private SkillProjectile activeProjectile;
 
             if (skillData != null && skillData.damageTime == skillDataConfig.damageTimeType.time)
             {
+                 Vector3 castPosition;
                 // 调用SkillDataConfig中的持续伤害逻辑
-                Vector3 castPosition = characterController?.AttackPoint?.position ?? transform.position;
+                if(isCharacter){
+                 castPosition = characterController?.AttackPoint?.position ?? transform.position;
+
+                }else{
+                 castPosition = enmeyController?.attackPoint?.position ?? transform.position;
+
+                }
+                if(castPosition==null){
+                    Debug.LogWarning($"[SkillComponent] 攻击点为空");
+                    return;
+                }
                 skillData.StartContinuousDamage(this, currentExecutingSkillIndex, gameObject, castPosition);
                 Debug.Log($"[SkillComponent] 开始持续伤害 - 技能: {skillData.skillName}");
             }
@@ -321,12 +345,16 @@ private SkillProjectile activeProjectile;
     {
 
         // 检查角色是否存活
-        if (characterController == null || !characterController.isAlive)
+        if (isCharacter&&(characterController == null || !characterController.isAlive))
         {
             Debug.LogWarning($"[SkillComponent] 角色控制器为空或角色已死亡");
             return false;
         }
-
+      if (!isCharacter&&(enmeyController == null || !enmeyController.isAlive))
+        {
+            Debug.LogWarning($"[SkillComponent] 角色控制器为空或角色已死亡");
+            return false;
+        }
         // 检查是否正在执行其他技能
         if (isExecutingSkill)
         {
@@ -343,16 +371,17 @@ private SkillProjectile activeProjectile;
 
         // 检查法力值
         skillDataConfig skillData = skillDataList[skillIndex];
-        if (characterController.currentMana < skillData.manaCost)
+        if (isCharacter&&characterController.currentMana < skillData.manaCost)
         {
             Debug.LogWarning($"[SkillComponent] 法力值不足，需要 {skillData.manaCost}，当前 {characterController.currentMana}");
             return false;
         }
-
+    //enmeyController 不需要检测法力值
         // 使用状态机进行状态判断
         if (stateMachine != null && !isForse)
         {
             bool canTransition = stateMachine.CanTransitionTo(PlayerState.Skill);
+            Debug.LogWarning($"[SkillComponent] 状态机返回{canTransition}");
 
             return canTransition;
         }
@@ -406,18 +435,7 @@ private SkillProjectile activeProjectile;
         return skillDataList != null ? skillDataList.Count : 0;
     }
 
-    /// <summary>
-    /// 设置技能配置
-    /// </summary>
-    /// <param name="config">技能配置</param>
-    public void SetSkillConfig(CharacterSkillConfig config)
-    {
-        if (config != null)
-        {
-            // 这里可以根据配置设置技能相关参数
-            Debug.Log($"已设置技能配置: {config.name}");
-        }
-    }
+  
 
     /// <summary>
     /// 设置技能数据
@@ -453,6 +471,20 @@ private SkillProjectile activeProjectile;
         Debug.Log("已设置角色引用");
     }
 
+    /// <summary>
+    /// 设置敌人引用 - 为敌人系统提供技能支持
+    /// </summary>
+    /// <param name="enemy">敌人控制器</param>
+    /// <param name="playerController">玩家控制器（可选）</param>
+    public void SetEnemyReferences(Enemy enemy, PlayerController playerController)
+    {
+        // 创建一个适配器来桥接Enemy和ISkillCharacter接口
+        this.enmeyController = enemy;
+        //添加绑定事件用于技能被玩家打断
+        enmeyController.OnSkillEnd+= HandleProjectileDestroyed;
+        isCharacter =false;
+        Debug.Log($"已设置敌人引用: {enemy.name}");
+    }
 
 
 
@@ -480,12 +512,19 @@ private SkillProjectile activeProjectile;
 
         // 消耗法力值
        // characterController.currentMana -= (int)skillData.manaCost;
-        characterController.ConsumeMana((int)skillData.manaCost);
+        if(isCharacter){
+            characterController.ConsumeMana((int)skillData.manaCost);
+        }
+        //enmeyController 不需要消耗法力值
         // 播放技能动画
         if (characterAnimator != null && !string.IsNullOrEmpty(skillData.animationTrigger))
         {
             characterAnimator.SetBool("isSkilling", true);
             characterAnimator.SetTrigger(skillData.animationTrigger);
+        }
+        if (!isCharacter)
+        {
+            enmeyController.IsSkill=true;
         }
         //播放技能音效
         StartCoroutine(playSkillSound(skillData));
@@ -496,7 +535,7 @@ private SkillProjectile activeProjectile;
             var movementComponent = gameObject.GetComponent<MonoBehaviour>();
             if (movementComponent != null)
             {
-                movementComponent.StartCoroutine(skillData.ExecuteMovement(gameObject, characterController.GetFacingDirection()));
+                movementComponent.StartCoroutine(skillData.ExecuteMovement(gameObject, isCharacter ? characterController.GetFacingDirection() : enmeyController.facingRight));
             }
         }
         // 开始技能冷却
@@ -558,7 +597,7 @@ private SkillProjectile activeProjectile;
     public void OnSkillEnd()
     {
         // 停止当前技能的持续伤害效果
-        if (currentExecutingSkillIndex >= 0 && skillDataList[currentExecutingSkillIndex] != null)
+        if (currentExecutingSkillIndex >= 0 && skillDataList[currentExecutingSkillIndex] != null&&skillDataList[currentExecutingSkillIndex].damageTime==damageTimeType.time)
         {
             if (skillDataList[currentExecutingSkillIndex].damageTime == damageTimeType.time)
             {
@@ -570,12 +609,16 @@ private SkillProjectile activeProjectile;
         isExecutingSkill = false;
         currentExecutingSkillIndex = -1;
         characterAnimator.SetBool("isSkilling", false);
+         if (!isCharacter)
+        {
+            enmeyController.IsSkill=false;
+        }
            // 新增投射物引用清理
-    if (activeProjectile != null)
-    {
-        activeProjectile.OnProjectileDestroyed -= HandleProjectileDestroyed;
-        activeProjectile = null;
-    }
+        if (activeProjectile != null)
+        {
+            activeProjectile.OnProjectileDestroyed -= HandleProjectileDestroyed;
+            activeProjectile = null;
+        }
         // 通知状态机技能结束，让状态机自动转换到合适的状态
         // 状态机会根据当前条件自动选择下一个状态（如Idle或Walking）
         Debug.Log("[SkillComponent] 技能执行结束，状态机将自动转换状态");
@@ -741,6 +784,23 @@ private SkillProjectile activeProjectile;
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(attackPoint, 0.1f);
     }
+
+   public void InterruptCurrentSkill()
+{
+    if (currentExecutingSkillIndex == -1) return;
+    
+    // 停止所有技能协程
+    // if (activeSkillCoroutines.TryGetValue(currentExecutingSkillIndex, out Coroutine coroutine))
+    // {
+    //     StopCoroutine(coroutine);
+    //     activeSkillCoroutines.Remove(currentExecutingSkillIndex);
+    // }
+    
+    
+    // 重置技能状态
+    currentExecutingSkillIndex = -1;
+    isExecutingSkill = false;
+}
 }
 
 /// <summary>

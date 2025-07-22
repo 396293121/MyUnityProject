@@ -17,6 +17,7 @@ MonoBehaviour:
   wildBoarConfig:
     health: 110
     moveSpeed: 3
+    chaseSpeedRate: 1.5
     attackDamage: 20
     physicalAttack: 26
     defense: 8.9
@@ -31,17 +32,6 @@ MonoBehaviour:
     onScreenUpdateInterval: 0.05
     screenBoundaryExtension: 5
     expReward: 10
-    attackSound: {fileID: 0}
-    chargeSound: {fileID: 0}
-    hurtSound: {fileID: 0}
-    deadSound: {fileID: 0}
-    chargeSpeed: 8
     chargeDistance: 10
-    chargeCooldown: 4
-    chargeDuration: 2
-    chargeDamage: 30
-    chargePreparationTime: 0.5
-    enrageHealthThreshold: 0.3
-    enrageSpeedMultiplier: 1.5
-    enrageDamageMultiplier: 1.3
-    stunDuration: 2
+    enrageHealthThreshold: 0.8
+    stunDuration: 4
