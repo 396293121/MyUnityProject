@@ -14,14 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   skillName: "\u91CE\u732A\u72C2\u66B4"
   skillIcon: {fileID: 0}
+  audioCategory: 4
   description: "\u6280\u80FD\u63CF\u8FF0"
   damage: 50
+  damageType: 0
   cooldown: 3
   manaCost: 20
   range: 5
   skillEffect: {fileID: 0}
   skillSound: {fileID: 0}
-  skillStartSoundName: skillStart
   skillHitSoundName: skillHit
   buffSoundName: "\u91CE\u732A\u72C2\u66B4\u97F3\u6548"
   skillTimeStartSoundName: 

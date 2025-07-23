@@ -14,15 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   skillName: "\u6CD5\u5E08\u666E\u653B"
   skillIcon: {fileID: 0}
+  audioCategory: 2
   description: "\u6280\u80FD\u63CF\u8FF0"
   damage: 30
+  damageType: 0
   cooldown: 1
   manaCost: 10
   range: 8
   skillEffect: {fileID: 0}
   skillSound: {fileID: 0}
-  skillStartSoundName: skillStart
   skillHitSoundName: skillHit
+  buffSoundName: 
   skillTimeStartSoundName: 
   animationTrigger: attackTrigger
   animationDuration: 1
@@ -78,8 +80,10 @@ MonoBehaviour:
   projectilePrefab: {fileID: 1966757687358142035, guid: a3e9393f8aa879348bdbd3e816b5cff5, type: 3}
   type: 0
   projectileDamageInterval: 0.5
+  isCastAnimation: 0
   projectileDamageTime: 1
   homingRadius: 5
+  homingProjectileCount: 1
   spawnOffset: {x: 0, y: 0}
   projectileSpeed: 10
   projectileRange: 20

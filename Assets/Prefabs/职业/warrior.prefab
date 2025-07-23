@@ -253,6 +253,7 @@ MonoBehaviour:
   skillSpawnPoint: {fileID: 2122437360670417740}
   characterAnimator: {fileID: 1234094422006537599}
   characterController: {fileID: 395180499527017281}
+  enmeyController: {fileID: 0}
   showDebugGizmos: 1
   isExecutingSkill: 0
 --- !u!114 &395180499527017281
@@ -267,8 +268,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e91ad85d3af1ec4894c4660708b129b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerType: 
   showDebugGizmos: 1
+  audioCategory: 1
   level: 1
   experience: 0
   experienceToNext: 100
@@ -305,6 +306,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterController: {fileID: 0}
+  enemyController: {fileID: 0}
   showDebugInfo: 1
 --- !u!212 &7109428010291904151
 SpriteRenderer:

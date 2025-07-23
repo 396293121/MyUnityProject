@@ -62,7 +62,7 @@ public class Warrior : Character
     protected override void Awake()
     {
         base.Awake();
-        playerType = "warrior";
+        characterClass=CharacterClass.Warrior;
         // 战士特有属性设置
         strength = config != null ? config.strength : 15;      // 高力量
         agility = config != null ? config.agility : 8;        // 较低敏捷
@@ -104,7 +104,7 @@ public class Warrior : Character
     { if (target is Enemy enemy) 
     {
         int damage = Mathf.RoundToInt(physicalAttack * 1.1f);
-        enemy.TakeDamage(damage);
+        enemy.TakeDamage(damage, DamageType.Physical, hitPoint, this);
         Debug.Log($"战士攻击造成伤害: {damage}");
     }
         // var enemy = target.GetComponent<Enemy>();

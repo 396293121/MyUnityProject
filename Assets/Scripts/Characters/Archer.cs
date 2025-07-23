@@ -53,7 +53,7 @@ public class Archer : Character
     {
         // 射手造成物理伤害，基于敏捷度
         int damage = Mathf.RoundToInt(physicalAttack * 0.9f); // 使用90%的物理攻击力
-        target.TakeDamage(damage, hitPoint, this);
+        target.TakeDamage(damage, DamageType.Physical, hitPoint, this);
         
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
@@ -209,7 +209,7 @@ public class Archer : Character
     protected override void Awake()
     {
         base.Awake();
-          playerType = "archer";
+        characterClass=CharacterClass.Archer;
         // 从配置文件设置射手特有属性
         if (config != null)
         {

@@ -317,7 +317,6 @@ public class BuffManager : MonoBehaviour
     {
         this.characterController = character;
         this.isCharacter = true;
-        Debug.Log("已设置BuffManager的角色控制器引用");
     }
     
     /// <summary>
@@ -328,7 +327,6 @@ public class BuffManager : MonoBehaviour
     {
         this.enemyController = enemy;
         this.isCharacter = false;
-        Debug.Log("已设置BuffManager的敌人控制器引用");
     }
     
     /// <summary>

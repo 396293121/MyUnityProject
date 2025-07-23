@@ -2,8 +2,6 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System.Collections;
-using Sirenix.Utilities;
-using static SkillProjectile;
 // 技能类型枚举
 public enum SkillTypeTest
 {
@@ -28,16 +26,16 @@ public enum SkillTypeTest
     [LabelText("远程投射物")]
     Projectile
 }
-    /// <summary>
-    /// 投射物类型枚举
-    /// </summary>
-    public enum ProjectileType
-    {
-        Standard,
-        DoT,
-        Homing,
-        AOE
-    }
+/// <summary>
+/// 投射物类型枚举
+/// </summary>
+public enum ProjectileType
+{
+    Standard,
+    DoT,
+    Homing,
+    AOE
+}
 // 目标类型枚举
 public enum TargetType
 {
@@ -64,7 +62,10 @@ public class skillDataConfig : ScriptableObject
     [LabelText("技能图标")]
     [InfoBox("技能在UI中显示的图标")]
     public Sprite skillIcon;
-
+    [TabGroup("基础信息")]
+    [LabelText("技能使用者分类")]
+    [InfoBox("音效分类")]
+    public AudioCategory audioCategory=AudioCategory.Skill;
     [TabGroup("基础信息")]
     [TextArea(2, 4)]
     [LabelText("技能描述")]
@@ -77,7 +78,12 @@ public class skillDataConfig : ScriptableObject
     [LabelText("伤害值")]
     [InfoBox("技能造成的基础伤害值")]
     public float damage = 50f;
+    [TabGroup("属性配置")]
+    [ShowIf("@skillType != SkillTypeTest.Buff && skillType != SkillTypeTest.Heal && skillType != SkillTypeTest.Summon")]
 
+    [LabelText("伤害类型")]
+    [InfoBox("技能造成的伤害类型")]
+    public DamageType damageType = DamageType.Physical;
     [TabGroup("属性配置")]
     [Range(0.5f, 30f)]
     [LabelText("冷却时间(秒)")]
@@ -105,12 +111,7 @@ public class skillDataConfig : ScriptableObject
     [TabGroup("特效配置")]
     [AssetsOnly]
     [LabelText("技能开始音效（在技能触发音效0.2S后播放）")]
-    public AudioClip skillSound;
-    [TabGroup("特效配置")]
-    [AssetsOnly]
-    [LabelText("技能触发音效名称")]
-    [InfoBox("在PLAYERAUDIOCONFIG配置的音效名称，默认SKILLSTART")]
-    public string skillStartSoundName = "skillStart";
+    public string skillSound;
 
     [TabGroup("特效配置")]
     [AssetsOnly]
@@ -313,7 +314,7 @@ public class skillDataConfig : ScriptableObject
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Projectile)]
     [LabelText("投射物类型")]
-    public ProjectileType type ;
+    public ProjectileType type;
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Projectile)]
     [LabelText("持续伤害间隔")]
@@ -349,7 +350,7 @@ public class skillDataConfig : ScriptableObject
     [ShowIf("@skillType == SkillTypeTest.Projectile && type == ProjectileType.Standard")]
     [LabelText("投射速度")]
     [Range(5f, 30f)]
-    [InfoBox("投射物的飞行速度")]    public float projectileSpeed = 15f;
+    [InfoBox("投射物的飞行速度")] public float projectileSpeed = 15f;
 
     [TabGroup("技能效果")]
     [ShowIf("@skillType == SkillTypeTest.Projectile && type == ProjectileType.Standard")]
@@ -357,7 +358,11 @@ public class skillDataConfig : ScriptableObject
     [Range(5f, 50f)]
     [InfoBox("投射物的最大飞行距离")]
     public float projectileRange = 20f;
+    public Character characterController;
+        public Enemy enmeyController;
 
+    //是否是角色技能组件，否则是敌人技能组件
+    private bool isCharacter = true;
     public enum MoveType
     {
         [LabelText("向前冲撞")]
@@ -458,6 +463,22 @@ public class skillDataConfig : ScriptableObject
     }
 
     /// <summary>
+    /// 获取施法角色引用
+    /// </summary>
+    public void setCharacterController(Character character)
+    {
+        characterController = character;
+        isCharacter = true;
+    }
+    /// <summary>
+    /// 获取施法敌人引用
+    /// </summary>
+    public void setenemyController(Enemy enemy)
+    {
+        enmeyController = enemy;
+        isCharacter = false;
+    }
+    /// <summary>
     /// 执行技能效果的核心方法
     /// </summary>
     /// <param name="caster">施法者</param>
@@ -532,11 +553,45 @@ public class skillDataConfig : ScriptableObject
             Vector3 newPosition = Vector3.Lerp(startPosition, targetPosition, curveValue);
 
             // 碰撞检测
-            if (stopOnCollision && CheckCollisionAtPosition(caster, newPosition))
+            if (stopOnCollision)
             {
-                movementInterrupted = true;
-                Debug.Log($"{caster.name} 的冲撞被障碍物阻挡");
-                break;
+                float skinWidth = 0.1f;
+                Collider2D casterCollider = isCharacter ? characterController?.Collider2D : enmeyController?.EnemyCollider;
+                if (casterCollider == null)
+                {
+                    casterCollider = caster.GetComponent<Collider2D>();
+                }
+
+                // 调整碰撞体尺寸和起点
+                Vector2 colliderSize = casterCollider.bounds.size;
+                Vector2 castSize = new Vector2(
+                    colliderSize.x * 0.8f,
+                    colliderSize.y * 0.3f); // 进一步缩小垂直检测范围
+
+                // 计算起点偏移（从底部锚点上移30%高度）
+                Vector2 castOrigin = caster.transform.position + Vector3.up * (colliderSize.y * 0.5f);
+
+                // 仅检测水平方向位移量
+                float horizontalDistance = Mathf.Abs(newPosition.x - castOrigin.x) + skinWidth;
+            Vector2 castDirection = moveDirection.normalized;
+
+                RaycastHit2D hit = Physics2D.BoxCast(
+                    castOrigin,  // 使用调整后的起点
+                    castSize,
+                    0f,
+                  castDirection,
+                    horizontalDistance,
+                    LayerMask.GetMask("Ground")); // 确保只检测障碍物层
+                if (hit.collider != null && Vector2.Dot(castDirection, (hit.point - (Vector2)castOrigin).normalized) > 0.9f)
+                {
+                    // 计算安全停止位置
+                    float safeDistance = hit.distance - skinWidth;
+                    Vector3 adjustedPosition = caster.transform.position + (newPosition - caster.transform.position).normalized * safeDistance;
+
+                    caster.transform.position = adjustedPosition;
+                    Debug.Log($"{caster.name} 的冲撞被阻挡在 {hit.collider.name} 前");
+                    break;
+                }
             }
 
             caster.transform.position = newPosition;
@@ -574,24 +629,6 @@ public class skillDataConfig : ScriptableObject
             default:
                 return Vector3.right;
         }
-    }
-
-    /// <summary>
-    /// 检查指定位置是否有碰撞
-    /// </summary>
-    private bool CheckCollisionAtPosition(GameObject caster, Vector3 position)
-    {
-        // 获取角色的碰撞体
-        Collider2D casterCollider = caster.GetComponent<Collider2D>();
-        if (casterCollider == null) return false;
-
-        // 检查在新位置是否会与环境碰撞
-        LayerMask obstacleLayer = LayerMask.GetMask("Ground", "Wall", "Obstacle");
-        Vector3 offset = position - caster.transform.position;
-
-        // 使用射线检测或重叠检测
-        RaycastHit2D hit = Physics2D.Raycast(caster.transform.position, offset.normalized, offset.magnitude, obstacleLayer);
-        return hit.collider != null;
     }
 
     /// <summary>
@@ -710,7 +747,7 @@ public class skillDataConfig : ScriptableObject
         // 播放增益BUFF音效
         if (!string.IsNullOrEmpty(buffSoundName))
         {
-            PlayerAudioConfig.Instance.PlaySound(buffSoundName);
+            PlayerAudioConfig.Instance.PlaySound(buffSoundName,isCharacter?characterController.audioCategory:enmeyController.audioCategory);
         }
         buffComponent.ApplyBuff(skillName, attackBonus, speedBonus, buffDuration);
         Debug.Log($"对 {caster.name} 施加BUFF: 攻击力+{attackBonus}, 速度+{speedBonus}, 持续{buffDuration}秒");
@@ -856,7 +893,8 @@ public class skillDataConfig : ScriptableObject
             spawnOffset: spawnOffset,
             damageTime: projectileDamageTime,
             spellPoint: spawnPoint,
-            isCastAnimation: isCastAnimation
+            isCastAnimation: isCastAnimation,
+            damageType: damageType
         );
     }
 
@@ -1012,7 +1050,7 @@ public class skillDataConfig : ScriptableObject
             case TargetType.Self:
                 return target.CompareTag("Player");
             case TargetType.Ally:
-                return target.CompareTag("Player")|| target.CompareTag("Ally");
+                return target.CompareTag("Player") || target.CompareTag("Ally");
             case TargetType.All:
                 return true;
             default:
@@ -1030,7 +1068,7 @@ public class skillDataConfig : ScriptableObject
             case TargetType.Ally:
                 return LayerMask.GetMask("Player", "Ally");
             case TargetType.All:
-                return LayerMask.GetMask("Enemy","Player", "Ally");
+                return LayerMask.GetMask("Enemy", "Player", "Ally");
             default:
                 return LayerMask.GetMask("Enemy");
         }
@@ -1045,24 +1083,24 @@ public class skillDataConfig : ScriptableObject
         if (target.CompareTag("Enemy"))
         {
             var enmey = target.GetComponent<Enemy>();
-            enmey?.TakeDamage(damageAmount);
+            enmey?.TakeDamage((int)damageAmount, damageType,default,characterController);
 
         }
         else if (target.CompareTag("Player"))
         {
-                //调用控制器的TAKEDAMAGE方法
+            //调用控制器的TAKEDAMAGE方法
             var player = target.GetComponent<PlayerController>();
-            player?.TakeDamage((int)damageAmount);
+            player?.TakeDamage((int)damageAmount,damageType);
 
         }
         if (!string.IsNullOrEmpty(skillHitSoundName))
         {
-            
-        PlayerAudioConfig.Instance.PlaySound(skillHitSoundName);
+
+            PlayerAudioConfig.Instance.PlaySound(skillHitSoundName,audioCategory);
         }
         // 如果目标有其他生命值组件，可以在这里添加
         Debug.Log($"对 {target.name} 造成 {damageAmount} 点伤害");
-           return;
+        return;
     }
 
 
@@ -1073,10 +1111,10 @@ public class skillDataConfig : ScriptableObject
     private Vector3 GetAttackPosition(GameObject caster, Vector3 fallbackPosition)
     {
         // 尝试从角色组件获取攻击点
-        var character = caster.GetComponent<Character>();
-        if (character != null)
+        var attackPoint = isCharacter ? characterController?.AttackPoint : enmeyController?.AttackPoint;
+        if (attackPoint != null)
         {
-            return character.AttackPoint.position;
+            return attackPoint.position;
         }
 
         // 如果没有Character组件，使用传入的位置

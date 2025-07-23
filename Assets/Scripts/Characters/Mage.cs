@@ -14,19 +14,6 @@ public class Mage : Character
 
     [Header("法师恢复量")]
     private float manaRegenRate = 2f;
-
-    public override void DealDamageToTarget(IDamageable target, Vector2 hitPoint)
-    {
-        // 法师造成魔法伤害，基于魔法攻击力
-        int damage = Mathf.RoundToInt(magicalAttack * 0.8f); // 使用80%的魔法攻击力
-        target.TakeDamage(damage, hitPoint, this);
-
-        if (GameManager.Instance != null && GameManager.Instance.debugMode)
-        {
-            Debug.Log($"[Mage] 法师魔法攻击造成 {damage} 点魔法伤害");
-        }
-    }
-
     protected override void ApplyKnockbackToTarget(Rigidbody2D targetRb, Vector2 direction)
     {
         // 法师的击退效果带有魔法特效
@@ -49,7 +36,7 @@ public class Mage : Character
     protected override void Awake()
     {
         base.Awake();
-        playerType = "mage";
+        characterClass=CharacterClass.Mage;
         // 法师特有属性设置
         strength = config != null ? config.strength : 5;
         agility = config != null ? config.agility : 10;

@@ -14,15 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   skillName: "\u6218\u543C"
   skillIcon: {fileID: 21300000, guid: 8319b5230c37b644a88c4f6fa96d56d4, type: 3}
+  audioCategory: 1
   description: "\u6280\u80FD\u63CF\u8FF0"
   damage: 1
+  damageType: 0
   cooldown: 8.2
   manaCost: 20
   range: 1
   skillEffect: {fileID: 0}
-  skillSound: {fileID: 8300000, guid: 17aacc27b079f5243a00865e906cd17e, type: 3}
-  skillStartSoundName: skillStart
+  skillSound: "\u6218\u543C"
   skillHitSoundName: skillHit
+  buffSoundName: 
+  skillTimeStartSoundName: 
   animationTrigger: battleCryTrigger
   animationDuration: 1
   skillType: 6
@@ -74,6 +77,16 @@ MonoBehaviour:
     m_RotationOrder: 4
   invincibleDuringMove: 0
   stopOnCollision: 1
+  projectilePrefab: {fileID: 0}
+  type: 0
+  projectileDamageInterval: 0.5
+  isCastAnimation: 0
+  projectileDamageTime: 1
+  homingRadius: 5
+  homingProjectileCount: 1
+  spawnOffset: {x: 0, y: 0}
+  projectileSpeed: 15
+  projectileRange: 20
   damageTime: 0
   isMultiDamage: 0
   damageInterval: 0.5

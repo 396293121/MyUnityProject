@@ -42,11 +42,9 @@ public class WildBoar : Enemy
     private static readonly int IsStunnedHash = Animator.StringToHash("IsStunned");
     private static readonly int StunTriggerHash = Animator.StringToHash("StunTrigger");
 
+    private float lastSkillTriggerTime = 0f;
     public override void Awake()
     {
-        // 设置敌人类型
-        enemyType = "WildBoar";
-
         // 调用基类初始化
         base.Awake();
 
@@ -148,7 +146,6 @@ public class WildBoar : Enemy
     protected override void Update()
     {
         //敌人放技能,或眩晕期间不更新
-        Debug.Log(currentState + "999");
         if (isSkill||currentState==EnemyState.Stun) return;
 
         // 调用基类的优化更新逻辑
@@ -174,19 +171,20 @@ public class WildBoar : Enemy
     /// </summary>
     private void CheckSkillTriggers()
     {
-        if (skillComponent == null || player == null) return;
+        if (skillComponent == null || player == null || isSkill) return; // 添加isSkill检查
+          // 添加冷却检查，避免频繁触发
+    // 添加技能冷却时间字段
+    if (Time.time - lastSkillTriggerTime < 1f) return;
         // 检查冲锋技能触发
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         if (currentState == EnemyState.Chase && distanceToPlayer <= chargeSkillTriggerDistance)
-
         {
             // 30%概率触发冲锋技能
             if (Random.Range(0f, 1f) < 0.3f)
             {
-                //转向玩家
+                  lastSkillTriggerTime = Time.time;
                 TriggerChargeSkill();
             }
-
         }
     }
 
@@ -216,15 +214,29 @@ public class WildBoar : Enemy
     /// <summary>
     /// 触发冲锋技能
     /// </summary>
+    // 移除冗余的动画参数，统一使用技能系统参数
+    private static readonly int isSkillingHash = Animator.StringToHash("isSkilling");
+    
+    // 在技能触发时统一设置
     private void TriggerChargeSkill()
     {
-        if (skillComponent.skillDataList[0] != null && skillComponent.TryUseSkill(0)) // 假设冲锋技能在索引0
+        if (skillComponent.skillDataList[0] != null && skillComponent.TryUseSkill(0))
         {
-
-            if (GameManager.Instance != null && GameManager.Instance.debugMode)
-            {
+            // 技能系统会自动处理 isSkilling 和 animationTrigger
+            // 移除手动的 Charge 触发
+                  // 计算玩家在野猪的左侧还是右侧
+//               bool shouldFaceRight = player.position.x > transform.position.x;
+          
+//             // UpdateFacing(shouldFaceRight);
+//                 // 强制更新朝向状态
+//         facingRight = shouldFaceRight;
+//                // 同步更新刚体速度方向（可选）
+//   // 立即同步物理系统方向
+//         transform.localScale = new Vector3(
+//             Mathf.Abs(transform.localScale.x) * (shouldFaceRight ? 1 : -1),
+//             transform.localScale.y,
+//             transform.localScale.z);        
                 Debug.Log($"[WildBoar] 触发冲锋技能");
-            }
         }
         else
         {
@@ -240,6 +252,9 @@ public class WildBoar : Enemy
     protected override void ExecuteChaseState()
     {
         if (!canMove || player == null) return;
+
+        // 如果正在执行技能，不进行状态切换
+        if (isSkill) return;
 
         // 修改为攻击点检测
         if (IsPlayerInAttackRange())
@@ -306,27 +321,16 @@ public class WildBoar : Enemy
     /// <summary>
     /// 使用指定速度向指定方向移动 - 重载方法
     /// </summary>
-    private void MoveInDirection(Vector2 direction, float speed)
+    protected override void MoveInDirection(Vector2 direction, float speed)
     {
         if (!canMove || isDead || rb2D == null) return;
 
-        Vector2 targetVelocity = new Vector2(direction.x * speed, rb2D.velocity.y);
-        rb2D.velocity = targetVelocity;
-
-        isMoving = targetVelocity.magnitude > 0.1f;
+    base.MoveInDirection(direction, speed);
 
         // 更新朝向
         UpdateFacing(direction.x > 0);
     }
 
-    /// <summary>
-    /// 受到玩家伤害 - 野猪版本
-    /// </summary>
-    public override void TakeDamage(float damage, Vector2 knockbackForce = default)
-    {
-        base.TakeDamage(damage, knockbackForce);
-
-    }
     public override void onHurtEnd()
     {
         base.onHurtEnd();
@@ -341,7 +345,7 @@ public class WildBoar : Enemy
         if (toBeStun)
         {
                toBeStun = false;
-            ExecuteStunState();
+           StartCoroutine(ExecuteStunStateCoroutine()); // 改为协程
          
         }
     }
@@ -351,25 +355,27 @@ public class WildBoar : Enemy
         base.InterruptSkill();
         toBeStun = true;
     }
-    private void ExecuteStunState()
+  private IEnumerator ExecuteStunStateCoroutine()
+{
+    ChangeState(EnemyState.Stun);
+    
+    // 眩晕时停止移动
+    if (rb2D != null)
     {
-          ChangeState(EnemyState.Stun);
-           // 眩晕时停止移动
-        if (rb2D != null)
-        {
-            rb2D.velocity = new Vector2(0, rb2D.velocity.y);
-        }
-        // 播放眩晕动画
-        animator.SetBool(IsStunnedHash, true);
-        animator.SetTrigger(StunTriggerHash);
-        float now = Time.time;
-        // 眩晕时间结束后回到空闲状态
-        while (Time.time - now <= stunDuration)
-        {
-            animator.SetBool(IsStunnedHash, false);
-            ChangeState(EnemyState.Idle);
-        }
+        rb2D.velocity = new Vector2(0, rb2D.velocity.y);
     }
+    
+    // 播放眩晕动画
+    animator.SetBool(IsStunnedHash, true);
+    animator.SetTrigger(StunTriggerHash);
+    
+    // 等待眩晕时间结束
+    yield return new WaitForSeconds(stunDuration);
+    
+    // 眩晕结束
+    animator.SetBool(IsStunnedHash, false);
+    ChangeState(EnemyState.Idle);
+}
     /// <summary>
     /// 根据AI状态返回对应颜色
     /// </summary>

@@ -155,10 +155,23 @@ public class PlayerAudioConfig : MonoBehaviour
     /// <param name="soundName">音效名称</param>
     /// <param name="volumeMultiplier">音量倍数</param>
     /// <param name="pitchMultiplier">音调倍数</param>
-    public void PlaySound(string soundName, float volumeMultiplier = 1f, float pitchMultiplier = 1f)
+    public void PlaySound(string soundName, AudioCategory category=default, float volumeMultiplier = 1f, float pitchMultiplier = 1f)
 
-    {
-        AudioClipConfig config = audioDataConfig.classSoundConfigs.Find((entry) => entry.className == soundName)?.sound;
+    {  
+
+            AudioClipConfig config = null;
+        if (category != AudioCategory.Default)
+        {
+            config = audioDataConfig.soundCategories.Find((entry) => entry.categoryType == category)?.soundEntries.Find((entry) => entry.soundName == soundName)?.config;
+
+        }
+        else
+        {
+                     Debug.Log("大司2");
+            config = audioDataConfig.classSoundConfigs.Find((entry) => entry.className == soundName)?.sound;
+
+        }
+
         if (config?.audioClip == null)
         {
             if (enableDebugLog)
@@ -196,6 +209,8 @@ public class PlayerAudioConfig : MonoBehaviour
             PlaySoundImmediate(config, volumeMultiplier, pitchMultiplier, soundName);
         }
     }
+
+
 
     /// <summary>
     /// 立即播放音效

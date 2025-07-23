@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using Sirenix.OdinInspector;
+using static Character;
 
 /// <summary>
 /// 现代化HUD组件 - 集成玩家控制器、技能系统和HUD设计提示词
@@ -31,10 +32,23 @@ public class ModernHUDComponent : MonoBehaviour
     public Character character;
     
 
-    
+  [BoxGroup("配置/核心引用/角色引用")]
+[LabelText("默认职业头像")]
+[PreviewField(50, ObjectFieldAlignment.Left)]
+public Sprite defaultClassIcon;
+    [BoxGroup("配置/核心引用/角色引用")]
+    [LabelText("角色头像")]
+    public Image characterImage;
+
+[BoxGroup("配置/核心引用/角色引用")]
+[LabelText("职业头像配置")]
+[SerializeField]
+private List<CharacterClassSprite> classSprites = new List<CharacterClassSprite>();
+
     [TabGroup("配置", "UI元素")]
     [BoxGroup("配置/UI元素/生命值系统")]
     [LabelText("生命值条背景")]
+    [Required("必须指定生命值条背景")]
     public Image healthBarBackground;
     
     [BoxGroup("配置/UI元素/生命值系统")]
@@ -165,7 +179,7 @@ public class ModernHUDComponent : MonoBehaviour
     [ShowInInspector]
     private int lastLevel = -1;
     private static ModernHUDComponent _instance;
-public static ModernHUDComponent Instance => _instance;
+    public static ModernHUDComponent Instance => _instance;
     private void Awake()
     {
         // 单例初始化
@@ -186,7 +200,8 @@ public static ModernHUDComponent Instance => _instance;
         
         if (character == null && playerController != null)
             character = playerController.playerCharacter;
-        
+        // 初始化角色图像
+         InitializeCharacterImage();
         // 验证必要组件
         ValidateComponents();
     }
@@ -223,7 +238,34 @@ public static ModernHUDComponent Instance => _instance;
          character.OnHealthChanged -= UpdateHealthDisplay;
     character.OnManaChanged -= UpdateManaDisplay;
     }
+    /// <summary>
+/// 初始化角色图像
+/// </summary>
+private void InitializeCharacterImage()
+{
+    if (characterImage == null || character == null) return;
+
+    // 根据职业设置头像
+    foreach (var classSprite in classSprites)
+    {
+        if (classSprite.characterClass == character.CHARACTERCLASS)
+        {
+            characterImage.sprite = classSprite.sprite;
+            return;
+        }
+    }
     
+    // 使用默认头像
+    if (defaultClassIcon != null)
+    {
+        characterImage.sprite = defaultClassIcon;
+    }
+    else
+    {
+        Debug.LogWarning("[ModernHUDComponent] 未找到匹配的职业头像且未设置默认头像");
+    }
+}
+
     /// <summary>
     /// 验证必要组件
     /// </summary>
@@ -685,6 +727,18 @@ public static ModernHUDComponent Instance => _instance;
         }
         return null;
     }
+    [System.Serializable]
+public struct CharacterClassSprite
+{
+    [HorizontalGroup("职业配置")]
+    [LabelText("职业类型")]
+    public CharacterClass characterClass;
     
+    [HorizontalGroup("职业配置")]
+    [LabelText("对应头像")]
+    [PreviewField(50, ObjectFieldAlignment.Left)]
+    public Sprite sprite;
+}
+
     #endregion
 }

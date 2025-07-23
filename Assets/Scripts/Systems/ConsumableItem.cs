@@ -419,7 +419,7 @@ public class ConsumableItem : Item
         
         while (elapsed < duration && user.isAlive)
         {
-            user.TakeDamage(damage, false);
+            user.TakeDamage(damage, DamageType.Magical, Vector2.zero, null);
             elapsed += tickInterval;
             yield return new WaitForSeconds(tickInterval);
         }

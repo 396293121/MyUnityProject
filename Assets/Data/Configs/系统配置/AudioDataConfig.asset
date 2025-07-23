@@ -12,6 +12,244 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d4bed79ea7db0845b6c4c475c2afe71, type: 3}
   m_Name: AudioDataConfig
   m_EditorClassIdentifier: 
+  soundCategories:
+  - categoryType: 1
+    soundEntries:
+    - soundName: attack
+      config:
+        audioClip: {fileID: 8300000, guid: 9be7884ac01923e41bfad083faf9a03c, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0.1
+        cooldown: 0
+        isLoop: 0
+    - soundName: jump
+      config:
+        audioClip: {fileID: 8300000, guid: aa6c2f668b4de7441abadfdb249f484d, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0.5
+        isLoop: 0
+    - soundName: attackHit
+      config:
+        audioClip: {fileID: 8300000, guid: ffc12a725b0881748bc725b00fb4e6d8, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0
+        isLoop: 0
+    - soundName: wirldHit
+      config:
+        audioClip: {fileID: 8300000, guid: 22d36cc7b9141114584f72c01097ab20, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0.05
+        isLoop: 0
+    - soundName: wirldStart
+      config:
+        audioClip: {fileID: 8300000, guid: b4390e217f2d1404484929093815ca1c, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0.1
+        cooldown: 0
+        isLoop: 0
+    - soundName: warriorChargeHit
+      config:
+        audioClip: {fileID: 8300000, guid: 7351bfa31faf2bd4f9fc65753aa3c2fe, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0.4
+        isLoop: 0
+    - soundName: hurt
+      config:
+        audioClip: {fileID: 8300000, guid: ddfed92597f4510448ac0eb51b4fc899, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0.1
+        cooldown: 0.5
+        isLoop: 0
+    - soundName: "\u6218\u543C"
+      config:
+        audioClip: {fileID: 8300000, guid: 17aacc27b079f5243a00865e906cd17e, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 1
+        isLoop: 0
+    - soundName: "\u91CD\u65A9"
+      config:
+        audioClip: {fileID: 8300000, guid: 9be7884ac01923e41bfad083faf9a03c, type: 3}
+        volume: 1
+        pitch: 1.2
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0
+        isLoop: 0
+  - categoryType: 4
+    soundEntries:
+    - soundName: attack
+      config:
+        audioClip: {fileID: 8300000, guid: d41d0e4fbbf23b5468fa5110ce31a491, type: 3}
+        volume: 0.9
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0.2
+        isLoop: 0
+    - soundName: charge
+      config:
+        audioClip: {fileID: 8300000, guid: 16e9eb30ec45d2f408746818d1b7e4dd, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0.2
+        isLoop: 0
+    - soundName: die
+      config:
+        audioClip: {fileID: 8300000, guid: dd92358db9a8ad24f994a3acf5cb96c1, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0
+        isLoop: 0
+    - soundName: hurt
+      config:
+        audioClip: {fileID: 8300000, guid: 0ec6515ace93e204c94103fd6b38ee9d, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0.5
+        isLoop: 0
+    - soundName: "\u91CE\u732A\u72C2\u66B4\u97F3\u6548"
+      config:
+        audioClip: {fileID: 8300000, guid: 4cdc8330185156a4d9b65e5f9d05562e, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0.5
+        isLoop: 0
+  - categoryType: 2
+    soundEntries:
+    - soundName: jump
+      config:
+        audioClip: {fileID: 8300000, guid: aa6c2f668b4de7441abadfdb249f484d, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0
+        isLoop: 0
+    - soundName: "\u6CD5\u5E08\u706B\u7130\u5492\u8BED"
+      config:
+        audioClip: {fileID: 8300000, guid: 06bd1a8543f45714fb67dc5a62ec17fe, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0
+        isLoop: 0
+    - soundName: "\u6CD5\u5E08\u7EC8\u6781\u5149\u9B54\u6CD5"
+      config:
+        audioClip: {fileID: 8300000, guid: 5f69611f85d41504994bb0c7c18041c7, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0
+        isLoop: 0
+    - soundName: hurt
+      config:
+        audioClip: {fileID: 8300000, guid: c95ad065965ddf149a9a5d0a79195688, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0
+        isLoop: 0
+  - categoryType: 8
+    soundEntries:
+    - soundName: skillStart
+      config:
+        audioClip: {fileID: 8300000, guid: 7c6ae25cb81c3014d80f283a752ed637, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0.5
+        isLoop: 0
+    - soundName: skillHit
+      config:
+        audioClip: {fileID: 8300000, guid: ffc12a725b0881748bc725b00fb4e6d8, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0.2
+        isLoop: 0
+  - categoryType: 9
+    soundEntries:
+    - soundName: "\u706B\u7130\u71C3\u70E7"
+      config:
+        audioClip: {fileID: 8300000, guid: 0432f3da2612960468157da46f3c214c, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0.1
+        cooldown: 0.5
+        isLoop: 1
+  - categoryType: 5
+    soundEntries:
+    - soundName: hurt
+      config:
+        audioClip: {fileID: 8300000, guid: c530c9fa094122b42a7a62fc885d814f, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0
+        isLoop: 0
+    - soundName: attack
+      config:
+        audioClip: {fileID: 8300000, guid: bfaed11140e1ebe4f9e4b7a80b5dbc74, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0.2
+        cooldown: 0
+        isLoop: 0
+    - soundName: die
+      config:
+        audioClip: {fileID: 8300000, guid: 0bbb10a22c1550c42b283980f9eabdc5, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0
+        isLoop: 0
+    - soundName: "\u91CE\u732A\u72C2\u66B4\u97F3\u6548"
+      config:
+        audioClip: {fileID: 8300000, guid: cac1208ddd7e07f4fb158f71235ba217, type: 3}
+        volume: 1
+        pitch: 1
+        delay: 0
+        pitchVariation: 0
+        cooldown: 0
+        isLoop: 0
   classSoundConfigs:
   - className: warrior_attack
     sound:
@@ -47,7 +285,7 @@ MonoBehaviour:
       pitch: 1
       delay: 0
       pitchVariation: 0
-      cooldown: 0
+      cooldown: 0.2
       isLoop: 0
   - className: WildBoar_charge
     sound:
@@ -83,7 +321,7 @@ MonoBehaviour:
       pitch: 1
       delay: 0
       pitchVariation: 0
-      cooldown: 0
+      cooldown: 0.5
       isLoop: 0
   - className: skillHit
     sound:
@@ -92,7 +330,7 @@ MonoBehaviour:
       pitch: 1
       delay: 0
       pitchVariation: 0
-      cooldown: 0.5
+      cooldown: 0.2
       isLoop: 0
   - className: warriorChargeHit
     sound:

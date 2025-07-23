@@ -109,7 +109,11 @@ public class SkillProjectile : MonoBehaviour
     [ReadOnly]
     [ShowInInspector]
     private float damage;
-
+[BoxGroup("战斗属性/伤害设置")]
+[LabelText("伤害类型")]
+[ReadOnly]
+[ShowInInspector]
+private DamageType damageType;
     [BoxGroup("战斗属性/音效设置")]
     [LabelText("命中音效")]
     [ShowInInspector]
@@ -149,10 +153,12 @@ public class SkillProjectile : MonoBehaviour
     [TitleGroup("初始化方法")]
     [Button("初始化投射物", ButtonSizes.Medium)]
     [GUIColor(0.4f, 0.8f, 1f)]
-    public void Initialize(float damage, float speed, float maxDistance, GameObject owner, TargetType targetType, Transform casterTransform, ProjectileType projectileType, float damageInterval, float homingRadius, int homingProjectileCount, Vector2 spawnOffset, float damageTime, Transform spellPoint, bool isCastAnimation)
+    public void Initialize(float damage, float speed, float maxDistance, GameObject owner, TargetType targetType, Transform casterTransform, ProjectileType projectileType, float damageInterval, float homingRadius, int homingProjectileCount, Vector2 spawnOffset, float damageTime, Transform spellPoint, bool isCastAnimation,DamageType damageType)
+
     {
         // 设置通用属性
-        SetCommonProperties(damage, owner, targetType, casterTransform);
+        SetCommonProperties(damage, owner, targetType, casterTransform,damageType);
+
 
         // 根据投射物类型调用相应的初始化方法
         switch (projectileType)
@@ -182,11 +188,14 @@ public class SkillProjectile : MonoBehaviour
     /// <summary>
     /// 设置所有投射物类型的通用属性
     /// </summary>
-    private void SetCommonProperties(float damage, GameObject owner, TargetType targetType, Transform casterTransform)
+    private void SetCommonProperties(float damage, GameObject owner, TargetType targetType, Transform casterTransform,DamageType damageType)
     {
         this.damage = damage;
         this.owner = owner;
         this.targetType = targetType;
+
+
+this.damageType = damageType;
         startPosition = transform.position;
 
         // 设置投射物朝向
@@ -320,7 +329,7 @@ public class SkillProjectile : MonoBehaviour
     {
         if (!string.IsNullOrEmpty(allSound))
         {
-            PlayerAudioConfig.Instance.PlaySound(allSound);
+            PlayerAudioConfig.Instance.PlaySound(allSound,AudioCategory.Projectiles);
         }
     }
 
@@ -515,8 +524,8 @@ public class SkillProjectile : MonoBehaviour
         var damageable = target.GetComponent<IDamageable>();
         if (damageable != null)
         {
-            damageable.TakeDamage((int)damage);
-            PlayerAudioConfig.Instance.PlaySound(hitSound);
+            damageable.TakeDamage((int)damage, damageType, transform.position);
+            PlayerAudioConfig.Instance.PlaySound(hitSound,AudioCategory.Projectiles);
         }
     }
 

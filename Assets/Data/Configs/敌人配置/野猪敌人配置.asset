@@ -22,7 +22,7 @@ MonoBehaviour:
     physicalAttack: 26
     defense: 8.9
     attackRange: 2
-    detectionRange: 8
+    detectionRange: 12
     loseTargetRange: 10
     attackCooldown: 2
     patrolSpeed: 3
@@ -32,6 +32,6 @@ MonoBehaviour:
     onScreenUpdateInterval: 0.05
     screenBoundaryExtension: 5
     expReward: 10
-    chargeDistance: 10
+    chargeDistance: 8
     enrageHealthThreshold: 0.8
     stunDuration: 4

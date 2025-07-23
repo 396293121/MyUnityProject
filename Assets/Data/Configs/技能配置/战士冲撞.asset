@@ -14,15 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   skillName: "\u51B2\u649E"
   skillIcon: {fileID: 0}
+  audioCategory: 1
   description: "\u6280\u80FD\u63CF\u8FF0"
   damage: 48
+  damageType: 0
   cooldown: 4
   manaCost: 20
   range: 6
   skillEffect: {fileID: 0}
   skillSound: {fileID: 0}
-  skillStartSoundName: skillStart
   skillHitSoundName: warriorChargeHit
+  buffSoundName: 
+  skillTimeStartSoundName: 
   animationTrigger: chargeTrigger
   animationDuration: 1
   skillType: 3
@@ -73,7 +76,17 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   invincibleDuringMove: 0
-  stopOnCollision: 0
+  stopOnCollision: 1
+  projectilePrefab: {fileID: 0}
+  type: 0
+  projectileDamageInterval: 0.5
+  isCastAnimation: 0
+  projectileDamageTime: 1
+  homingRadius: 5
+  homingProjectileCount: 1
+  spawnOffset: {x: 0, y: 0}
+  projectileSpeed: 15
+  projectileRange: 20
   damageTime: 1
   isMultiDamage: 0
   damageInterval: 0.1

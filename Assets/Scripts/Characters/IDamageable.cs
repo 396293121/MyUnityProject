@@ -11,7 +11,7 @@ public interface IDamageable
     /// <param name="damage">伤害值</param>
     /// <param name="hitPoint">命中点</param>
     /// <param name="attacker">攻击者</param>
-    void TakeDamage(int damage, Vector2 hitPoint = default, Character attacker = null);
+    void TakeDamage(int damage,DamageType damageType=DamageType.Physical, Vector2 hitPoint = default, Character attacker = null);
     /// <summary>
     /// 是否存活
     /// </summary>

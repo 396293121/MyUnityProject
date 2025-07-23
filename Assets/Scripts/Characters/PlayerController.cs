@@ -433,7 +433,8 @@ public class PlayerController : MonoBehaviour, IInputListener
             }
 
             // 播放跳跃音效 - 优先使用配置化音频系统
-            PlayerAudioConfig.Instance.PlaySound(playerCharacter.playerType + "_jump");
+            Debug.Log(playerCharacter.audioCategory);
+            PlayerAudioConfig.Instance.PlaySound("jump",playerCharacter.audioCategory);
             // 播放跳跃动画
             if (animator != null)
             {
@@ -477,7 +478,7 @@ public class PlayerController : MonoBehaviour, IInputListener
         }
 
         // 播放攻击音效 - 优先使用配置化音频系统
-        PlayerAudioConfig.Instance.PlaySound(playerCharacter.playerType + "_attack");
+        PlayerAudioConfig.Instance.PlaySound("attack",playerCharacter.audioCategory);
 
     }
 
@@ -492,7 +493,7 @@ public class PlayerController : MonoBehaviour, IInputListener
         {
             playerCharacter.DetectAndDamageEnemies(() =>
             {
-                PlayerAudioConfig.Instance.PlaySound(playerCharacter.playerType + "_attackHit");
+                PlayerAudioConfig.Instance.PlaySound("attackHit",playerCharacter.audioCategory);
             });
         }
     }
@@ -527,7 +528,7 @@ public class PlayerController : MonoBehaviour, IInputListener
     /// 角色受到伤害的处理方法
     /// </summary>
     /// <param name="damage">受到的伤害值</param>
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage,DamageType damageType,Vector3 hitPoint=default,Enemy enemy=default)
     {
         // 性能优化：通知状态机伤害事件
         if (stateMachine != null)
@@ -596,7 +597,7 @@ public class PlayerController : MonoBehaviour, IInputListener
         }
 
         // 播放受伤音效 - 优先使用配置化音频系统
-        PlayerAudioConfig.Instance.PlaySound(playerCharacter.playerType + "_hurt");
+        PlayerAudioConfig.Instance.PlaySound( "hurt",playerCharacter.audioCategory);
      
     }
 
@@ -832,7 +833,7 @@ public class PlayerController : MonoBehaviour, IInputListener
         }
 
         // 播放升级音效 - 优先使用配置化音频系统
-        PlayerAudioConfig.Instance.PlaySound(playerCharacter.playerType + "_levelUp");
+        PlayerAudioConfig.Instance.PlaySound("levelUp",playerCharacter.audioCategory);
     }
 
     private void OnPlayerDeath()
@@ -851,7 +852,7 @@ public class PlayerController : MonoBehaviour, IInputListener
             stateMachine.ForceChangeState(PlayerState.Death);
         }
         // 播放死亡音效 - 优先使用配置化音频系统
-        PlayerAudioConfig.Instance.PlaySound(playerCharacter.playerType + "_death");
+        PlayerAudioConfig.Instance.PlaySound("death",playerCharacter.audioCategory);
         // 显示游戏结束界面
         if (UIManager.Instance != null)
         {

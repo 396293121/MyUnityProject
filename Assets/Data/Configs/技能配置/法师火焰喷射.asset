@@ -14,15 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   skillName: "\u706B\u7130\u55B7\u5C04"
   skillIcon: {fileID: 0}
+  audioCategory: 2
   description: "\u6280\u80FD\u63CF\u8FF0"
   damage: 15
+  damageType: 0
   cooldown: 5
   manaCost: 40
   range: 5
   skillEffect: {fileID: 0}
-  skillSound: {fileID: 0}
-  skillStartSoundName: "\u6CD5\u5E08\u706B\u7130\u5492\u8BED"
+  skillSound: "\u6CD5\u5E08\u706B\u7130\u5492\u8BED"
   skillHitSoundName: skillHit
+  buffSoundName: 
   skillTimeStartSoundName: 
   animationTrigger: fireTrigger
   animationDuration: 1
@@ -81,6 +83,7 @@ MonoBehaviour:
   isCastAnimation: 1
   projectileDamageTime: 5
   homingRadius: 5
+  homingProjectileCount: 1
   spawnOffset: {x: 0, y: 0}
   projectileSpeed: 15
   projectileRange: 20

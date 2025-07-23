@@ -65,13 +65,9 @@ public class enmeyConfig{
     [PropertyRange(1, 100)]
     [PropertyOrder(3)]
     public int attackDamage = 15;
-    
     [FoldoutGroup("基础属性")]
-    [LabelText("物理攻击力")]
-    [PropertyRange(1, 100)]
-    [PropertyOrder(3.5f)]
-    public float physicalAttack = 15f;
-    
+    [LabelText("伤害类型")]
+    public DamageType damageType = DamageType.Physical;
     [FoldoutGroup("基础属性")]
     [LabelText("防御力")]
     [PropertyRange(0, 50)]
@@ -153,6 +149,7 @@ public class enmeyConfig{
     [PropertyRange(1, 1000)]
     [PropertyOrder(15)]
     public int expReward = 10;
+
 }
 /// <summary>
 /// 野猪配置

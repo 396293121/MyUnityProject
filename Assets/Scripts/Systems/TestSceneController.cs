@@ -219,18 +219,18 @@ public class TestSceneController : MonoBehaviour
     }
     
     [TabGroup("控制面板", "敌人管理")]
-    [FoldoutGroup("控制面板/敌人管理/敌人控制", expanded: true)]
-    [Button("生成野猪", ButtonSizes.Medium)]
-    [GUIColor(1f, 0.9f, 0.7f)]
-    [EnableIf("CanSpawnEnemy")]
-    private void SpawnWildBoar()
-    {
-        if (Application.isPlaying && currentPlayer != null)
-        {
-            Vector3 spawnPos = currentPlayer.transform.position + Vector3.right * 3f;
-            CreateEnemyAtPosition("wild_boar", spawnPos);
-        }
-    }
+    // [FoldoutGroup("控制面板/敌人管理/敌人控制", expanded: true)]
+    // [Button("生成野猪", ButtonSizes.Medium)]
+    // [GUIColor(1f, 0.9f, 0.7f)]
+    // [EnableIf("CanSpawnEnemy")]
+    // private void SpawnWildBoar()
+    // {
+    //     if (Application.isPlaying && currentPlayer != null)
+    //     {
+    //         Vector3 spawnPos = currentPlayer.transform.position + Vector3.right * 3f;
+    //         CreateEnemyAtPosition("wild_boar", spawnPos);
+    //     }
+    // }
     
     [FoldoutGroup("控制面板/敌人管理/敌人控制")]
     [Button("清除所有敌人", ButtonSizes.Medium)]
@@ -700,31 +700,10 @@ public static TestSceneController Instance { get; private set; }
                 }
             }
         }
-        else
-        {
-            // 如果没有配置敌人生成，创建一个默认的敌人
-            CreateDefaultEnemy();
-        }
-        
         if (debugMode)
         {
             Debug.Log($"[TestSceneController] 创建了 {enemies.Count} 个敌人");
         }
-    }
-    
-    /// <summary>
-    /// 创建默认敌人
-    /// </summary>
-    void CreateDefaultEnemy()
-    {
-        Vector3 enemyPosition = Vector3.zero;
-        if (currentPlayer != null)
-        {
-            enemyPosition = currentPlayer.transform.position + Vector3.right * 5f;
-        }
-        
-        var defaultEnemyType = unifiedConfig.enemyPrefabs.Count > 0 ? unifiedConfig.enemyPrefabs[0].enemyType : "wild_boar";
-        CreateEnemyAtPosition(defaultEnemyType, enemyPosition);
     }
     
     /// <summary>

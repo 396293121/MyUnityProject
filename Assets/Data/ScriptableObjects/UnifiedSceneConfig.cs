@@ -74,12 +74,6 @@ public class UnifiedSceneConfig : ScriptableObject
     [LabelText("敌人生成配置")]
     [ListDrawerSettings(ShowIndexLabels = true)]
     public List<EnemySpawnConfig> enemySpawns = new List<EnemySpawnConfig>();
-    
-    [VerticalGroup("基础配置/敌人系统/敌人设置/波次设置")]
-    [LabelText("敌人波次配置")]
-    [ListDrawerSettings(ShowIndexLabels = true, ListElementLabelName = "waveName")]
-    public List<EnemyWaveConfig> enemyWaves = new List<EnemyWaveConfig>();
-    
     [VerticalGroup("基础配置/敌人系统/敌人设置/系统配置")]
     [LabelText("敌人系统配置")]
     [InfoBox("敌人系统的全局配置，包括更新频率、AI设置等")]
@@ -375,16 +369,6 @@ public class EnemySpawnConfig
     [LabelText("敌人类型")]
     public string enemyType;
     
-    [LabelText("敌人预制体")]
-    [AssetsOnly]
-    public GameObject enemyPrefab;
-    
-    [LabelText("敌人系统配置引用")]
-    [InfoBox("从EnemySystemConfig获取敌人配置", InfoMessageType.Info)]
-    [ReadOnly]
-    [ShowInInspector]
-    private string configSource = "使用EnemySystemConfig.wildBoarConfig";
-    
     [LabelText("生成位置")]
     public Vector3 spawnPosition;
     
@@ -393,7 +377,7 @@ public class EnemySpawnConfig
     public float spawnDelay = 0f;
     
     [LabelText("生成数量")]
-    [Range(1, 10)]
+    [Range(0, 10)]
     public int spawnCount = 1;
     
     [LabelText("随机化位置")]
@@ -422,22 +406,6 @@ public class EnemySpawnConfig
 
 /// <summary>
 /// 敌人波次配置
-/// </summary>
-[System.Serializable]
-public class EnemyWaveConfig
-{
-    [LabelText("波次名称")]
-    public string waveName;
-    
-    [LabelText("波次延迟")]
-    [SuffixLabel("秒")]
-    public float waveDelay = 0f;
-    
-    [LabelText("敌人列表")]
-    [ListDrawerSettings(ShowIndexLabels = true)]
-    public List<EnemySpawnConfig> enemies = new List<EnemySpawnConfig>();
-}
-
 /// <summary>
 /// HUD显示配置
 /// </summary>
