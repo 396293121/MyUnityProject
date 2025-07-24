@@ -199,6 +199,38 @@ public class GameManager : MonoBehaviour
     }
     
     /// <summary>
+    /// 开始对话状态
+    /// </summary>
+    public void StartDialogue()
+    {
+        ChangeGameState(GameState.Dialogue);
+        if (debugMode)
+        {
+            Debug.Log("[GameManager] 进入对话状态");
+        }
+    }
+    
+    /// <summary>
+    /// 结束对话状态
+    /// </summary>
+    public void EndDialogue()
+    {
+        ChangeGameState(GameState.Playing);
+        if (debugMode)
+        {
+            Debug.Log("[GameManager] 退出对话状态");
+        }
+    }
+    
+    /// <summary>
+    /// 检查是否可以开始对话
+    /// </summary>
+    public bool CanStartDialogue()
+    {
+        return currentState == GameState.Playing;
+    }
+    
+    /// <summary>
     /// 获取玩家职业
     /// </summary>
     public string GetPlayerClass()
@@ -354,6 +386,7 @@ public enum GameState
     CharacterSelect,
     Playing,
     Paused,
+    Dialogue,  // 对话状态
     GameOver,
     Victory
 }

@@ -219,18 +219,6 @@ public class TestSceneController : MonoBehaviour
     }
     
     [TabGroup("控制面板", "敌人管理")]
-    // [FoldoutGroup("控制面板/敌人管理/敌人控制", expanded: true)]
-    // [Button("生成野猪", ButtonSizes.Medium)]
-    // [GUIColor(1f, 0.9f, 0.7f)]
-    // [EnableIf("CanSpawnEnemy")]
-    // private void SpawnWildBoar()
-    // {
-    //     if (Application.isPlaying && currentPlayer != null)
-    //     {
-    //         Vector3 spawnPos = currentPlayer.transform.position + Vector3.right * 3f;
-    //         CreateEnemyAtPosition("wild_boar", spawnPos);
-    //     }
-    // }
     
     [FoldoutGroup("控制面板/敌人管理/敌人控制")]
     [Button("清除所有敌人", ButtonSizes.Medium)]
@@ -709,19 +697,18 @@ public static TestSceneController Instance { get; private set; }
     /// <summary>
     /// 在指定位置创建敌人
     /// </summary>
-  void CreateEnemyAtPosition(string enemyType, Vector3 position)
+  void CreateEnemyAtPosition(string enemyType, Vector3 position,float patrolRadius)
 {
     GameObject enemyPrefab = GetEnemyPrefab(enemyType);
     if (enemyPrefab != null)
     {
         GameObject enemy = Instantiate(enemyPrefab, position, Quaternion.identity);
         enemy.name = $"Enemy_{enemyType}_{enemies.Count}";
-        
-        // 只添加到列表，不配置属性
         enemies.Add(enemy);
-        
         // 设置事件监听
         Enemy enemyController = enemy.GetComponent<Enemy>();
+        //设置敌人巡逻半径
+        enemyController.patrolRange=patrolRadius;
         if (enemyController != null)
         {
             enemyControllers.Add(enemyController);
@@ -872,7 +859,7 @@ public static TestSceneController Instance { get; private set; }
                 );
             }
             
-            CreateEnemyAtPosition(enemySpawn.enemyType, spawnPosition);
+            CreateEnemyAtPosition(enemySpawn.enemyType, spawnPosition,enemySpawn.patrolRadius);
             
             if (i < enemySpawn.spawnCount - 1)
             {

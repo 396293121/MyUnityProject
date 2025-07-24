@@ -9,29 +9,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 89a2216186655fb47a54a354f1ba449a, type: 3}
+  m_Script: {fileID: 11500000, guid: dd1a82cc43a3b6e4b9a9a37e95ad9aee, type: 3}
   m_Name: "\u5927\u578B\u91CE\u732A"
   m_EditorClassIdentifier: 
-  maxEnemyCount: 10
-  aiUpdateInterval: 0.2
-  wildBoarConfig:
-    health: 110
-    moveSpeed: 3
-    chaseSpeedRate: 1.2
-    attackDamage: 40
-    physicalAttack: 26
-    defense: 15
-    attackRange: 2
-    detectionRange: 14
-    loseTargetRange: 16
-    attackCooldown: 3
-    patrolSpeed: 4
-    patrolWaitTime: 2
-    patrolRadius: 6
-    offScreenUpdateInterval: 0.5
-    onScreenUpdateInterval: 0.05
-    screenBoundaryExtension: 5
-    expReward: 50
-    chargeDistance: 10
-    enrageHealthThreshold: 0.5
-    stunDuration: 3
+  health: 160
+  moveSpeed: 5
+  chaseSpeedRate: 1.5
+  attackDamage: 25
+  damageType: 0
+  defense: 10
+  attackRange: 2
+  detectionRange: 14
+  loseTargetRange: 16
+  attackCooldown: 2.5
+  patrolSpeed: 3
+  patrolWaitTime: 2
+  offScreenUpdateInterval: 0.5
+  onScreenUpdateInterval: 0.05
+  screenBoundaryExtension: 5
+  expReward: 30
+  chargeDistance: 10
+  enrageHealthThreshold: 0.7
+  stunDuration: 1

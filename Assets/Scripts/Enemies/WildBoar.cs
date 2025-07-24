@@ -38,6 +38,7 @@ public class WildBoar : Enemy
     private bool hasTriggeredEnrage = false;
     private bool toBeStun=false;
 
+    private WildBoarConfig wildBoarConfig;
     // 野猪眩晕状态动画
     private static readonly int IsStunnedHash = Animator.StringToHash("IsStunned");
     private static readonly int StunTriggerHash = Animator.StringToHash("StunTrigger");
@@ -111,13 +112,6 @@ public class WildBoar : Enemy
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, chargeSkillTriggerDistance);
     }
-    /// <summary>
-    /// 重写获取基础配置方法，返回野猪特定配置
-    /// </summary>
-    protected override enmeyConfig GetBaseConfig(EnemySystemConfig systemConfig)
-    {
-        return systemConfig.wildBoarConfig;
-    }
 
     /// <summary>
     /// 从系统配置初始化野猪特定属性
@@ -127,10 +121,9 @@ public class WildBoar : Enemy
         // 先调用基类初始化
         base.InitializeFromSystemConfig();
 
-        enemySystem ??= FindObjectOfType<EnemySystemConfig>();
-        if (enemySystem != null)
+        wildBoarConfig ??= FindObjectOfType<WildBoarConfig>();
+        if (wildBoarConfig != null)
         {
-            var wildBoarConfig = enemySystem.wildBoarConfig;
 
             // 初始化技能触发条件
             chargeSkillTriggerDistance = wildBoarConfig.chargeDistance;

@@ -9,12 +9,12 @@ using Sirenix.OdinInspector;
 /// 支持Odin Inspector可视化编辑
 /// </summary>
 [ShowOdinSerializedPropertiesInInspector]
-public abstract class Enemy : MonoBehaviour, IDamageable
+public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
 {
     [LabelText("敌人基础配置文件")]
     [Required]
     [SerializeField]
-    public EnemySystemConfig enemySystem;
+    public EnemyConfig enemyConfig;
     
        [LabelText("敌人音频类型")]
     public   AudioCategory audioCategory;
@@ -233,6 +233,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable
     [EnumToggleButtons]
     public EnemyState currentState = EnemyState.Idle;
 
+//暂停前状态
+    private EnemyState prePauseState;
     [VerticalGroup("敌人配置/状态控制/状态信息/状态标志")]
     [LabelText("是否死亡")]
     [ReadOnly]
@@ -406,6 +408,8 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
     [ShowInInspector, ReadOnly, LabelText("当前位置")]
     public Vector3 Position => transform.position;
 
+    private bool isPaused = false;
+
     /// <summary>
     /// 获取生命值进度条颜色
     /// </summary>
@@ -494,6 +498,20 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
         updatePatrolPoints();
         // 更新最后更新时间
         lastUpdateTime = Time.time;
+    }
+     public void SetPaused(bool paused)
+    {
+        isPaused = paused;
+        if(paused)
+        {
+            prePauseState = currentState;
+            animator.enabled = false;
+        }
+        else
+        {
+            currentState = prePauseState;
+            animator.enabled = true;
+        }
     }
     protected virtual void InitializeSkillComponent()
     {
@@ -605,10 +623,10 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
     protected virtual void InitializeFromSystemConfig()
     {
         //优先读取配置文件
-        enemySystem ??= FindObjectOfType<EnemySystemConfig>();
-        if (enemySystem != null)
+        enemyConfig ??= FindObjectOfType<EnemyConfig>();
+        if (enemyConfig != null)
         {
-            var baseConfig = GetBaseConfig(enemySystem);
+            var baseConfig = GetBaseConfig(enemyConfig);
 
             if (baseConfig != null)
             {
@@ -629,7 +647,8 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
                 // 初始化巡逻属性
                 patrolSpeed = baseConfig.patrolSpeed;
                 patrolWaitTime = baseConfig.patrolWaitTime;
-                patrolRange = baseConfig.patrolRadius;
+                //巡逻半径在场景配置文件中设置
+               // patrolRange = baseConfig.patrolRadius;
 
                 // 初始化性能优化参数
                 offScreenUpdateInterval = baseConfig.offScreenUpdateInterval;
@@ -651,10 +670,9 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
     /// <summary>
     /// 获取基础配置，子类可重写以返回特定配置
     /// </summary>
-    protected virtual enmeyConfig GetBaseConfig(EnemySystemConfig systemConfig)
+    protected virtual EnemyConfig GetBaseConfig(EnemyConfig enemyConfig)
     {
-        // 基类返回野猪配置作为默认配置
-        return systemConfig.wildBoarConfig;
+        return enemyConfig;
     }
     #region 初始化方法
     /// <summary>
@@ -1091,12 +1109,6 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
         int oldHealth = currentHealth;
         currentHealth = Mathf.Max(0, currentHealth - actualDamage);
 
-        // 检查死亡 - 在显示伤害数字前检查
-        bool willDie = currentHealth <= 0;
-
-        // 只有在敌人还活着或者刚死亡时才显示伤害数字
-        if (isAlive || willDie)
-        {
             Vector3 damageNumberPosition = transform.position;
         
             if (enemyCollider != null)
@@ -1105,10 +1117,9 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
             }
 DamagePopup popup = DamagePool.Instance.GetPopup();
         popup.Setup(damageNumberPosition, actualDamage, damageType);
-        }
 
         // 处理死亡
-        if (willDie && isAlive)
+        if (currentHealth <= 0)
         {
             Die();
             return;

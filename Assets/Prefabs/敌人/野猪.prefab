@@ -52,7 +52,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57fb27383f81e2d458a0a68294f02542, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemySystem: {fileID: 11400000, guid: 2870bf038ca305e4a99ae517772557e0, type: 2}
+  enemyConfig: {fileID: 11400000, guid: 092ca990afdc6a142998532bc5a2daf8, type: 2}
   audioCategory: 4
   skillComponent: {fileID: 3842344859021258402}
   buffManager: {fileID: 0}

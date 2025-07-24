@@ -34,6 +34,10 @@ public class UIManager : MonoBehaviour
     public Image[] skillCooldownImages;
     public Text[] skillCooldownTexts;
     
+    [Header("Fungus对话系统")]
+    [Tooltip("Fungus对话UI面板")]
+    public GameObject fungusDialogPanel;
+    
     [Header("消息系统")]
     public GameObject messagePanel;
     public Text messageText;
@@ -113,6 +117,7 @@ public class UIManager : MonoBehaviour
         if (characterPanel != null) uiPanels["Character"] = characterPanel;
         if (saveLoadPanel != null) uiPanels["SaveLoad"] = saveLoadPanel;
         if (gameOverPanel != null) uiPanels["GameOver"] = gameOverPanel;
+        if (fungusDialogPanel != null) uiPanels["FungusDialog"] = fungusDialogPanel;
         
         // 初始时隐藏所有面板
         foreach (var panel in uiPanels.Values)
@@ -640,5 +645,76 @@ public class UIManager : MonoBehaviour
         // 这里应该隐藏商店界面
         // 由于没有具体的商店UI面板，暂时显示消息
         ShowMessage("关闭商店");
+    }
+    
+    /// <summary>
+    /// 显示Fungus对话UI
+    /// </summary>
+    public void ShowDialogueUI()
+    {
+        if (fungusDialogPanel != null)
+        {
+            fungusDialogPanel.SetActive(true);
+        }
+        
+        // 隐藏游戏内UI元素，避免干扰对话
+        if (gameplayPanel != null)
+        {
+            var gameplayComponents = gameplayPanel.GetComponentsInChildren<CanvasGroup>();
+            foreach (var component in gameplayComponents)
+            {
+                component.alpha = 0.3f; // 半透明显示
+                component.interactable = false;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 隐藏Fungus对话UI
+    /// </summary>
+    public void HideDialogueUI()
+    {
+        if (fungusDialogPanel != null)
+        {
+            fungusDialogPanel.SetActive(false);
+        }
+        
+        // 恢复游戏内UI元素
+        if (gameplayPanel != null)
+        {
+            var gameplayComponents = gameplayPanel.GetComponentsInChildren<CanvasGroup>();
+            foreach (var component in gameplayComponents)
+            {
+                component.alpha = 1f; // 完全不透明
+                component.interactable = true;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 对话开始时的UI处理
+    /// </summary>
+    public void OnDialogueStart()
+    {
+        ShowDialogueUI();
+        
+        // 可以添加额外的UI效果，比如模糊背景等
+        if (GameManager.Instance.debugMode)
+        {
+            Debug.Log("[UIManager] 对话开始，调整UI显示");
+        }
+    }
+    
+    /// <summary>
+    /// 对话结束时的UI处理
+    /// </summary>
+    public void OnDialogueEnd()
+    {
+        HideDialogueUI();
+        
+        if (GameManager.Instance.debugMode)
+        {
+            Debug.Log("[UIManager] 对话结束，恢复UI显示");
+        }
     }
 }

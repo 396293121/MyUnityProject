@@ -8,7 +8,7 @@ using Sirenix.OdinInspector;
 /// 实现IInputListener接口，支持自动输入监听
 /// </summary>
 [ShowOdinSerializedPropertiesInInspector]
-public class PlayerController : MonoBehaviour, IInputListener
+public class PlayerController : MonoBehaviour, IInputListener,IPausable
 {
     [TabGroup("配置", "角色设置")]
     [BoxGroup("配置/角色设置/角色引用")]
@@ -197,7 +197,8 @@ public class PlayerController : MonoBehaviour, IInputListener
     [SuffixLabel("秒")]
     [ShowInInspector]
     private float invincibilityTime = 1f;
-
+    //是否暂停
+    private bool isPause = false;
 
 
     // 攻击冷却参数已移动到各职业脚本中
@@ -252,7 +253,8 @@ public class PlayerController : MonoBehaviour, IInputListener
 
         // 注册为输入监听器
         InputManager.RegisterListener(this);
-
+        //注册暂停管理器
+        GamePauseManager.Instance.Register(this);
         // 监听角色事件
         if (playerCharacter != null)
         {
@@ -287,6 +289,7 @@ public class PlayerController : MonoBehaviour, IInputListener
 
     private void FixedUpdate()
     {
+         if(isPause) return;
         // 物理移动 - 使用状态机判断
         if (stateMachine != null)
         {
@@ -335,6 +338,7 @@ public class PlayerController : MonoBehaviour, IInputListener
     /// <summary>
     /// 处理移动输入
     /// </summary>
+    /// /// 
     private void HandleMovement()
     {
         // 移动输入现在通过IInputListener接口的OnMoveInput方法接收
@@ -372,7 +376,31 @@ public class PlayerController : MonoBehaviour, IInputListener
             jumpInput = false;
         }
     }
-
+    /// <summary>
+    /// 暂停游戏
+    /// </summary>
+    /// <param name="paused">是否暂停</param>
+    public void SetPaused(bool paused)
+    {
+        isPause = paused;
+        
+        if(paused) 
+        {
+            rb.velocity = Vector2.zero;
+            // 对话期间保持动画播放，但不禁用animator
+            // 让ImprovedDialogueEventManager来控制动画速度
+        }
+        else
+        {
+            rb.isKinematic = false;
+            // 恢复时确保动画正常播放
+            if (animator != null)
+            {
+                animator.enabled = true;
+            }
+        }
+    }
+    
     /// <summary>
     /// 应用物理移动
     /// </summary>
@@ -691,6 +719,7 @@ public class PlayerController : MonoBehaviour, IInputListener
     /// </summary>
     private void Update()
     {
+        if(isPause) return;
         if (playerCharacter == null || !playerCharacter.isAlive) return;
 
         float currentTime = Time.time;
