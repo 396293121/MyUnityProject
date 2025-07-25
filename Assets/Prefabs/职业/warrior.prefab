@@ -210,7 +210,7 @@ MonoBehaviour:
   groundCheckDistance: 0.1
   groundLayerMask:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 4096
   groundCheck: {fileID: 7446572618078747637}
   interactRange: 1.5
   interactableLayerMask:
@@ -227,7 +227,6 @@ MonoBehaviour:
   isHurt: 0
   isInvincible: 0
   interactionCheckInterval: 0.1
-  groundCheckInterval: 0.033
 --- !u!114 &4187876456670026591
 MonoBehaviour:
   m_ObjectHideFlags: 0

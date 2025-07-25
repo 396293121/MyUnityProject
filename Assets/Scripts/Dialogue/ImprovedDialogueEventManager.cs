@@ -34,7 +34,9 @@ public class ImprovedDialogueEventManager : MonoBehaviour
     
     // 缓存的组件引用
     private PlayerController playerController;
-    private List<Enemy> enemies = new List<Enemy>();
+    private List<Enemy> enemies = new List<Enemy>();[Header("Continue Button修复")]
+    [Tooltip("自动修复Continue Button")]
+    // 原始动画速度缓存
     private Dictionary<Animator, float> originalAnimatorSpeeds = new Dictionary<Animator, float>();
 
     void Start()
@@ -97,7 +99,6 @@ public class ImprovedDialogueEventManager : MonoBehaviour
     /// </summary>
     private void OnBlockStart(Block block)
     {
-        Debug.Log("对话开始");
         // 检查是否包含对话命令
         if (ContainsDialogueCommands(block))
         {
@@ -113,7 +114,6 @@ public class ImprovedDialogueEventManager : MonoBehaviour
     /// </summary>
     private void OnBlockEnd(Block block)
     {
-        Debug.Log("对话结束"+block.name);
         // 检查是否是对话 Block 结束
         if (ContainsDialogueCommands(block))
         {

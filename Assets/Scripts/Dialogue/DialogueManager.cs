@@ -31,10 +31,6 @@ public class DialogueManager : MonoBehaviour
     // 对话事件
     public System.Action OnDialogueStart;
     public System.Action OnDialogueEnd;
-    public System.Action<string> OnDialogueTextChanged;
-    
-    [SerializeField] private SayDialog sayDialog;
-    [SerializeField] private Flowchart flowchart;
     // 组件引用
     private AudioSource audioSource;
     
@@ -78,13 +74,6 @@ public class DialogueManager : MonoBehaviour
         Invoke("StartDialogue", 0.5f);
     }
     
-    void StartDialogue()
-    {
-        if (flowchart != null)
-        {
-            flowchart.ExecuteBlock("Start");
-        }
-    }
     /// <summary>
     /// 初始化对话管理器
     /// </summary>

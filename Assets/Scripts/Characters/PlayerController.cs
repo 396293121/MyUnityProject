@@ -8,7 +8,7 @@ using Sirenix.OdinInspector;
 /// 实现IInputListener接口，支持自动输入监听
 /// </summary>
 [ShowOdinSerializedPropertiesInInspector]
-public class PlayerController : MonoBehaviour, IInputListener,IPausable
+public class PlayerController : MonoBehaviour, IInputListener, IPausable
 {
     [TabGroup("配置", "角色设置")]
     [BoxGroup("配置/角色设置/角色引用")]
@@ -273,11 +273,6 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
     [SuffixLabel("秒")]
     [SerializeField] private float interactionCheckInterval = 0.1f; // 0.1秒检测一次交互
 
-    [BoxGroup("配置/性能优化/更新频率控制")]
-    [LabelText("地面检测间隔")]
-    [PropertyRange(0.016f, 0.1f)]
-    [SuffixLabel("秒")]
-    [SerializeField] private float groundCheckInterval = 0.033f; // 30FPS检测地面
 
     // 性能优化计时器
     private float lastInteractionCheckTime;
@@ -289,7 +284,7 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
 
     private void FixedUpdate()
     {
-         if(isPause) return;
+        if (isPause) return;
         // 物理移动 - 使用状态机判断
         if (stateMachine != null)
         {
@@ -383,8 +378,8 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
     public void SetPaused(bool paused)
     {
         isPause = paused;
-        
-        if(paused) 
+
+        if (paused)
         {
             rb.velocity = Vector2.zero;
             // 对话期间保持动画播放，但不禁用animator
@@ -400,7 +395,7 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
             }
         }
     }
-    
+
     /// <summary>
     /// 应用物理移动
     /// </summary>
@@ -462,7 +457,7 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
 
             // 播放跳跃音效 - 优先使用配置化音频系统
             Debug.Log(playerCharacter.audioCategory);
-            PlayerAudioConfig.Instance.PlaySound("jump",playerCharacter.audioCategory);
+            PlayerAudioConfig.Instance.PlaySound("jump", playerCharacter.audioCategory);
             // 播放跳跃动画
             if (animator != null)
             {
@@ -506,7 +501,7 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
         }
 
         // 播放攻击音效 - 优先使用配置化音频系统
-        PlayerAudioConfig.Instance.PlaySound("attack",playerCharacter.audioCategory);
+        PlayerAudioConfig.Instance.PlaySound("attack", playerCharacter.audioCategory);
 
     }
 
@@ -521,7 +516,7 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
         {
             playerCharacter.DetectAndDamageEnemies(() =>
             {
-                PlayerAudioConfig.Instance.PlaySound("attackHit",playerCharacter.audioCategory);
+                PlayerAudioConfig.Instance.PlaySound("attackHit", playerCharacter.audioCategory);
             });
         }
     }
@@ -556,7 +551,7 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
     /// 角色受到伤害的处理方法
     /// </summary>
     /// <param name="damage">受到的伤害值</param>
-    public void TakeDamage(int damage,DamageType damageType,Vector3 hitPoint=default,Enemy enemy=default)
+    public void TakeDamage(int damage, DamageType damageType, Vector3 hitPoint = default, Enemy enemy = default)
     {
         // 性能优化：通知状态机伤害事件
         if (stateMachine != null)
@@ -580,7 +575,7 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
 
             // 检查是否在攻击或技能状态 - 这些状态下受伤不触发受伤动画
             bool shouldPlayHurtAnimation = currentState != PlayerState.Attacking &&
-                                         currentState != PlayerState.Skill&&currentState!=PlayerState.Death&& playerCharacter.isAlive;
+                                         currentState != PlayerState.Skill && currentState != PlayerState.Death && playerCharacter.isAlive;
 
             if (shouldPlayHurtAnimation)
             {
@@ -625,8 +620,8 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
         }
 
         // 播放受伤音效 - 优先使用配置化音频系统
-        PlayerAudioConfig.Instance.PlaySound( "hurt",playerCharacter.audioCategory);
-     
+        PlayerAudioConfig.Instance.PlaySound("hurt", playerCharacter.audioCategory);
+
     }
 
     /// <summary>
@@ -719,17 +714,11 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
     /// </summary>
     private void Update()
     {
-        if(isPause) return;
+        if (isPause) return;
         if (playerCharacter == null || !playerCharacter.isAlive) return;
 
         float currentTime = Time.time;
 
-        // 优化1：地面检测 - 使用间隔检测而非每帧检测
-        if (currentTime - lastGroundCheckTime >= groundCheckInterval)
-        {
-            CheckGrounded();
-            lastGroundCheckTime = currentTime;
-        }
 
         // 保持每帧的核心逻辑（响应性要求高）
         HandleMovement();
@@ -740,14 +729,18 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
             HandleInteraction();
             lastInteractionCheckTime = currentTime;
         }
-
+        if (Time.time - lastGroundCheckTime >= interactionCheckInterval)
+        {
+            CheckGrounded();
+            lastGroundCheckTime = Time.time;
+        }
         // 优化3：动画更新 - 只在状态变更时更新
         UpdateAnimationsOnStateChange();
     }
 
     /// <summary>
     /// 优化的地面检测 - 使用碰撞检测点而非射线检测
-    /// </summary>
+    // /// </summary>
     private void CheckGrounded()
     {
         Vector2 checkPosition = transform.position;
@@ -758,7 +751,8 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
 
         // 使用OverlapCircle进行碰撞检测，比Raycast更高效
         bool newGrounded = Physics2D.OverlapCircle(checkPosition, groundCheckDistance, groundLayerMask) != null;
-
+        Debug.DrawRay(checkPosition, Vector2.down * 0.2f, newGrounded ? Color.green : Color.red, 0.1f);
+        Debug.Log(newGrounded);
         // 性能优化：只在地面状态真正改变时通知状态机
         if (isGrounded != newGrounded)
         {
@@ -770,7 +764,6 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
             }
         }
     }
-
     /// <summary>
     /// 优化的动画更新 - 只在状态变更时更新
     /// </summary>
@@ -862,7 +855,7 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
         }
 
         // 播放升级音效 - 优先使用配置化音频系统
-        PlayerAudioConfig.Instance.PlaySound("levelUp",playerCharacter.audioCategory);
+        PlayerAudioConfig.Instance.PlaySound("levelUp", playerCharacter.audioCategory);
     }
 
     private void OnPlayerDeath()
@@ -881,7 +874,7 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
             stateMachine.ForceChangeState(PlayerState.Death);
         }
         // 播放死亡音效 - 优先使用配置化音频系统
-        PlayerAudioConfig.Instance.PlaySound("death",playerCharacter.audioCategory);
+        PlayerAudioConfig.Instance.PlaySound("death", playerCharacter.audioCategory);
         // 显示游戏结束界面
         if (UIManager.Instance != null)
         {
@@ -891,7 +884,7 @@ public class PlayerController : MonoBehaviour, IInputListener,IPausable
         // 通知游戏管理器
         if (GameManager.Instance != null)
         {
-          //  GameManager.Instance.OnPlayerDeath();
+            //  GameManager.Instance.OnPlayerDeath();
         }
         if (TestSceneController.Instance != null)
         {

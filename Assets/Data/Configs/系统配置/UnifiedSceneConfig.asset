@@ -16,7 +16,7 @@ MonoBehaviour:
   sceneDescription: "\u6D4B\u8BD5\u573A\u666F"
   ScenesType: 0
   backgroundColor: {r: 0.19215688, g: 0.3019608, b: 0.47450984, a: 1}
-  mapPrefab: {fileID: 8076007621738116656, guid: 81ea8720e8107324d8d8fb361dbd2259, type: 3}
+  mapPrefab: {fileID: 0}
   characterPrefabs:
   - characterType: warrior
     prefab: {fileID: 5332153218383502975, guid: 0af60e9c735588e4b8aaa4a0ea67de4e, type: 3}
@@ -55,7 +55,6 @@ MonoBehaviour:
     autoGeneratePatrolPoints: 1
     patrolRadius: 5
     patrolPoints: []
-  enemySystemConfig: {fileID: 11400000, guid: f7f06f39a749eda46b300dadd76cfbee, type: 2}
   hudUIPrefab: {fileID: 0}
   pauseMenuPrefab: {fileID: 0}
   gameOverUIPrefab: {fileID: 0}
