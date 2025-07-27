@@ -169,13 +169,13 @@ public class WildBoar : Enemy
     // 添加技能冷却时间字段
     if (Time.time - lastSkillTriggerTime < 1f) return;
         // 检查冲锋技能触发
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+        float distanceToPlayer = Vector2.Distance(attackPoint.transform.position, player.position);
         if (currentState == EnemyState.Chase && distanceToPlayer <= chargeSkillTriggerDistance)
         {
             // 30%概率触发冲锋技能
             if (Random.Range(0f, 1f) < 0.3f)
             {
-                  lastSkillTriggerTime = Time.time;
+                lastSkillTriggerTime = Time.time;
                 TriggerChargeSkill();
             }
         }

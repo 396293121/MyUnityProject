@@ -9,7 +9,7 @@ TagManager:
   - Wall
   - Obstacle
   - PlayerTrigger
-  - EnemyTrigger
+  - "\u68AF\u5B50"
   layers:
   - Default
   - TransparentFX
@@ -24,10 +24,10 @@ TagManager:
   - Player
   - Enemy
   - Ground
-  - PlayerTrigger
-  - EnemyTrigger
   - Wall
   - Obstacle
+  - Trigger
+  - 
   - 
   - 
   - 
@@ -46,6 +46,27 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Background_Far
+    uniqueID: 1669979867
+    locked: 0
+  - name: BackGround
+    uniqueID: 295713377
+    locked: 0
+  - name: Ground
+    uniqueID: 4016347151
+    locked: 0
+  - name: Decorations
+    uniqueID: 4215204393
+    locked: 0
+  - name: NPC
+    uniqueID: 981845443
+    locked: 0
+  - name: ENEMY
+    uniqueID: 3065052343
+    locked: 0
+  - name: Interactive
+    uniqueID: 3978044931
     locked: 0
   - name: Characters
     uniqueID: 3192362963

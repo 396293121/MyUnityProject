@@ -398,7 +398,6 @@ public abstract class Character : MonoBehaviour, IDamageable
         {
             LevelUp();
         }
-
         Debug.Log($"[{gameObject.name}] 获得 {exp} 点经验值，当前经验: {experience}/{experienceToNext}");
     }
 

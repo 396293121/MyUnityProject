@@ -15,8 +15,8 @@ MonoBehaviour:
   npcName: "\u795E\u79D8\u4EBA"
   npcType: 0
   description: 
+  dialogueFlowchart: {fileID: 290462809166452371, guid: f27c8a649674e974f9fa2c171437a549, type: 3}
   interactionRange: 2
   promptOffset: {x: 0, y: 2, z: 0}
-  dialogueFlowchart: {fileID: 0}
   firstDialogueBlock: Start
   repeatDialogueBlock: Repeat

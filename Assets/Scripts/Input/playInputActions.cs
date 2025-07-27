@@ -107,6 +107,24 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ClimbUp"",
+                    ""type"": ""Button"",
+                    ""id"": ""1d13a7b0-237d-44d1-adfc-6d23fa404c85"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ClimbDown"",
+                    ""type"": ""Button"",
+                    ""id"": ""11d8002c-1d98-4c5a-9854-ddd847ce7034"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -263,6 +281,28 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""SKILL4"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2c699573-336e-4904-aa59-1b5d36c7ed16"",
+                    ""path"": ""<Keyboard>/upArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ClimbUp"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""3fd3a418-e2ca-45ce-92bd-8709f28db051"",
+                    ""path"": ""<Keyboard>/downArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ClimbDown"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -308,6 +348,8 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
         m_Player_SKILL2 = m_Player.FindAction("SKILL2", throwIfNotFound: true);
         m_Player_SKILL3 = m_Player.FindAction("SKILL3", throwIfNotFound: true);
         m_Player_SKILL4 = m_Player.FindAction("SKILL4", throwIfNotFound: true);
+        m_Player_ClimbUp = m_Player.FindAction("ClimbUp", throwIfNotFound: true);
+        m_Player_ClimbDown = m_Player.FindAction("ClimbDown", throwIfNotFound: true);
         // New action map1
         m_Newactionmap1 = asset.FindActionMap("New action map1", throwIfNotFound: true);
         m_Newactionmap1_Newaction = m_Newactionmap1.FindAction("New action", throwIfNotFound: true);
@@ -387,6 +429,8 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_SKILL2;
     private readonly InputAction m_Player_SKILL3;
     private readonly InputAction m_Player_SKILL4;
+    private readonly InputAction m_Player_ClimbUp;
+    private readonly InputAction m_Player_ClimbDown;
     public struct PlayerActions
     {
         private @PlayInputActions m_Wrapper;
@@ -400,6 +444,8 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
         public InputAction @SKILL2 => m_Wrapper.m_Player_SKILL2;
         public InputAction @SKILL3 => m_Wrapper.m_Player_SKILL3;
         public InputAction @SKILL4 => m_Wrapper.m_Player_SKILL4;
+        public InputAction @ClimbUp => m_Wrapper.m_Player_ClimbUp;
+        public InputAction @ClimbDown => m_Wrapper.m_Player_ClimbDown;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -436,6 +482,12 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
             @SKILL4.started += instance.OnSKILL4;
             @SKILL4.performed += instance.OnSKILL4;
             @SKILL4.canceled += instance.OnSKILL4;
+            @ClimbUp.started += instance.OnClimbUp;
+            @ClimbUp.performed += instance.OnClimbUp;
+            @ClimbUp.canceled += instance.OnClimbUp;
+            @ClimbDown.started += instance.OnClimbDown;
+            @ClimbDown.performed += instance.OnClimbDown;
+            @ClimbDown.canceled += instance.OnClimbDown;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -467,6 +519,12 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
             @SKILL4.started -= instance.OnSKILL4;
             @SKILL4.performed -= instance.OnSKILL4;
             @SKILL4.canceled -= instance.OnSKILL4;
+            @ClimbUp.started -= instance.OnClimbUp;
+            @ClimbUp.performed -= instance.OnClimbUp;
+            @ClimbUp.canceled -= instance.OnClimbUp;
+            @ClimbDown.started -= instance.OnClimbDown;
+            @ClimbDown.performed -= instance.OnClimbDown;
+            @ClimbDown.canceled -= instance.OnClimbDown;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -541,6 +599,8 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
         void OnSKILL2(InputAction.CallbackContext context);
         void OnSKILL3(InputAction.CallbackContext context);
         void OnSKILL4(InputAction.CallbackContext context);
+        void OnClimbUp(InputAction.CallbackContext context);
+        void OnClimbDown(InputAction.CallbackContext context);
     }
     public interface INewactionmap1Actions
     {

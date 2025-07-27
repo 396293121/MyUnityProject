@@ -17,7 +17,8 @@ public enum PlayerState
     Skill,      // 技能状态
     Hurt,       // 受伤状态
     Death,      // 死亡状态
-    Invincible  // 无敌状态（可与其他状态叠加）
+    Invincible, // 无敌状态（可与其他状态叠加）
+    Climbing    // 攀爬状态
 }
 
 /// <summary>
@@ -214,6 +215,7 @@ public class PlayerStateMachine : MonoBehaviour
         AddWalkingStateTransitions();
         AddJumpingStateTransitions();
         AddFallingStateTransitions();
+        AddClimbingStateTransitions();
         AddAttackingStateTransitions();
         AddSkillStateTransitions();
         AddHurtStateTransitions();
@@ -227,7 +229,7 @@ public class PlayerStateMachine : MonoBehaviour
     {
         // 死亡转换 - 最高优先级，适用于除死亡状态外的所有状态
         var livingStates = new[] { PlayerState.Idle, PlayerState.Walking, PlayerState.Jumping, 
-                                  PlayerState.Falling, PlayerState.Attacking, PlayerState.Skill, PlayerState.Hurt };
+                                  PlayerState.Falling, PlayerState.Climbing, PlayerState.Attacking, PlayerState.Skill, PlayerState.Hurt };
         
         foreach (var state in livingStates)
         {
@@ -237,7 +239,7 @@ public class PlayerStateMachine : MonoBehaviour
         
         // 受伤转换 - 高优先级，适用于非受伤和非死亡状态
         var vulnerableStates = new[] { PlayerState.Idle, PlayerState.Walking, PlayerState.Jumping, 
-                                      PlayerState.Falling, PlayerState.Attacking, PlayerState.Skill };
+                                      PlayerState.Falling, PlayerState.Climbing, PlayerState.Attacking, PlayerState.Skill };
         
         foreach (var state in vulnerableStates)
         {
@@ -331,6 +333,20 @@ public class PlayerStateMachine : MonoBehaviour
             () => !IsHurt() && isGrounded && IsMoving() && canMove, "受伤结束且在地面且有移动输入"));
         stateTransitions.Add(new StateTransition(PlayerState.Hurt, PlayerState.Falling, 
             () => !IsHurt() && ShouldFall(), "受伤结束且应该下降"));
+    }
+    
+    /// <summary>
+    /// 添加攀爬状态的转换
+    /// </summary>
+    private void AddClimbingStateTransitions()
+    {
+        // 攀爬状态退出到其他状态
+        stateTransitions.Add(new StateTransition(PlayerState.Climbing, PlayerState.Idle, 
+            () => !IsClimbing() && isGrounded && !IsMoving(), "攀爬结束且在地面且无移动输入"));
+        stateTransitions.Add(new StateTransition(PlayerState.Climbing, PlayerState.Walking, 
+            () => !IsClimbing() && isGrounded && IsMoving() && canMove, "攀爬结束且在地面且有移动输入"));
+        stateTransitions.Add(new StateTransition(PlayerState.Climbing, PlayerState.Falling, 
+            () => !IsClimbing() && ShouldFall(), "攀爬结束且应该下降"));
     }
     
     /// <summary>
@@ -507,6 +523,16 @@ public class PlayerStateMachine : MonoBehaviour
                 
             case PlayerState.Falling:
                 // 下降状态：设置下降标志
+                break;
+                
+            case PlayerState.Climbing:
+                // 攀爬状态：禁用常规移动，攀爬组件接管控制
+                if (playerController != null)
+                {
+                    playerController.canMove = false;
+                    playerController.canAttack = false;
+                }
+                break;
                 
             case PlayerState.Attacking:
                 // 攻击状态：允许移动但速度减慢（在PlayerController中处理）
@@ -556,6 +582,15 @@ public class PlayerStateMachine : MonoBehaviour
         {
             case PlayerState.Falling:
                 // 退出下降状态：重置下降标志
+                break;
+                
+            case PlayerState.Climbing:
+                // 退出攀爬状态：恢复常规移动和攻击能力
+                if (playerController != null)
+                {
+                    playerController.canMove = true;
+                    playerController.canAttack = true;
+                }
                 break;
                 
             case PlayerState.Attacking:
@@ -706,6 +741,15 @@ public class PlayerStateMachine : MonoBehaviour
     private bool IsHurt()
     {
         return playerController != null && playerController.isHurt;
+    }
+    
+    /// <summary>
+    /// 是否正在攀爬
+    /// </summary>
+    private bool IsClimbing()
+    {
+        PlayerClimbing climbingComponent = GetComponent<PlayerClimbing>();
+        return climbingComponent != null && climbingComponent.IsClimbing();
     }
     
     #endregion

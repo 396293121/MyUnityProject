@@ -522,25 +522,27 @@ namespace Fungus
             {
                 return false;
             }
-        }        
+        }
 
         /// <summary>
         /// Execute a child block in the Flowchart.
         /// You can use this method in a UI event. e.g. to handle a button click.
-        public virtual void ExecuteBlock(string blockName)
+        public virtual bool ExecuteBlock(string blockName)
         {
             var block = FindBlock(blockName);
 
             if (block == null)
             {
-                Debug.LogError("Block " + blockName  + " does not exist");
-                return;
+                Debug.LogError("Block " + blockName + " does not exist");
+                return false;
             }
 
             if (!ExecuteBlock(block))
             {
-                Debug.LogWarning("Block " + blockName  + " failed to execute");
+                Debug.LogWarning("Block " + blockName + " failed to execute");
+                return false;
             }
+            return true;
         }
             
         /// <summary>

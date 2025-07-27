@@ -6,7 +6,9 @@ public class DamagePool : MonoBehaviour
     public static DamagePool Instance;
     public GameObject popupPrefab;
          public Transform canvasTransform; // 引用Canvas的Transform
-    public int poolSize = 20;
+private float lastCleanupTime;
+private const float CLEANUP_INTERVAL = 30f; // 每30秒清理一次
+private const int MAX_POOL_SIZE = 50; // 最大池容量
     
     private Queue<DamagePopup> pool = new Queue<DamagePopup>();
     
@@ -16,16 +18,40 @@ public class DamagePool : MonoBehaviour
         InitializePool();
     }
     
+void Update()
+{
+    // 定期清理多余对象
+    if (Time.time - lastCleanupTime > CLEANUP_INTERVAL)
+    {
+        CleanupPool();
+        lastCleanupTime = Time.time;
+    }
+}
     void InitializePool()
     {
-        for (int i = 0; i < poolSize; i++)
+        for (int i = 0; i < MAX_POOL_SIZE; i++)
         {
                      GameObject obj = Instantiate(popupPrefab, canvasTransform);
             obj.SetActive(false);
             pool.Enqueue(obj.GetComponent<DamagePopup>());
         }
     }
-    
+    private void CleanupPool()
+{
+    // 计算需要清理的对象数量
+    int cleanupCount = pool.Count - MAX_POOL_SIZE;
+    if (cleanupCount <= 0) return;
+
+    // 清理多余对象
+    for (int i = 0; i < cleanupCount; i++)
+    {
+        DamagePopup popup = pool.Dequeue();
+        if (popup != null && popup.gameObject != null)
+        {
+            Destroy(popup.gameObject);
+        }
+    }
+}
     public DamagePopup GetPopup()
     {
         if (pool.Count == 0) 
@@ -38,8 +64,15 @@ public class DamagePool : MonoBehaviour
     
     public void ReturnPopup(DamagePopup popup)
     {
-        popup.gameObject.SetActive(false);
-        pool.Enqueue(popup);
+          // 添加空对象检查
+    if (popup == null || popup.gameObject == null) return;
+
+    // 重置状态
+    popup.ResetState();
+    // 隐藏
+    popup.gameObject.SetActive(false);
+    // 重新入队
+    pool.Enqueue(popup);
     }
     
     void ExpandPool()

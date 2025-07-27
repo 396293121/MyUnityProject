@@ -22,6 +22,8 @@ public class InputManager : MonoBehaviour
     public System.Action OnJumpPressed;
     public System.Action OnJumpReleased;
     public System.Action OnAttackPressed;
+    public System.Action OnClimbUpPressed;
+    public System.Action OnClimbDownPressed;
     public System.Action OnSkillPressed;
     public System.Action OnInteractPressed;
     public System.Action OnPausePressed;
@@ -77,6 +79,8 @@ public class InputManager : MonoBehaviour
         inputActions.Player.Skill.performed += OnSkillPerformed;
         inputActions.Player.Interact.performed += OnInteractPerformed;
         inputActions.Player.Pause.performed += OnPausePerformed;
+        inputActions.Player.ClimbUp.performed += OnClimbUpPerformed;
+        inputActions.Player.ClimbDown.performed += OnClimbDownPerformed;
         Debug.Log($"@jump,{inputActions.Player.Jump},@attack,{inputActions.Player.Attack}");
         if (debugInput)
         {
@@ -165,13 +169,22 @@ public class InputManager : MonoBehaviour
             Debug.Log("[InputManager] 技能按下");
         }
     }
-    
+    private void OnClimbDownPerformed(InputAction.CallbackContext context)
+    {
+        OnClimbDownPressed?.Invoke();
+        BroadcastClimbDownInput();
+    }
+    private void OnClimbUpPerformed(InputAction.CallbackContext context)
+    {
+        OnClimbUpPressed?.Invoke();
+        BroadcastClimbUpInput();
+    }
     // 交互输入处理
     private void OnInteractPerformed(InputAction.CallbackContext context)
     {
         OnInteractPressed?.Invoke();
         BroadcastInteractInput();
-        
+
         if (debugInput)
         {
             Debug.Log("[InputManager] 交互按下");
@@ -268,7 +281,28 @@ public class InputManager : MonoBehaviour
             listener?.OnJumpInput();
         }
     }
-    
+    /// <summary>
+    /// 广播攀爬向上输入
+    /// </summary>
+    private void BroadcastClimbUpInput()
+    {
+        foreach (var listener in listeners)
+        {
+            
+            Debug.Log(listener+"[InputManager] 广播攀爬向上输入");
+            listener?.OnClimbUpInput();
+        }
+    }
+    /// <summary>
+    /// 广播攀爬向下输入
+    /// </summary>
+    private void BroadcastClimbDownInput()
+    {
+        foreach (var listener in listeners)
+        {
+            listener?.OnClimbDownInput();
+        }
+    }
     /// <summary>
     /// 广播跳跃释放
     /// </summary>

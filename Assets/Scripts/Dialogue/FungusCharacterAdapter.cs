@@ -69,38 +69,6 @@ public class FungusCharacterAdapter : MonoBehaviour
     }
     
     /// <summary>
-    /// 查找指定名称的Flowchart
-    /// </summary>
-    private Flowchart FindFlowchart(string flowchartName)
-    {
-        // 首先尝试在当前GameObject上查找
-        var flowchart = GetComponent<Flowchart>();
-        if (flowchart != null && flowchart.name == flowchartName)
-        {
-            return flowchart;
-        }
-        
-        // 在场景中查找指定名称的Flowchart
-        var flowchartObject = GameObject.Find(flowchartName);
-        if (flowchartObject != null)
-        {
-            return flowchartObject.GetComponent<Flowchart>();
-        }
-        
-        // 查找所有Flowchart组件
-        var allFlowcharts = FindObjectsOfType<Flowchart>();
-        foreach (var fc in allFlowcharts)
-        {
-            if (fc.name == flowchartName || fc.gameObject.name == flowchartName)
-            {
-                return fc;
-            }
-        }
-        
-        return null;
-    }
-    
-    /// <summary>
     /// 检查是否可以开始对话
     /// </summary>
     public bool CanStartDialogue()

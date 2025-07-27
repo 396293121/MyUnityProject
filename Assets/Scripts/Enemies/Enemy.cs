@@ -15,9 +15,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     [Required]
     [SerializeField]
     public EnemyConfig enemyConfig;
-    
-       [LabelText("敌人音频类型")]
-    public   AudioCategory audioCategory;
+
+    [LabelText("敌人音频类型")]
+    public AudioCategory audioCategory;
     [LabelText("敌人技能系统")]
     [SerializeField]
     [ReadOnly]
@@ -61,7 +61,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     [ShowInInspector]
     protected bool isOnScreen = true;
 
-    public bool IsOnScreen {get{ return isOnScreen; }}
+    public bool IsOnScreen { get { return isOnScreen; } }
     [VerticalGroup("敌人配置/性能优化/优化设置/状态监控")]
     [LabelText("上次更新时间")]
     [ReadOnly]
@@ -233,7 +233,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     [EnumToggleButtons]
     public EnemyState currentState = EnemyState.Idle;
 
-//暂停前状态
+    //暂停前状态
     private EnemyState prePauseState;
     [VerticalGroup("敌人配置/状态控制/状态信息/状态标志")]
     [LabelText("是否死亡")]
@@ -265,11 +265,12 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     [LabelText("碰撞器组件")]
     [Required("需要Collider2D组件")]
     private Collider2D enemyCollider;
-public Collider2D EnemyCollider { get { return enemyCollider; } }
+    public Collider2D EnemyCollider { get { return enemyCollider; } }
     [VerticalGroup("敌人配置/状态控制/状态信息/核心组件")]
     [LabelText("动画控制器")]
-    public Animator animator;
+    protected Animator animator;
 
+    public Animator Animator { get { return animator; } }
     [VerticalGroup("敌人配置/状态控制/状态信息/核心组件")]
     [LabelText("精灵渲染器")]
     [Required("需要SpriteRenderer组件")]
@@ -409,6 +410,7 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
     public Vector3 Position => transform.position;
 
     private bool isPaused = false;
+    private bool inNPCPaused = false;
 
     /// <summary>
     /// 获取生命值进度条颜色
@@ -439,7 +441,6 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
 
         // 从系统配置初始化参数
         InitializeFromSystemConfig();
-
         // 初始化技能组件
         InitializeSkillComponent();
         InitializeBuffManager();
@@ -460,6 +461,8 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
         // 查找玩家
         FindPlayer();
 
+        // 注册到游戏暂停管理器
+        GamePauseManager.Instance.Register(this);
         // 设置巡逻点
         //   SetupPatrolPoints();
 
@@ -474,7 +477,8 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
 
     protected virtual void Update()
     {
-            // 更新状态计时器
+        if (isPaused) return;
+        // 更新状态计时器
         stateTimer += Time.unscaledDeltaTime;
         if (!isAlive || !ShouldUpdate()) return;
 
@@ -483,7 +487,7 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
         // 性能优化：检查是否需要更新
         // if (!ShouldUpdate()) return;
 
-    
+
 
 
 
@@ -499,10 +503,12 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
         // 更新最后更新时间
         lastUpdateTime = Time.time;
     }
-     public void SetPaused(bool paused)
+    public void SetPaused(bool paused)
     {
+            if(inNPCPaused) return;
         isPaused = paused;
-        if(paused)
+        Debug.Log($"[Enemy] {gameObject.name} 暂停状态: {paused}");
+        if (paused)
         {
             prePauseState = currentState;
             animator.enabled = false;
@@ -512,6 +518,10 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
             currentState = prePauseState;
             animator.enabled = true;
         }
+    }
+    public void setNPCPaused(bool paused)
+    {
+        inNPCPaused = paused;
     }
     protected virtual void InitializeSkillComponent()
     {
@@ -648,7 +658,7 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
                 patrolSpeed = baseConfig.patrolSpeed;
                 patrolWaitTime = baseConfig.patrolWaitTime;
                 //巡逻半径在场景配置文件中设置
-               // patrolRange = baseConfig.patrolRadius;
+                // patrolRange = baseConfig.patrolRadius;
 
                 // 初始化性能优化参数
                 offScreenUpdateInterval = baseConfig.offScreenUpdateInterval;
@@ -922,7 +932,7 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
             float patrolCycle = patrolWaitTime * 4f; // 完整巡逻周期，增加稳定性
             float currentTime = (Time.time) % patrolCycle; // 加入实例ID避免同步
             bool shouldMoveRight = currentTime < patrolCycle * 0.5f;
-         
+
             UpdateFacing(shouldMoveRight); // 新增方向同步
             Vector2 direction = shouldMoveRight ? Vector2.right : Vector2.left;
             cachedPatrolDirection = direction;
@@ -975,8 +985,8 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
     }
     public virtual void onHurtEnd()
     {
-          // 防止重复调用
-    if (currentState != EnemyState.Hurt) return;
+        // 防止重复调用
+        if (currentState != EnemyState.Hurt) return;
         if (player != null && Vector2.Distance(transform.position, player.position) <= detectionRange)
         {
             ChangeState(EnemyState.Chase);
@@ -1093,9 +1103,9 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
     /// 受到伤害
     /// </summary>
     /// <param name="damage">伤害值</param>
-    public virtual void TakeDamage(int damage,DamageType damageType, Vector2 hitPoint=default, Character attacker=null)
+    public virtual void TakeDamage(int damage, DamageType damageType, Vector2 hitPoint = default, Character attacker = null)
     {
-        if (!isAlive) 
+        if (!isAlive)
         {
             Debug.Log($"[{gameObject.name}] 已死亡，忽略伤害");
             return;
@@ -1108,23 +1118,15 @@ public Collider2D EnemyCollider { get { return enemyCollider; } }
 
         int oldHealth = currentHealth;
         currentHealth = Mathf.Max(0, currentHealth - actualDamage);
-
-            Vector3 damageNumberPosition = transform.position;
-        
-            if (enemyCollider != null)
-            {
-                damageNumberPosition += Vector3.up * enemyCollider.bounds.extents.y;
-            }
-DamagePopup popup = DamagePool.Instance.GetPopup();
-        popup.Setup(damageNumberPosition, actualDamage, damageType);
+        showNumber(actualDamage, damageType);
 
         // 处理死亡
         if (currentHealth <= 0)
         {
-            Die();
+            Die(attacker);
             return;
         }
-        
+
         //技能可以被打断
         if (isSkill)
         {
@@ -1139,11 +1141,33 @@ DamagePopup popup = DamagePool.Instance.GetPopup();
         {
             animator.SetTrigger(isHurtHash);
         }
-        PlayerAudioConfig.Instance.PlaySound("hurt",audioCategory);
+        PlayerAudioConfig.Instance.PlaySound("hurt", audioCategory);
 
         Debug.Log($"[{gameObject.name}] 受到 {actualDamage} 点{damageType}伤害，剩余生命值: {currentHealth}");
     }
+    protected void showNumber(int damage, DamageType damageType)
 
+    {
+        Vector3 damageNumberPosition = transform.position;
+
+        if (enemyCollider != null)
+        {
+            damageNumberPosition += Vector3.up * enemyCollider.bounds.extents.y;
+        }
+        DamagePopup popup = DamagePool.Instance.GetPopup();
+        popup.Setup(damageNumberPosition, damage, damageType);
+
+    }
+    protected void showExp(int exp)
+    {
+        Vector3 expNumberPosition = transform.position;
+          if (enemyCollider != null)
+        {
+            expNumberPosition += Vector3.up * enemyCollider.bounds.extents.y;
+        }
+        DamagePopup popup = DamagePool.Instance.GetPopup();
+        popup.SetupExp(expNumberPosition, exp);
+    }
     protected virtual void InterruptSkill()
     {
         // 供子类扩展的技能被打断方法
@@ -1176,7 +1200,8 @@ DamagePopup popup = DamagePool.Instance.GetPopup();
     /// <summary>
     /// 敌人死亡
     /// </summary>
-    public virtual void Die()
+    public virtual void Die(Character attacker)
+
     {
         if (!isAlive) return;
 
@@ -1187,13 +1212,17 @@ DamagePopup popup = DamagePool.Instance.GetPopup();
         {
             animator.SetTrigger(dieHash);
         }
-        PlayerAudioConfig.Instance.PlaySound( "die",audioCategory);
+        PlayerAudioConfig.Instance.PlaySound("die", audioCategory);
 
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
             Debug.Log($"[Enemy] {gameObject.name} 死亡");
         }
-
+        showExp(expReward);
+        if(attacker != null)
+        {
+            attacker.GainExperience(expReward);
+        }
         // 启动死亡处理协程
         StartCoroutine(HandleDeath());
     }
@@ -1229,7 +1258,7 @@ DamagePopup popup = DamagePool.Instance.GetPopup();
             Vector2 targetVelocity = new Vector2(direction.x * speed, rb2D.velocity.y);
             rb2D.velocity = targetVelocity;
 
-        isMoving = targetVelocity.magnitude > 0.1f;
+            isMoving = targetVelocity.magnitude > 0.1f;
         }
     }
 
@@ -1282,16 +1311,11 @@ DamagePopup popup = DamagePool.Instance.GetPopup();
     }
     #endregion
 
-
-    #region 公共方法
-    /// <summary>
-    /// 强制死亡
-    /// </summary>
-    public void ForceDeath()
+    void OnDestroy()
     {
-        currentHealth = 0;
-        Die();
+        GamePauseManager.Instance.Unregister(this);
     }
+    #region 公共方法
 
     /// <summary>
     /// 治疗
@@ -1394,13 +1418,13 @@ DamagePopup popup = DamagePool.Instance.GetPopup();
         if (animator != null)
         {
             animator.SetTrigger(AttackHash);
-            PlayerAudioConfig.Instance.PlaySound("attack",audioCategory);
+            PlayerAudioConfig.Instance.PlaySound("attack", audioCategory);
         }
 
         // 新增攻击点检测
         if (playerController != null)
         {
-            playerController.TakeDamage((int)damage,damageType);
+            playerController.TakeDamage((int)damage, damageType);
         }
 
         lastAttackTime = Time.time;

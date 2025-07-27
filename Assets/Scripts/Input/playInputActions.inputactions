@@ -85,6 +85,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "ClimbUp",
+                    "type": "Button",
+                    "id": "1d13a7b0-237d-44d1-adfc-6d23fa404c85",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ClimbDown",
+                    "type": "Button",
+                    "id": "11d8002c-1d98-4c5a-9854-ddd847ce7034",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -239,6 +257,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "SKILL4",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2c699573-336e-4904-aa59-1b5d36c7ed16",
+                    "path": "<Keyboard>/upArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ClimbUp",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3fd3a418-e2ca-45ce-92bd-8709f28db051",
+                    "path": "<Keyboard>/downArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ClimbDown",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -31,22 +31,23 @@ public class GamePauseManager : MonoBehaviour
     // 注册可暂停对象
     public void Register(IPausable pausable) => pausables.Add(pausable);
     
+    public void Unregister(IPausable pausable) => pausables.Remove(pausable);
     // 暂停游戏
     public void SetPaused(bool paused)
     {
         IsPaused = paused;
-        
+
         // 更新所有注册组件
-        foreach(var p in pausables)
+        foreach (var p in pausables)
         {
             p.SetPaused(paused);
         }
-        
+
         // 特殊处理：粒子系统
         var particles = FindObjectsOfType<ParticleSystem>();
-        foreach(var ps in particles)
+        foreach (var ps in particles)
         {
-            if(paused) ps.Pause();
+            if (paused) ps.Pause();
             else ps.Play();
         }
     }

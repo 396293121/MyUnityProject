@@ -235,8 +235,9 @@ private List<CharacterClassSprite> classSprites = new List<CharacterClassSprite>
     {
         // 注销事件监听
         UnregisterEventListeners();
-         character.OnHealthChanged -= UpdateHealthDisplay;
-    character.OnManaChanged -= UpdateManaDisplay;
+        character.OnHealthChanged -= UpdateHealthDisplay;
+        character.OnManaChanged -= UpdateManaDisplay;
+        character.OnExpChanged -= UpdateExpDisplay;
     }
     /// <summary>
 /// 初始化角色图像
@@ -418,8 +419,9 @@ private void InitializeCharacterImage()
                       // 添加事件订阅
          character.OnHealthChanged += UpdateHealthDisplay;
     character.OnManaChanged += UpdateManaDisplay;
+    character.OnExpChanged += UpdateExpDisplay;
     // character.OnLevelUp += TriggerLevelUpEffect;
-    // skillComponent.OnSkillPerformed += UpdateSkillSlots;
+            // skillComponent.OnSkillPerformed += UpdateSkillSlots;
             character.OnLevelUp += OnLevelUp;
             character.OnDeath += OnPlayerDeath;
         }

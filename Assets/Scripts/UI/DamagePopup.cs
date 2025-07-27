@@ -31,7 +31,7 @@ public class DamagePopup : MonoBehaviour
         text = GetComponent<TextMeshProUGUI>();
     }
 
-    public void Setup(Vector3 position, int damage, DamageType damageType)
+    public void Setup(Vector3 position, int damage, DamageType damageType, bool isMerge = false)
 
     {
         Vector3 randomOffset = new Vector3(
@@ -53,11 +53,37 @@ public class DamagePopup : MonoBehaviour
         timer = lifetime;
     }
 
+    public void SetupExp(Vector3 position, int exp, bool isMerge = false)
+
+    {
+        Vector3 randomOffset = new Vector3(
+                Random.Range(-0.5f, 0.5f),
+                Random.Range(-0.2f, 0.3f),
+                0
+            );
+        transform.position = position + randomOffset;
+
+        // 设置文本属性
+        text.text = "Exp:" + exp.ToString();
+        text.fontSize = normalSize;
+        text.color = Color.yellow;
+        timer = lifetime;
+    }
+
     void Update()
     {
     }
+    public void ResetState()
+    {
+        // 重置文本、位置等显示状态
+        transform.localPosition = Vector3.zero;
+        if(text!=null)
+        {
+            text.text = "";
+        }
+    }
     public void OnEnd()
     {
-            DamagePool.Instance.ReturnPopup(this);
-    } 
+        DamagePool.Instance.ReturnPopup(this);
+    }
 }

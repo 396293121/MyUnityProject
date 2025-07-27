@@ -25,7 +25,11 @@ public interface IInputListener
     /// 攻击输入事件
     /// </summary>
     void OnAttackInput();
-    
+        /// <summary>
+    /// 攀爬向上输入
+    /// </summary>
+    void OnClimbUpInput();
+        void OnClimbDownInput();
     /// <summary>
     /// 技能输入事件
     /// </summary>

@@ -143,6 +143,7 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
     [ShowInInspector]
     private PlayerStateMachine stateMachine;
 
+    public PlayerStateMachine StateMachine => stateMachine;
     [TabGroup("状态", "角色状态")]
     [HorizontalGroup("状态/角色状态/状态设置")]
     [VerticalGroup("状态/角色状态/状态设置/基础状态")]
@@ -231,7 +232,6 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
             playerCharacter = GetComponent<Character>();
 
         }
-
         // 获取或添加状态机组件
         stateMachine = GetComponent<PlayerStateMachine>();
         if (stateMachine == null)
@@ -296,6 +296,7 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
                             currentState == PlayerState.Falling ||
                             currentState == PlayerState.Attacking || // 攻击时允许移动但速度减慢
                             currentState == PlayerState.Skill; // 技能时允许移动但速度减慢
+                            // 注意：攀爬状态(Climbing)被排除，由PlayerClimbing组件接管移动控制
 
             if (shouldMove)
             {
@@ -751,8 +752,6 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
 
         // 使用OverlapCircle进行碰撞检测，比Raycast更高效
         bool newGrounded = Physics2D.OverlapCircle(checkPosition, groundCheckDistance, groundLayerMask) != null;
-        Debug.DrawRay(checkPosition, Vector2.down * 0.2f, newGrounded ? Color.green : Color.red, 0.1f);
-        Debug.Log(newGrounded);
         // 性能优化：只在地面状态真正改变时通知状态机
         if (isGrounded != newGrounded)
         {
@@ -951,7 +950,8 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
     {
         // 注销输入监听器
         InputManager.UnregisterListener(this);
-
+        // 注销游戏暂停管理器
+        GamePauseManager.Instance.Unregister(this);
         // 取消监听角色事件
         if (playerCharacter != null)
         {
@@ -986,7 +986,11 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
     {
         // 可以在这里处理跳跃释放逻辑，比如可变跳跃高度
     }
+    void IInputListener.OnClimbDownInput()
+    {
+    }                             // 空实现
 
+    void IInputListener.OnClimbUpInput() { }  
     /// <summary>
     /// 攻击输入事件处理
     /// </summary>

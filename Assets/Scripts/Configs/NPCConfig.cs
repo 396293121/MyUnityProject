@@ -1,3 +1,5 @@
+using Fungus;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 /// <summary>
@@ -15,7 +17,6 @@ public class NPCConfig : ScriptableObject
     [Tooltip("NPC描述")]
     [TextArea(3, 5)]
     public string description = "";
-    
     [Header("交互设置")]
     [Tooltip("交互范围")]
     public float interactionRange = 2f;
