@@ -8,6 +8,7 @@ using Sirenix.OdinInspector;
 /// 支持未来扩展（任务、对话等）
 /// </summary>
 [CreateAssetMenu(fileName = "UnifiedSceneConfig", menuName = "Game/Unified Scene Config")]
+
 public class UnifiedSceneConfig : ScriptableObject
 {
     #region 场景基础信息
@@ -23,7 +24,6 @@ public class UnifiedSceneConfig : ScriptableObject
     [LabelText("场景描述")]
     [TextArea(2, 4)]
     public string sceneDescription;
-    
     [VerticalGroup("基础配置/场景信息/信息设置/基本设置")]
     [LabelText("场景类型")]
     public ScenesType ScenesType = ScenesType.Battle;

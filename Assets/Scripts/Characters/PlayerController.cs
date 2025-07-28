@@ -296,7 +296,7 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
                             currentState == PlayerState.Falling ||
                             currentState == PlayerState.Attacking || // 攻击时允许移动但速度减慢
                             currentState == PlayerState.Skill; // 技能时允许移动但速度减慢
-                            // 注意：攀爬状态(Climbing)被排除，由PlayerClimbing组件接管移动控制
+                                                               // 注意：攀爬状态(Climbing)被排除，由PlayerClimbing组件接管移动控制
 
             if (shouldMove)
             {
@@ -744,14 +744,33 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
     // /// </summary>
     private void CheckGrounded()
     {
-        Vector2 checkPosition = transform.position;
-        if (groundCheck != null)
-        {
-            checkPosition = groundCheck.transform.position;
-        }
+         // 使用三个检测点：中心、左边缘、右边缘
+    Vector2[] checkPoints = new Vector2[3];
+        // 计算底部检测点位置
+        Vector3 size = playerCharacter.Collider2D.bounds.size;
+        float bottomY = transform.position.y;
+    checkPoints[0] = new Vector2(transform.position.x, bottomY); // 中心点
+    checkPoints[1] = new Vector2(transform.position.x - size.x/2 * 0.8f, bottomY); // 左边缘
+    checkPoints[2] = new Vector2(transform.position.x + size.x/2 * 0.8f, bottomY); // 右边缘
 
-        // 使用OverlapCircle进行碰撞检测，比Raycast更高效
-        bool newGrounded = Physics2D.OverlapCircle(checkPosition, groundCheckDistance, groundLayerMask) != null;
+    bool newGrounded = false;
+    foreach (var point in checkPoints)
+    {
+        // 使用BoxCast代替OverlapCircle，增加检测稳定性
+        RaycastHit2D hit = Physics2D.BoxCast(
+            point,
+            new Vector2(0.1f, 0.05f), // 检测区域尺寸
+            0f,
+            Vector2.down,
+            groundCheckDistance,
+            groundLayerMask);
+
+        if (hit.collider != null)
+        {
+            newGrounded = true;
+            break;
+        }
+    }
         // 性能优化：只在地面状态真正改变时通知状态机
         if (isGrounded != newGrounded)
         {
@@ -805,7 +824,6 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
             isFalling = false;
         }
     }
-
 
     // 旧的输入处理方法已移除，现在通过IInputListener接口实现
 
@@ -885,9 +903,9 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
         {
             //  GameManager.Instance.OnPlayerDeath();
         }
-        if (TestSceneController.Instance != null)
+        if (SceneController.Instance != null)
         {
-            TestSceneController.Instance.OnPlayerDied();
+            SceneController.Instance.OnPlayerDied();
         }
     }
     /// <summary>
@@ -990,7 +1008,7 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
     {
     }                             // 空实现
 
-    void IInputListener.OnClimbUpInput() { }  
+    void IInputListener.OnClimbUpInput() { }
     /// <summary>
     /// 攻击输入事件处理
     /// </summary>

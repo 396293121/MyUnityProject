@@ -165,9 +165,8 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
     /// </summary>
     private void GetInput()
     {
-        Debug.Log("检测到向上攀爬输入");
         if (!isClimbing) {
-    float hand = (float)(playerController?.transform.position.y+c2d?.bounds.extents.y*2);
+    float hand =c2d.bounds.max.y;
         if (hand > currentLadderTop)
         {
             return;
@@ -179,8 +178,7 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
     {
         if (!isClimbing)
         {
-
-            float bottom = (float)(playerController.groundCheck?.transform.position.y);
+            float bottom =c2d.bounds.min.y;
             if (bottom < currentLadderTop * 0.5)
             {
 
@@ -271,7 +269,6 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
             playerController.canMove = false;
         }
 
-        Debug.Log("[PlayerClimbing] 开始攀爬");
     }
 
     /// <summary>
@@ -292,12 +289,12 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
             return true;
         }
         //角色底部或顶部离开梯子
-        if (playerController.groundCheck?.transform.position.y < currentLadderBottom)
+        if (c2d?.bounds.min.y < currentLadderBottom)
             return true;
-        if ( playerController.transform.position.y+c2d?.bounds.extents.y*2 > currentLadderTop)
+        if ( c2d?.bounds.max.y> currentLadderTop)
         {
             //直接移动到地面,防止掉落
-            playerController.transform.position = new Vector3(playerController.transform.position.x, playerController.transform.position.y + c2d?.bounds.extents.y * 2 ?? 0, 0);
+            playerController.transform.position = new Vector3(playerController.transform.position.x,  c2d?.bounds.max.y+ c2d?.bounds.extents.y * 2 ?? 0, 0);
             return true;
         }
         return false;
@@ -308,18 +305,6 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
     /// </summary>
     private void ExitClimbing()
     {
-          // 新增地面层碰撞检测
-    // if (Physics2D.OverlapCollider(c2d, 
-    //     ContactFilter2D.CreateLegacyFilter(
-    //         LayerMask.NameToLayer("Ground"), 
-    //         0, 
-    //         -1, 
-    //         float.NegativeInfinity, 
-    //         float.PositiveInfinity)) != null)
-    // {
-    //     Debug.Log("[PlayerClimbing] 检测到与地面重叠，阻止退出攀爬");
-    //     return;
-    // }
         isClimbing = false;
         animator.SetBool(animClimbing, false);
         Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("Ground"), false);
@@ -358,7 +343,6 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
         }
         verticalInput = 0f;
         climbInputPressed = false;
-        Debug.Log("[PlayerClimbing] 退出攀爬");
     }
 
     /// <summary>
@@ -378,8 +362,8 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
     {
 
         //直接移动到梯子,防止掉落
-        transform.position = new Vector3(transform.position.x, (float)(transform.position.y - c2d?.bounds.extents.y * 2 - topOffset), 0);
-          
+        Debug.Log((float)( currentLadderTop - c2d.bounds.extents.y*2));
+        transform.position = new Vector3(transform.position.x, (float)( currentLadderTop - c2d.bounds.extents.y*2), 0);
         showDown = false;
      }
     /// <summary>
@@ -427,13 +411,12 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
         {
             isInLadderArea = true;
             currentLadder = other;
-            currentLadderBottom = other.transform.position.y;
-            currentLadderTop = other.transform.position.y + other.bounds.extents.y * 2;
+            currentLadderBottom =other.bounds.min.y;
+            currentLadderTop =other.bounds.max.y;
             topOffset=other.GetComponent<LadderController>().topOffset;
             // 计算梯子中心X坐标
             ladderCenterX = other.bounds.center.x;
 
-            Debug.Log($"[PlayerClimbing] 进入梯子区域，梯子中心X: {ladderCenterX}");
         }
     }
 
@@ -453,7 +436,6 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
                 ExitClimbing();
             }
 
-            Debug.Log("[PlayerClimbing] 离开梯子区域");
         }
     }
 

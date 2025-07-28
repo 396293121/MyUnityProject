@@ -74,8 +74,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -316922365
+  m_SortingLayer: 7
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 848012e1aaae34d48a19d320bd0ee897, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -178,6 +178,8 @@ MonoBehaviour:
   damageInterval: 0.5
   damageTime: 1
   homingRadius: 0
+  homingProjectileCount: 0
+  homingTarget: {fileID: 0}
   spawnOffset: {x: 0, y: 0}
   impactEffect: {fileID: 0}
   hitSound: 

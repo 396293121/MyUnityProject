@@ -605,7 +605,6 @@ public class skillDataConfig : ScriptableObject
             SetInvincible(caster, false);
         }
 
-        Debug.Log($"{caster.name} 完成{moveType}位移，距离: {Vector3.Distance(startPosition, caster.transform.position):F2}");
     }
 
     /// <summary>
@@ -894,7 +893,8 @@ public class skillDataConfig : ScriptableObject
             damageTime: projectileDamageTime,
             spellPoint: spawnPoint,
             isCastAnimation: isCastAnimation,
-            damageType: damageType
+            damageType: damageType,
+            Character:characterController
         );
     }
 

@@ -507,7 +507,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     {
             if(inNPCPaused) return;
         isPaused = paused;
-        Debug.Log($"[Enemy] {gameObject.name} 暂停状态: {paused}");
         if (paused)
         {
             prePauseState = currentState;
@@ -1131,7 +1130,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
         if (isSkill)
         {
             OnSkillEnd?.Invoke();
-            Debug.Log("技能被打断");
             InterruptSkill();
         }
 
@@ -1219,7 +1217,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
             Debug.Log($"[Enemy] {gameObject.name} 死亡");
         }
         showExp(expReward);
-        if(attacker != null)
+        Debug.Log(attacker);
+        if (attacker != null)
         {
             attacker.GainExperience(expReward);
         }

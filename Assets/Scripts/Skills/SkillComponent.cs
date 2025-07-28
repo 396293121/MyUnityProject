@@ -118,7 +118,6 @@ public class SkillComponent : MonoBehaviour
             {
                 if (skillDataList[i] != null)
                 {
-                    Debug.Log($"[SkillComponent] 技能 {i}: {skillDataList[i].skillName}");
                 }
                 else
                 {
@@ -280,13 +279,11 @@ public class SkillComponent : MonoBehaviour
     /// <returns>是否成功使用技能</returns>
     public bool TryUseSkill(int skillIndex, bool isForse = false)
     {
-        Debug.Log($"[SkillComponent] TryUseSkill 被调用，技能索引: {skillIndex}");
 
         // 性能优化：通知状态机技能输入
         if (isCharacter && stateMachine != null)
         {
             stateMachine.NotifySkillInput();
-            Debug.Log("[SkillComponent] 已通知状态机技能输入");
         }
         else
         {
@@ -307,7 +304,6 @@ public class SkillComponent : MonoBehaviour
             return false;
         }
 
-        Debug.Log($"[SkillComponent] 技能数据检查通过，技能名称: {skillDataList[skillIndex].skillName}");
 
         // 检查是否可以使用技能
         if (!CanUseSkill(skillIndex, isForse))
@@ -316,7 +312,6 @@ public class SkillComponent : MonoBehaviour
             return false;
         }
 
-        Debug.Log($"[SkillComponent] 准备执行技能: {skillDataList[skillIndex].skillName}");
 
         // 执行技能
         ExecuteSkill(skillIndex);
@@ -334,7 +329,6 @@ public class SkillComponent : MonoBehaviour
             var skillData = skillDataList[currentExecutingSkillIndex];
             if (skillData.damageTime != damageTimeType.time)
             {
-                Debug.LogWarning("技能伤害时间不是time类型,不能调用OnSkillDamageTimeStart");
                 return;
             }
             // 播放技能音效
@@ -360,7 +354,6 @@ public class SkillComponent : MonoBehaviour
                     return;
                 }
                 skillData.StartContinuousDamage(this, currentExecutingSkillIndex, gameObject, castPosition);
-                Debug.Log($"[SkillComponent] 开始持续伤害 - 技能: {skillData.skillName}");
             }
         }
     }
@@ -378,7 +371,6 @@ public class SkillComponent : MonoBehaviour
             {
                 // 调用SkillDataConfig中的停止持续伤害逻辑
                 skillData.StopContinuousDamage(this, currentExecutingSkillIndex);
-                Debug.Log($"[SkillComponent] 结束持续伤害 - 技能: {skillData.skillName}");
             }
         }
     }
@@ -493,7 +485,6 @@ public class SkillComponent : MonoBehaviour
                 skillCooldowns[i] = 0f;
             }
 
-            Debug.Log($"已设置 {skills.Length} 个技能数据");
         }
     }
 
@@ -506,7 +497,6 @@ public class SkillComponent : MonoBehaviour
     {
         this.characterController = character;
         // 这里可以设置其他需要的引用
-        Debug.Log("已设置角色引用");
     }
 
     /// <summary>
@@ -521,7 +511,6 @@ public class SkillComponent : MonoBehaviour
         //添加绑定事件用于技能被玩家打断
         enmeyController.OnSkillEnd += HandleProjectileDestroyed;
         isCharacter = false;
-        Debug.Log($"已设置敌人引用: {enemy.name}");
     }
 
 
@@ -586,7 +575,6 @@ public class SkillComponent : MonoBehaviour
         // 开始技能冷却
         skillCooldowns[skillIndex] = skillData.cooldown;
 
-        Debug.Log($"执行技能: {skillData.skillName}");
     }
     private IEnumerator playSkillSound(skillDataConfig skillData)
     {
@@ -596,7 +584,6 @@ public class SkillComponent : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         if (AudioManager.Instance != null && skillData.skillSound != null)
         {
-            Debug.Log(skillData.skillSound);
             //直接调用AUDIOMANAGER播放音效
             PlayerAudioConfig.Instance.PlaySound(skillData.skillSound, skillData.audioCategory);
         }
@@ -667,7 +654,6 @@ public class SkillComponent : MonoBehaviour
         }
         // 通知状态机技能结束，让状态机自动转换到合适的状态
         // 状态机会根据当前条件自动选择下一个状态（如Idle或Walking）
-        Debug.Log("[SkillComponent] 技能执行结束，状态机将自动转换状态");
     }
     /// <summary>
     /// 获取技能信息（用于UI显示）

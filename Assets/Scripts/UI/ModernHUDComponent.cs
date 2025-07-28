@@ -189,36 +189,40 @@ private List<CharacterClassSprite> classSprites = new List<CharacterClassSprite>
         return;
     }
     _instance = this;
-    DontDestroyOnLoad(gameObject); // 跨场景保留
-
-        // 自动获取组件引用
-        if (playerController == null)
-            playerController = FindObjectOfType<PlayerController>();
+    DontDestroyOnLoad(gameObject);
+    
+    // 移除自动查找组件的代码
+    }
+    
+    // 新增初始化方法
+    public void InitializeHUDComponents(PlayerController pc, Character ch, SkillComponent sc)
+    {
+        playerController = pc;
+        character = ch;
+        skillComponent = sc;
         
-        if (skillComponent == null)
-            skillComponent = FindObjectOfType<SkillComponent>();
-        
-        if (character == null && playerController != null)
-            character = playerController.playerCharacter;
-        // 初始化角色图像
-         InitializeCharacterImage();
-        // 验证必要组件
+        // 执行后续初始化
+        InitializeCharacterImage();
         ValidateComponents();
+        InitializeHUD();
+        RegisterEventListeners();
+        InitializeSkillSlots();
+        ForceUpdateDisplay();
     }
     
     private void Start()
     {
-        // 初始化HUD
-        InitializeHUD();
+        // // 初始化HUD
+        // InitializeHUD();
         
-        // 注册事件监听
-        RegisterEventListeners();
+        // // 注册事件监听
+        // RegisterEventListeners();
         
-        // 初始化技能槽位
-        InitializeSkillSlots();
+        // // 初始化技能槽位
+        // InitializeSkillSlots();
         
-        // 强制更新一次显示
-        ForceUpdateDisplay();
+        // // 强制更新一次显示
+        // ForceUpdateDisplay();
     }
     
     private void Update()

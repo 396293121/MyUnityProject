@@ -128,7 +128,7 @@ public class SkillSlotUI : MonoBehaviour
     {
         skillIndex = index;
         skillComponent = component;
-        
+        //UpdateDisplay();
         // 设置快捷键文本
         if (hotkeyText != null)
         {

@@ -45,7 +45,6 @@ public class InputManager : MonoBehaviour
             GameObject inputManagerGO = new GameObject("[InputManager]");
             inputManagerGO.AddComponent<InputManager>();
             DontDestroyOnLoad(inputManagerGO);
-            Debug.Log("[InputManager] 自动初始化完成");
         }
     }
     
@@ -81,7 +80,6 @@ public class InputManager : MonoBehaviour
         inputActions.Player.Pause.performed += OnPausePerformed;
         inputActions.Player.ClimbUp.performed += OnClimbUpPerformed;
         inputActions.Player.ClimbDown.performed += OnClimbDownPerformed;
-        Debug.Log($"@jump,{inputActions.Player.Jump},@attack,{inputActions.Player.Attack}");
         if (debugInput)
         {
             Debug.Log("[InputManager] 输入系统初始化完成");
@@ -289,7 +287,6 @@ public class InputManager : MonoBehaviour
         foreach (var listener in listeners)
         {
             
-            Debug.Log(listener+"[InputManager] 广播攀爬向上输入");
             listener?.OnClimbUpInput();
         }
     }

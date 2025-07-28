@@ -12,7 +12,7 @@ public class UIManager : MonoBehaviour
     public static UIManager Instance { get; private set; }
     
     [Header("UI面板引用")]
-    public GameObject mainMenuPanel;
+    public PauseMenuManager pauseMenuManager;
     public GameObject gameplayPanel;
     public GameObject pauseMenuPanel;
     public GameObject settingsPanel;
@@ -81,6 +81,13 @@ public class UIManager : MonoBehaviour
     
     private void Start()
     {
+            if(pauseMenuManager==null){
+                pauseMenuManager=FindObjectOfType<PauseMenuManager>();
+            }
+             if (InputManager.Instance != null)
+        {
+            InputManager.Instance.OnPausePressed += pauseMenuManager.TogglePauseMenu;
+        }
         // 设置按钮事件
         SetupButtonEvents();
         
@@ -102,14 +109,20 @@ public class UIManager : MonoBehaviour
         // 处理消息队列
         ProcessMessageQueue();
     }
-    
+      void OnDestroy() {
+                  if (InputManager.Instance != null)
+        {
+            InputManager.Instance.OnPausePressed -= pauseMenuManager.TogglePauseMenu;
+        }
+
+    }
     /// <summary>
     /// 初始化UI系统
     /// </summary>
     private void InitializeUI()
     {
         // 将UI面板添加到字典中
-        if (mainMenuPanel != null) uiPanels["MainMenu"] = mainMenuPanel;
+        // if (mainMenuPanel != null) uiPanels["MainMenu"] = mainMenuPanel;
         if (gameplayPanel != null) uiPanels["Gameplay"] = gameplayPanel;
         if (pauseMenuPanel != null) uiPanels["PauseMenu"] = pauseMenuPanel;
         if (settingsPanel != null) uiPanels["Settings"] = settingsPanel;
@@ -556,26 +569,26 @@ public class UIManager : MonoBehaviour
     private void HandleUIInput()
     {
         // ESC键处理
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (uiStack.Count > 1) // 有多个面板时，关闭当前面板
-            {
-                HideCurrentPanel();
-            }
-            else if (GameManager.Instance != null) // 只有一个面板时，暂停游戏
-            {
-                if (GameManager.Instance.CurrentState == GameState.Playing)
-                {
-                    GameManager.Instance.PauseGame();
-                    ShowPanel("PauseMenu");
-                }
-                else if (GameManager.Instance.CurrentState == GameState.Paused)
-                {
-                    GameManager.Instance.ResumeGame();
-                    HideCurrentPanel();
-                }
-            }
-        }
+        // if (Input.GetKeyDown(KeyCode.Escape))
+        // {
+        //     if (uiStack.Count > 1) // 有多个面板时，关闭当前面板
+        //     {
+        //         HideCurrentPanel();
+        //     }
+        //     else if (GameManager.Instance != null) // 只有一个面板时，暂停游戏
+        //     {
+        //         if (GameManager.Instance.CurrentState == GameState.Playing)
+        //         {
+        //             GameManager.Instance.PauseGame();
+        //             ShowPanel("PauseMenu");
+        //         }
+        //         else if (GameManager.Instance.CurrentState == GameState.Paused)
+        //         {
+        //             GameManager.Instance.ResumeGame();
+        //             HideCurrentPanel();
+        //         }
+        //     }
+        // }
         
         // 快捷键
         if (Input.GetKeyDown(KeyCode.I))

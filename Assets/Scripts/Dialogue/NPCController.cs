@@ -82,7 +82,6 @@ public class NPCController : MonoBehaviour
     void Start()
     {
         // 实例化并激活
-        Debug.Log(dialogueFlowchart + "999");
 
         initConfig();
         var flowchartInstance = Instantiate(dialogueFlowchart, transform);
@@ -176,7 +175,6 @@ public class NPCController : MonoBehaviour
         {
             animator.Play("Idle");
         }
-        Debug.Log("对话结束");
         // 恢复玩家控制
         GamePauseManager.Instance.SetPaused(false);
         //如果是敌人NPC恢复敌人控制
@@ -195,7 +193,6 @@ public class NPCController : MonoBehaviour
         // 设置交互提示
         SetupInteractionPrompt();
 
-        Debug.Log($"[NPCController] {npcName} 初始化完成");
     }
 
 
@@ -236,8 +233,6 @@ public class NPCController : MonoBehaviour
     {
         if (!playerInRange || dialogueFlowchart == null)
         {
-            Debug.Log(playerInRange + ",dialogueFlowchart=" + dialogueFlowchart);
-            Debug.LogWarning("[NPCController] 玩家不在交互范围内或对话流程图未设置");
             return;
         }
         // 确定要执行的对话块
@@ -261,7 +256,6 @@ public class NPCController : MonoBehaviour
             GamePauseManager.Instance.SetPaused(true);
             // 标记已经对话过
             hasSpokenBefore = true;
-            Debug.Log($"[NPCController] 开始与 {npcName} 的对话，执行块: {blockToExecute}");
 
         }
         else
@@ -306,7 +300,6 @@ public class NPCController : MonoBehaviour
     /// </summary>
     void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log(other.tag);
         if (other.CompareTag("Player"))
         {
 
@@ -315,7 +308,6 @@ public class NPCController : MonoBehaviour
             // playerController = other.GetComponent<PlayerController>();
             ShowInteractionPrompt(true);
 
-            Debug.Log($"[NPCController] 玩家进入 {npcName} 的交互范围");
         }
     }
 
@@ -330,7 +322,6 @@ public class NPCController : MonoBehaviour
             // playerController = null;
             ShowInteractionPrompt(false);
 
-            Debug.Log($"[NPCController] 玩家离开 {npcName} 的交互范围");
         }
     }
 
@@ -340,7 +331,6 @@ public class NPCController : MonoBehaviour
     public void ResetDialogueState()
     {
         hasSpokenBefore = false;
-        Debug.Log($"[NPCController] 重置 {npcName} 的对话状态");
     }
 
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
+using Fungus;
 
 /// <summary>
 /// 玩家状态枚举
@@ -676,7 +677,6 @@ public class PlayerStateMachine : MonoBehaviour
         // 检查是否有技能输入事件
         if (skillInputReceived)
         {
-            Debug.Log("[PlayerStateMachine] 检测到技能输入，准备进入技能状态");
             return true;
         }
         
@@ -776,6 +776,12 @@ public class PlayerStateMachine : MonoBehaviour
         {
             if (transition.fromState == currentState && transition.toState == targetState)
             {
+                // 检查条件是否满足
+                if (transition.condition != null&&!transition.condition()){
+                        Debug.Log(transition?.conditionDescription+"cnm");
+
+                    
+                }
                 return transition.condition == null || transition.condition();
             }
         }
@@ -900,28 +906,7 @@ public class PlayerStateMachine : MonoBehaviour
     
     #region Odin调试方法
     
-    [TabGroup("状态机", "调试")]
-    [Button("重置状态机")]
-    [GUIColor(1f, 0.6f, 0.6f)]
-    private void ResetStateMachine()
-    {
-        ChangeState(PlayerState.Idle);
-        stateTransitionHistory.Clear();
-        Debug.Log("[PlayerStateMachine] 状态机已重置");
-    }
-    
-    [TabGroup("状态机", "调试")]
-    [Button("清除转换历史")]
-    private void ClearTransitionHistory()
-    {
-        stateTransitionHistory.Clear();
-        Debug.Log("[PlayerStateMachine] 转换历史已清除");
-    }
-    
-    private string GetTransitionLabel(string transition, int index)
-    {
-        return $"[{index}] {transition}";
-    }
+
     
     #endregion
 }

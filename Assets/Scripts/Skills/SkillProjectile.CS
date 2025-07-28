@@ -141,7 +141,8 @@ private DamageType damageType;
     // DoT 伤害相关变量
     private Dictionary<GameObject, Coroutine> activeDoTCoroutines = new Dictionary<GameObject, Coroutine>();
     private HashSet<GameObject> damagedTargets = new HashSet<GameObject>();
-    
+    private Character character;
+
     // 新增销毁事件
     public event Action OnProjectileDestroyed;
     
@@ -153,12 +154,15 @@ private DamageType damageType;
     [TitleGroup("初始化方法")]
     [Button("初始化投射物", ButtonSizes.Medium)]
     [GUIColor(0.4f, 0.8f, 1f)]
-    public void Initialize(float damage, float speed, float maxDistance, GameObject owner, TargetType targetType, Transform casterTransform, ProjectileType projectileType, float damageInterval, float homingRadius, int homingProjectileCount, Vector2 spawnOffset, float damageTime, Transform spellPoint, bool isCastAnimation,DamageType damageType)
+    public void Initialize(float damage, float speed, float maxDistance, GameObject owner, TargetType targetType, Transform casterTransform, ProjectileType projectileType, float damageInterval, float homingRadius, int homingProjectileCount, Vector2 spawnOffset, float damageTime, Transform spellPoint, bool isCastAnimation,DamageType damageType, Character Character)
 
     {
         // 设置通用属性
         SetCommonProperties(damage, owner, targetType, casterTransform,damageType);
-
+        if (Character != null)
+        {
+            this.character = Character;
+        }
 
         // 根据投射物类型调用相应的初始化方法
         switch (projectileType)
@@ -524,7 +528,8 @@ this.damageType = damageType;
         var damageable = target.GetComponent<IDamageable>();
         if (damageable != null)
         {
-            damageable.TakeDamage((int)damage, damageType, transform.position);
+            Debug.Log(character+"投射物发射");
+            damageable.TakeDamage((int)damage, damageType, transform.position,character);
             PlayerAudioConfig.Instance.PlaySound(hitSound,AudioCategory.Projectiles);
         }
     }
