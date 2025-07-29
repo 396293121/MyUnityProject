@@ -226,6 +226,7 @@ public class PauseMenuManager : MonoBehaviour
     /// </summary>
     private void ShowTabContent(string tabId)
     {
+        Debug.Log($"[PauseMenuManager] 显示标签页内容: {tabId} {contentPanels.ContainsKey(tabId)} ");
         if (contentPanels.ContainsKey(tabId))
         {
             contentPanels[tabId].ShowContent();

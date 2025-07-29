@@ -12,6 +12,10 @@ public class QuestManager : MonoBehaviour
     [Header("任务配置")]
     [SerializeField] private List<QuestData> allQuests = new List<QuestData>();
     
+    [Header("系统配置")]
+    [Tooltip("是否启用调试日志")]
+    [SerializeField] private bool enableDebugLogs = true;
+    
     // 运行时任务数据
     private Dictionary<string, QuestData> questDatabase = new Dictionary<string, QuestData>();
     private List<QuestData> activeQuests = new List<QuestData>();
@@ -36,11 +40,151 @@ public class QuestManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            
+            if (enableDebugLogs)
+            {
+                Debug.Log("[QuestManager] 开始初始化任务系统...");
+            }
+            
             InitializeQuests();
+            InitializeKillQuestSystem();
+            
+            if (enableDebugLogs)
+            {
+                Debug.Log("[QuestManager] 任务系统初始化完成！");
+            }
         }
         else
         {
             Destroy(gameObject);
+        }
+    }
+    
+    /// <summary>
+    /// 初始化击杀任务系统
+    /// </summary>
+    private void InitializeKillQuestSystem()
+    {
+        // 获取敌人击杀追踪器
+        var killTracker = FindObjectOfType<EnemyKillTracker>();
+        if (killTracker == null)
+        {
+            // 如果场景中没有EnemyKillTracker，创建一个
+            GameObject trackerObj = new GameObject("EnemyKillTracker");
+            killTracker = trackerObj.AddComponent<EnemyKillTracker>();
+            DontDestroyOnLoad(trackerObj);
+            
+            if (enableDebugLogs)
+            {
+                Debug.Log("[QuestManager] 创建了EnemyKillTracker实例");
+            }
+        }
+        else
+        {
+            if (enableDebugLogs)
+            {
+                Debug.Log("[QuestManager] EnemyKillTracker已存在");
+            }
+        }
+        
+        // 订阅敌人死亡事件
+        killTracker.OnEnemyKilled += HandleEnemyKilled;
+    }
+    
+    /// <summary>
+    /// 处理敌人死亡事件
+    /// </summary>
+    private void HandleEnemyKilled(string enemyType, int totalKills)
+    {
+        // 更新所有相关的击杀任务
+        foreach (var quest in activeQuests)
+        {
+            foreach (var objective in quest.objectives)
+            {
+                if ((objective.objectiveType == ObjectiveType.KillEnemy || 
+                     objective.objectiveType == ObjectiveType.KillBoss) && 
+                    objective.targetId == enemyType)
+                {
+                    UpdateObjectiveProgress(quest.questId, objective.targetId, totalKills);
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 处理物品收集事件
+    /// </summary>
+    public void HandleItemCollected(string itemId, int quantity)
+    {
+        foreach (var quest in activeQuests)
+        {
+            foreach (var objective in quest.objectives)
+            {
+                if (objective.objectiveType == ObjectiveType.CollectItem && 
+                    objective.targetId == itemId)
+                {
+                    AddObjectiveProgress(quest.questId, objective.targetId, quantity);
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 处理NPC对话事件
+    /// </summary>
+    public void HandleNPCTalk(string npcId)
+    {
+        foreach (var quest in activeQuests)
+        {
+            foreach (var objective in quest.objectives)
+            {
+                if (objective.objectiveType == ObjectiveType.TalkToNPC && 
+                    objective.targetId == npcId)
+                {
+                    UpdateObjectiveProgress(quest.questId, objective.targetId, 1);
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 处理到达地点事件
+    /// </summary>
+    public void HandleLocationReached(string locationId, Vector3 playerPosition)
+    {
+        foreach (var quest in activeQuests)
+        {
+            foreach (var objective in quest.objectives)
+            {
+                if (objective.objectiveType == ObjectiveType.ReachLocation && 
+                    objective.targetId == locationId)
+                {
+                    // 检查距离
+                    float distance = Vector3.Distance(playerPosition, objective.parameters.targetPosition);
+                    if (distance <= objective.parameters.targetRange)
+                    {
+                        UpdateObjectiveProgress(quest.questId, objective.targetId, 1);
+                    }
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 处理物品使用事件
+    /// </summary>
+    public void HandleItemUsed(string itemId, int quantity)
+    {
+        foreach (var quest in activeQuests)
+        {
+            foreach (var objective in quest.objectives)
+            {
+                if (objective.objectiveType == ObjectiveType.UseItem && 
+                    objective.targetId == itemId)
+                {
+                    AddObjectiveProgress(quest.questId, objective.targetId, quantity);
+                }
+            }
         }
     }
     
@@ -55,7 +199,17 @@ public class QuestManager : MonoBehaviour
             if (!questDatabase.ContainsKey(quest.questId))
             {
                 questDatabase.Add(quest.questId, quest);
+                
+                if (enableDebugLogs)
+                {
+                    Debug.Log($"[QuestManager] 预加载任务: {quest.questName}");
+                }
             }
+        }
+        
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[QuestManager] 预加载了 {allQuests.Count} 个任务");
         }
         
         // 加载保存的任务数据
@@ -256,25 +410,28 @@ public class QuestManager : MonoBehaviour
     /// </summary>
     private void GiveQuestReward(QuestData quest)
     {
-        if (quest.reward == null) return;
+        if (quest.rewards == null || quest.rewards.Count == 0) return;
         
-        // 给予经验值
-        if (quest.reward.experienceReward > 0 && GameManager.Instance != null)
+        foreach (var reward in quest.rewards)
         {
-            GameManager.Instance.AddPlayerExperience(quest.reward.experienceReward);
-        }
-        
-        // 给予金币
-        if (quest.reward.goldReward > 0 && GameManager.Instance != null)
-        {
-            GameManager.Instance.AddPlayerGold(quest.reward.goldReward);
-        }
-        
-        // 给予物品奖励
-        foreach (var itemReward in quest.reward.itemRewards)
-        {
-            // 这里需要根据实际的物品系统来实现
-            Debug.Log($"[QuestManager] 获得物品: {itemReward.itemId} x{itemReward.quantity}");
+            // 给予经验值
+            if (reward.experienceReward > 0 && GameManager.Instance != null)
+            {
+                GameManager.Instance.AddPlayerExperience(reward.experienceReward);
+            }
+            
+            // 给予金币
+            if (reward.goldReward > 0 && GameManager.Instance != null)
+            {
+                GameManager.Instance.AddPlayerGold(reward.goldReward);
+            }
+            
+            // 给予物品奖励
+            foreach (var itemReward in reward.itemRewards)
+            {
+                // 这里需要根据实际的物品系统来实现
+                Debug.Log($"[QuestManager] 获得物品: {itemReward.itemId} x{itemReward.quantity}");
+            }
         }
     }
     
@@ -332,6 +489,36 @@ public class QuestManager : MonoBehaviour
     public List<QuestData> GetQuestsByType(QuestType questType)
     {
         return activeQuests.Where(q => q.questType == questType).ToList();
+    }
+    
+    /// <summary>
+    /// 获取指定状态的任务
+    /// </summary>
+    public List<QuestData> GetQuestsByStatus(QuestStatus status)
+    {
+        switch (status)
+        {
+            case QuestStatus.InProgress:
+                return new List<QuestData>(activeQuests);
+            case QuestStatus.Completed:
+                return new List<QuestData>(completedQuests);
+            case QuestStatus.Failed:
+                return new List<QuestData>(failedQuests);
+            case QuestStatus.NotStarted:
+                return questDatabase.Values.Where(q => q.questStatus == QuestStatus.NotStarted).ToList();
+            case QuestStatus.Abandoned:
+                return questDatabase.Values.Where(q => q.questStatus == QuestStatus.Abandoned).ToList();
+            default:
+                return new List<QuestData>();
+        }
+    }
+    
+    /// <summary>
+    /// 根据ID获取任务
+    /// </summary>
+    public QuestData GetQuestById(string questId)
+    {
+        return questDatabase.ContainsKey(questId) ? questDatabase[questId] : null;
     }
     
     /// <summary>

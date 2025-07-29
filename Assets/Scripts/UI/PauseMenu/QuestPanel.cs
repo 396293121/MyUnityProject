@@ -11,34 +11,81 @@ using Sirenix.OdinInspector;
 /// </summary>
 public class QuestPanel : MonoBehaviour, IPauseMenuContent
 {
-    [Header("UI引用")]
-    [SerializeField] private GameObject questPanel;
+    [BoxGroup("主要面板")]
+    [LabelText("任务面板")]
+    public GameObject questPanel;
     
-    [Header("任务列表")]
-    [SerializeField] private Transform questListContainer;
-    [SerializeField] private GameObject questItemPrefab;
-    [SerializeField] private ScrollRect questScrollRect;
+    [BoxGroup("任务列表")]
+    [LabelText("任务列表容器")]
+    public Transform questListContainer;
     
-    [Header("任务分类按钮")]
-    [SerializeField] private Button allQuestsButton;
-    [SerializeField] private Button mainQuestsButton;
-    [SerializeField] private Button sideQuestsButton;
-    [SerializeField] private Button completedQuestsButton;
+    [BoxGroup("任务列表")]
+    [LabelText("任务项预制体")]
+    public GameObject questItemPrefab;
     
-    [Header("任务详情面板")]
-    [SerializeField] private GameObject questDetailPanel;
-    [SerializeField] private TextMeshProUGUI questTitleText;
-    [SerializeField] private TextMeshProUGUI questDescriptionText;
-    [SerializeField] private TextMeshProUGUI questTypeText;
-    [SerializeField] private Image questIconImage;
-    [SerializeField] private Slider questProgressSlider;
-    [SerializeField] private TextMeshProUGUI questProgressText;
-    [SerializeField] private Transform objectiveListContainer;
-    [SerializeField] private GameObject objectiveItemPrefab;
+    [BoxGroup("任务列表")]
+    [LabelText("滚动视图")]
+    public ScrollRect questScrollRect;
     
-    [Header("任务操作按钮")]
-    [SerializeField] private Button abandonQuestButton;
-    [SerializeField] private Button trackQuestButton;
+    [BoxGroup("分类按钮")]
+    [LabelText("全部任务")]
+    public Button allQuestsButton;
+    
+    [BoxGroup("分类按钮")]
+    [LabelText("主线任务")]
+    public Button mainQuestsButton;
+    
+    [BoxGroup("分类按钮")]
+    [LabelText("支线任务")]
+    public Button sideQuestsButton;
+    
+    [BoxGroup("分类按钮")]
+    [LabelText("已完成任务")]
+    public Button completedQuestsButton;
+    
+    [BoxGroup("任务详情")]
+    [LabelText("详情面板")]
+    public GameObject questDetailPanel;
+    
+    [BoxGroup("任务详情")]
+    [LabelText("任务标题")]
+    public TextMeshProUGUI questTitleText;
+    
+    [BoxGroup("任务详情")]
+    [LabelText("任务描述")]
+    public TextMeshProUGUI questDescriptionText;
+    
+    [BoxGroup("任务详情")]
+    [LabelText("任务类型")]
+    public TextMeshProUGUI questTypeText;
+    
+    [BoxGroup("任务详情")]
+    [LabelText("任务图标")]
+    public Image questIconImage;
+    
+    [BoxGroup("任务详情")]
+    [LabelText("进度滑动条")]
+    public Slider questProgressSlider;
+    
+    [BoxGroup("任务详情")]
+    [LabelText("进度文本")]
+    public TextMeshProUGUI questProgressText;
+    
+    [BoxGroup("任务详情")]
+    [LabelText("目标列表容器")]
+    public Transform objectiveListContainer;
+    
+    [BoxGroup("任务详情")]
+    [LabelText("目标项预制体")]
+    public GameObject objectiveItemPrefab;
+    
+    [BoxGroup("操作按钮")]
+    [LabelText("放弃任务")]
+    public Button abandonQuestButton;
+    
+    [BoxGroup("操作按钮")]
+    [LabelText("追踪任务")]
+    public Button trackQuestButton;
     
     // 当前显示的任务类型
     private QuestDisplayType currentDisplayType = QuestDisplayType.All;
@@ -231,10 +278,10 @@ public class QuestPanel : MonoBehaviour, IPauseMenuContent
                 return QuestManager.Instance.GetActiveQuests();
             
             case QuestDisplayType.Main:
-                return QuestManager.Instance.GetQuestsByType(QuestType.Main);
+                return QuestManager.Instance.GetQuestsByType(QuestType.MainQuest);
             
             case QuestDisplayType.Side:
-                return QuestManager.Instance.GetQuestsByType(QuestType.Side);
+                return QuestManager.Instance.GetQuestsByType(QuestType.SideQuest);
             
             case QuestDisplayType.Completed:
                 return QuestManager.Instance.GetCompletedQuests();
@@ -314,7 +361,7 @@ public class QuestPanel : MonoBehaviour, IPauseMenuContent
         
         if (questDescriptionText != null)
         {
-            questDescriptionText.text = selectedQuest.questDescription;
+            questDescriptionText.text = selectedQuest.description;
         }
         
         if (questTypeText != null)
@@ -496,9 +543,9 @@ public class QuestPanel : MonoBehaviour, IPauseMenuContent
     {
         switch (questType)
         {
-            case QuestType.Main: return "主线任务";
-            case QuestType.Side: return "支线任务";
-            case QuestType.Daily: return "日常任务";
+            case QuestType.MainQuest: return "主线任务";
+            case QuestType.SideQuest: return "支线任务";
+            case QuestType.DailyQuest: return "日常任务";
             case QuestType.Achievement: return "成就任务";
             default: return "未知任务";
         }
@@ -535,114 +582,4 @@ public enum QuestDisplayType
     Completed   // 已完成任务
 }
 
-/// <summary>
-/// 任务项UI组件
-/// </summary>
-public class QuestItemUI : MonoBehaviour
-{
-    [Header("UI引用")]
-    public TextMeshProUGUI questNameText;
-    public TextMeshProUGUI questTypeText;
-    public Slider progressSlider;
-    public TextMeshProUGUI progressText;
-    public Image questIcon;
-    public Button selectButton;
-    
-    private QuestData questData;
-    private System.Action<QuestData> onClickCallback;
-    
-    public void Initialize(QuestData quest, System.Action<QuestData> onClickCallback)
-    {
-        this.questData = quest;
-        this.onClickCallback = onClickCallback;
-        
-        UpdateUI();
-        
-        if (selectButton != null)
-        {
-            selectButton.onClick.AddListener(() => onClickCallback?.Invoke(questData));
-        }
-    }
-    
-    private void UpdateUI()
-    {
-        if (questData == null) return;
-        
-        if (questNameText != null)
-        {
-            questNameText.text = questData.questName;
-        }
-        
-        if (questTypeText != null)
-        {
-            questTypeText.text = GetQuestTypeText(questData.questType);
-        }
-        
-        if (progressSlider != null)
-        {
-            progressSlider.value = questData.GetProgressPercentage();
-        }
-        
-        if (progressText != null)
-        {
-            float progress = questData.GetProgressPercentage();
-            progressText.text = $"{Mathf.RoundToInt(progress * 100)}%";
-        }
-        
-        if (questIcon != null && questData.questIcon != null)
-        {
-            questIcon.sprite = questData.questIcon;
-        }
-    }
-    
-    private string GetQuestTypeText(QuestType questType)
-    {
-        switch (questType)
-        {
-            case QuestType.Main: return "主线";
-            case QuestType.Side: return "支线";
-            case QuestType.Daily: return "日常";
-            case QuestType.Achievement: return "成就";
-            default: return "";
-        }
-    }
-}
 
-/// <summary>
-/// 目标项UI组件
-/// </summary>
-public class ObjectiveItemUI : MonoBehaviour
-{
-    [Header("UI引用")]
-    public TextMeshProUGUI objectiveText;
-    public TextMeshProUGUI progressText;
-    public Image checkIcon;
-    
-    private QuestObjective objectiveData;
-    
-    public void Initialize(QuestObjective objective)
-    {
-        this.objectiveData = objective;
-        UpdateUI();
-    }
-    
-    private void UpdateUI()
-    {
-        if (objectiveData == null) return;
-        
-        if (objectiveText != null)
-        {
-            objectiveText.text = objectiveData.description;
-        }
-        
-        if (progressText != null)
-        {
-            progressText.text = objectiveData.GetProgressText();
-        }
-        
-        if (checkIcon != null)
-        {
-            checkIcon.gameObject.SetActive(objectiveData.isCompleted);
-        }
-    }
-}

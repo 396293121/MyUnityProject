@@ -1,6 +1,7 @@
 using UnityEngine;
 using Sirenix.OdinInspector;
 using Unity.VisualScripting;
+using System.Collections;
 
 /// <summary>
 /// 玩家攀爬系统 - 处理梯子攀爬逻辑
@@ -202,13 +203,12 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
             }
             return;
         }
-
         // 在梯子区域内的逻辑
         if (!isClimbing && climbInputPressed && CanStartClimbing())
         {
             StartClimbing();
         }
-        else if (isClimbing && ShouldExitClimbing())
+        else if (isClimbing&&!showDown && ShouldExitClimbing())
         {
             ExitClimbing();
         }
@@ -242,12 +242,7 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
         isClimbing = true;
         animator.SetBool(animClimbing, true);
         animator.SetTrigger(animClimbTrigger);
-        HandleSnapToLadder();
-        if (showDown)
-        {
-            
-        HandleClimbInput();
-        }
+       StartCoroutine( HandleClimbInput());
         Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("Ground"), true);
 
         // 通知状态机进入攀爬状态
@@ -344,27 +339,32 @@ public class PlayerClimbing : MonoBehaviour, IInputListener
         verticalInput = 0f;
         climbInputPressed = false;
     }
-
-    /// <summary>
-    /// 处理自动定位到梯子中心
-    /// </summary>
-    private void HandleSnapToLadder()
-    {
-        if (currentLadder == null)
-        {
-            return;
-        }
-
-        transform.position = new Vector3(ladderCenterX, transform.position.y, transform.position.z);
-
-    }
-    private void HandleClimbInput()
+    private IEnumerator HandleClimbInput()
     {
 
         //直接移动到梯子,防止掉落
-        Debug.Log((float)( currentLadderTop - c2d.bounds.extents.y*2));
-        transform.position = new Vector3(transform.position.x, (float)( currentLadderTop - c2d.bounds.extents.y*2), 0);
+              transform.position = new Vector3(ladderCenterX, showDown?(float)( currentLadderTop - c2d.bounds.extents.y*2):transform.position.y, 0);
+
+                yield return new WaitForFixedUpdate();  // 新增等待物理更新
+
+
+        if (c2d.bounds.max.y > currentLadderTop)  // 新增边界检查
+        {
+            Debug.Log(currentLadderTop - c2d.bounds.extents.y * 2 - topOffset);
+
+            //重新计算
+            transform.position = new Vector3(
+                transform.position.x,
+                (float)(currentLadderTop - c2d.bounds.extents.y * 2-topOffset),
+                0
+            );
+            showDown = false;
+        }
+        else
+        {
+            
         showDown = false;
+        }
      }
     /// <summary>
     /// 处理攀爬移动

@@ -2,6 +2,7 @@ using UnityEngine;
 using Fungus;
 using Sirenix.OdinInspector;
 using System;
+using System.Collections.Generic;
 
 /// <summary>
 /// NPC控制器 - 处理NPC与玩家的对话交互
@@ -9,70 +10,128 @@ using System;
 /// </summary>
 public class NPCController : MonoBehaviour
 {
-    [LabelText("NPC配置")]
+    [BoxGroup("NPC基础配置")]
+    [LabelText("NPC配置文件")]
+    [InfoBox("包含NPC的基本信息和对话设置")]
     public NPCConfig npcConfig;
-    [LabelText("NPC基础配置")]
+    
+    [BoxGroup("NPC基础配置")]
+    [LabelText("NPC名称")]
     [ShowInInspector]
     [ReadOnly]
     private string npcName = "NPC";
 
+    [BoxGroup("NPC基础配置")]
     [LabelText("NPC角色类型")]
     [ShowInInspector]
     [ReadOnly]
     private NPCType npcType = NPCType.Villager;
-    [TextArea(3, 5)]
+    
+    [BoxGroup("NPC基础配置")]
     [LabelText("NPC描述")]
+    [TextArea(3, 5)]
     [ShowInInspector]
     [ReadOnly]
     private string description = "";
-    [LabelText("对话FLOWCHART")]
+    
+    [BoxGroup("对话系统")]
+    [LabelText("对话流程图")]
+    [InfoBox("Fungus对话系统的Flowchart组件")]
     [Required]
     public Flowchart dialogueFlowchart;
 
-    private Transform playerTransform;
-    [LabelText("交互偏移")]
-    [ShowInInspector]
-    [ReadOnly]
-    private Vector3 promptOffset = new Vector3(0, 2, 0);
-    [LabelText("对话块")]
+    [BoxGroup("对话系统")]
+    [LabelText("开始对话块")]
     [ShowInInspector]
     [ReadOnly]
     private string startBlockName = "Start";
+    
+    [BoxGroup("对话系统")]
     [LabelText("重复对话块")]
     [ShowInInspector]
     [ReadOnly]
     private string repeatBlockName = "Repeat";
 
-    [LabelText("交互设置")]
+    [BoxGroup("交互设置")]
+    [LabelText("交互范围")]
     [ShowInInspector]
     [ReadOnly]
+    [MinValue(0.1f)]
     private float interactionRange = 2f;
-    [LabelText("交互键")]
+    
+    [BoxGroup("交互设置")]
+    [LabelText("交互按键")]
     [ShowInInspector]
     [ReadOnly]
     private KeyCode interactionKey = KeyCode.E;
+    
+    [BoxGroup("交互设置")]
+    [LabelText("交互偏移")]
+    [ShowInInspector]
+    [ReadOnly]
+    private Vector3 promptOffset = new Vector3(0, 2, 0);
 
+    [BoxGroup("UI组件")]
     [LabelText("交互提示UI")]
+    [InfoBox("玩家靠近时显示的交互提示")]
     public GameObject interactionPrompt;
 
+    [BoxGroup("UI组件")]
     [LabelText("交互提示文本")]
     [ShowInInspector]
     [ReadOnly]
     private string promptText = "按 E 键对话";
 
-    [LabelText("是否已经对话过")]
+    [BoxGroup("对话状态")]
+    [LabelText("是否已对话")]
     [ShowInInspector]
     [ReadOnly]
     private bool hasSpokenBefore = false;
 
-    [LabelText("是否可以重复对话")]
+    [BoxGroup("对话状态")]
+    [LabelText("可重复对话")]
     [ShowInInspector]
     [ReadOnly]
     private bool canRepeatDialogue = true;
 
+    [BoxGroup("任务系统", VisibleIf = "@npcType == NPCType.QuestGiver")]
+    [LabelText("可分发任务")]
+    [InfoBox("此NPC可以分发的任务列表")]
+    [ListDrawerSettings(ShowIndexLabels = true, DraggableItems = true)]
+    [SerializeField] public List<QuestData> availableQuests = new List<QuestData>();
+    
+    [BoxGroup("任务系统", VisibleIf = "@npcType == NPCType.QuestGiver")]
+    [LabelText("任务可接取指示器")]
+    [InfoBox("显示NPC有任务可接取的UI指示器")]
+    [SerializeField] private GameObject questIndicator;
+    
+    [BoxGroup("任务系统", VisibleIf = "@npcType == NPCType.QuestGiver")]
+    [LabelText("任务可完成指示器")]
+    [InfoBox("显示NPC有任务可完成的UI指示器")]
+    [SerializeField] private GameObject questCompleteIndicator;
+    
+    [BoxGroup("运行时状态")]
+    [LabelText("已分发任务ID")]
+    [ShowInInspector]
+    [ReadOnly]
+    [ListDrawerSettings(ShowIndexLabels = true)]
+    private List<string> givenQuestIds = new List<string>();
+    
+    [BoxGroup("运行时状态")]
+    [LabelText("有可接任务")]
+    [ShowInInspector]
+    [ReadOnly]
+    private bool hasAvailableQuests = false;
+    
+    [BoxGroup("运行时状态")]
+    [LabelText("有可完成任务")]
+    [ShowInInspector]
+    [ReadOnly]
+    private bool hasCompletableQuests = false;
+
     // 私有变量
+    private Transform playerTransform;
     private bool playerInRange = false;
-    // private PlayerController playerController;  
     private CircleCollider2D interactionCollider;
     private Enemy enemyComponent;
     // 事件
@@ -89,6 +148,12 @@ public class NPCController : MonoBehaviour
         dialogueFlowchart = flowchartInstance;
         InitializeNPC();
         InitializeNpcTypeComponent();
+        
+        // 初始化任务系统
+        if (npcType == NPCType.QuestGiver)
+        {
+            InitializeQuestSystem();
+        }
     }
     private void InitializeNpcTypeComponent()
     {
@@ -332,6 +397,191 @@ public class NPCController : MonoBehaviour
     {
         hasSpokenBefore = false;
     }
+    
+    #region 任务系统方法
+    
+    /// <summary>
+    /// 初始化任务系统
+    /// </summary>
+    private void InitializeQuestSystem()
+    {
+        if (QuestManager.Instance != null)
+        {
+            // 订阅任务事件
+            QuestManager.Instance.OnQuestStarted += OnQuestStarted;
+            QuestManager.Instance.OnQuestCompleted += OnQuestCompleted;
+            QuestManager.Instance.OnQuestProgressUpdated += OnQuestProgressUpdated;
+        }
+        
+        // 更新任务状态
+        UpdateQuestStatus();
+    }
+    
+    /// <summary>
+    /// 更新任务状态
+    /// </summary>
+    private void UpdateQuestStatus()
+    {
+        if (QuestManager.Instance == null) return;
+        
+        hasAvailableQuests = false;
+        hasCompletableQuests = false;
+        
+        // 检查可分发的任务
+        foreach (var quest in availableQuests)
+        {
+            if (quest == null) continue;
+            
+            // 检查是否有可以开始的任务
+            if (!givenQuestIds.Contains(quest.questId) && 
+                !QuestManager.Instance.IsQuestActive(quest.questId) &&
+                !QuestManager.Instance.IsQuestCompleted(quest.questId))
+            {
+                hasAvailableQuests = true;
+            }
+            
+            // 检查是否有可以完成的任务
+            if (QuestManager.Instance.IsQuestActive(quest.questId))
+            {
+                var activeQuest = QuestManager.Instance.GetActiveQuest(quest.questId);
+                if (activeQuest != null && activeQuest.CanComplete())
+                {
+                    hasCompletableQuests = true;
+                }
+            }
+        }
+        
+        // 更新指示器
+        UpdateQuestIndicators();
+    }
+    
+    /// <summary>
+    /// 更新任务指示器
+    /// </summary>
+    private void UpdateQuestIndicators()
+    {
+        if (questIndicator != null)
+        {
+            questIndicator.SetActive(hasAvailableQuests);
+        }
+        
+        if (questCompleteIndicator != null)
+        {
+            questCompleteIndicator.SetActive(hasCompletableQuests);
+        }
+    }
+    
+    /// <summary>
+    /// 分发任务
+    /// </summary>
+    public bool GiveQuest(string questId)
+    {
+        if (QuestManager.Instance == null) return false;
+        
+        var quest = availableQuests.Find(q => q.questId == questId);
+        if (quest == null)
+        {
+            Debug.LogWarning($"[NPCController] NPC {gameObject.name} 没有任务 {questId}");
+            return false;
+        }
+        
+        if (QuestManager.Instance.StartQuest(questId))
+        {
+            givenQuestIds.Add(questId);
+            UpdateQuestStatus();
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    /// 完成任务
+    /// </summary>
+    public bool CompleteQuest(string questId)
+    {
+        if (QuestManager.Instance == null) return false;
+        
+        if (QuestManager.Instance.CompleteQuest(questId))
+        {
+            UpdateQuestStatus();
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    /// 获取可分发的任务列表
+    /// </summary>
+    public List<QuestData> GetAvailableQuests()
+    {
+        var result = new List<QuestData>();
+        
+        foreach (var quest in availableQuests)
+        {
+            if (quest == null) continue;
+            
+            if (!givenQuestIds.Contains(quest.questId) && 
+                !QuestManager.Instance.IsQuestActive(quest.questId) &&
+                !QuestManager.Instance.IsQuestCompleted(quest.questId))
+            {
+                result.Add(quest);
+            }
+        }
+        
+        return result;
+    }
+    
+    /// <summary>
+    /// 获取可完成的任务列表
+    /// </summary>
+    public List<QuestData> GetCompletableQuests()
+    {
+        var result = new List<QuestData>();
+        
+        foreach (var quest in availableQuests)
+        {
+            if (quest == null) continue;
+            
+            if (QuestManager.Instance.IsQuestActive(quest.questId))
+            {
+                var activeQuest = QuestManager.Instance.GetActiveQuest(quest.questId);
+                if (activeQuest != null && activeQuest.CanComplete())
+                {
+                    result.Add(activeQuest);
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+    /// <summary>
+    /// 任务开始事件处理
+    /// </summary>
+    private void OnQuestStarted(QuestData quest)
+    {
+        UpdateQuestStatus();
+    }
+    
+    /// <summary>
+    /// 任务完成事件处理
+    /// </summary>
+    private void OnQuestCompleted(QuestData quest)
+    {
+        UpdateQuestStatus();
+    }
+    
+    /// <summary>
+    /// 任务进度更新事件处理
+    /// </summary>
+    private void OnQuestProgressUpdated(QuestData quest)
+    {
+        UpdateQuestStatus();
+    }
+    
+    #endregion
 
 
 

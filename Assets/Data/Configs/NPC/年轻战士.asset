@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "\u5E74\u8F7B\u6218\u58EB"
   m_EditorClassIdentifier: 
   npcName: "\u5E74\u8F7B\u6218\u58EB"
-  npcType: 0
+  npcType: 3
   description: 
   interactionRange: 2
   promptOffset: {x: 0, y: 2, z: 0}

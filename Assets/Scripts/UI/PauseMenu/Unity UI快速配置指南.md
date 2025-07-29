@@ -50,7 +50,7 @@ CharacterPanel
 │   ├── StrengthText (TextMeshPro) "力量: 0"
 │   ├── AgilityText (TextMeshPro) "敏捷: 0"
 │   ├── IntelligenceText (TextMeshPro) "智力: 0"
-│   └── VitalityText (TextMeshPro) "体力: 0"
+│   └── staminaText (TextMeshPro) "体力: 0"
 └── CombatStatsPanel (Grid Layout Group 2x3)
     ├── AttackPowerText (TextMeshPro) "攻击力: 0"
     ├── DefenseText (TextMeshPro) "防御力: 0"
@@ -162,7 +162,7 @@ public TextMeshProUGUI expText;             // 经验值文本
 public TextMeshProUGUI strengthText;        // 力量
 public TextMeshProUGUI agilityText;         // 敏捷
 public TextMeshProUGUI intelligenceText;    // 智力
-public TextMeshProUGUI vitalityText;        // 体力
+public TextMeshProUGUI staminaText;        // 体力
 
 [Header("Combat Attributes")]
 public TextMeshProUGUI attackPowerText;     // 攻击力

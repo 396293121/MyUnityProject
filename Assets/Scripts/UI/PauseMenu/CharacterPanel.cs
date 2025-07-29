@@ -30,7 +30,7 @@ public class CharacterPanel : MonoBehaviour, IPauseMenuContent
     [SerializeField] private TextMeshProUGUI strengthText;
     [SerializeField] private TextMeshProUGUI agilityText;
     [SerializeField] private TextMeshProUGUI intelligenceText;
-    [SerializeField] private TextMeshProUGUI vitalityText;
+    [SerializeField] private TextMeshProUGUI staminaText;
     
     [Header("战斗属性")]
     [SerializeField] private TextMeshProUGUI attackPowerText;
@@ -221,23 +221,23 @@ public class CharacterPanel : MonoBehaviour, IPauseMenuContent
     {
         if (strengthText != null)
         {
-            strengthText.text = currentCharacter.strength.ToString();
+            strengthText.text ="力量:"+ currentCharacter.strength.ToString();
         }
         
         if (agilityText != null)
         {
-            agilityText.text = currentCharacter.agility.ToString();
+            agilityText.text ="敏捷:"+ currentCharacter.agility.ToString();
         }
         
         if (intelligenceText != null)
         {
-            intelligenceText.text = currentCharacter.intelligence.ToString();
+            intelligenceText.text ="智力:"+ currentCharacter.intelligence.ToString();
         }
         
-        // if (vitalityText != null)
-        // {
-        //     vitalityText.text = currentCharacter.vitality.ToString();
-        // }
+        if (staminaText != null)
+        {
+            staminaText.text ="耐力:"+ currentCharacter.stamina.ToString();
+        }
     }
     
     /// <summary>
@@ -247,27 +247,27 @@ public class CharacterPanel : MonoBehaviour, IPauseMenuContent
     {
         if (attackPowerText != null)
         {
-            attackPowerText.text = currentCharacter.physicalAttack.ToString();
+            attackPowerText.text ="物理攻击:"+ currentCharacter.physicalAttack.ToString();
         }
         
         if (defenseText != null)
         {
-            defenseText.text = currentCharacter.defense.ToString();
+            defenseText.text ="物理防御:"+ currentCharacter.defense.ToString();
         }
         
         if (magicAttackText != null)
         {
-            magicAttackText.text = currentCharacter.magicalAttack.ToString();
+            magicAttackText.text ="魔法攻击:"+ currentCharacter.magicalAttack.ToString();
         }
         
         if (magicDefenseText != null)
         {
-            magicDefenseText.text = currentCharacter.magicDefense.ToString();
+            magicDefenseText.text ="魔法防御:"+ currentCharacter.magicDefense.ToString();
         }
         
         if (moveSpeedText != null)
         {
-            moveSpeedText.text = currentCharacter.speed.ToString("F1");
+            moveSpeedText.text ="移动速度:"+ currentCharacter.speed.ToString("F1");
         }
         
         // if (attackSpeedText != null)

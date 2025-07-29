@@ -26,7 +26,7 @@ MonoBehaviour:
     prefab: {fileID: 5332153218383502975, guid: a7e0e9f2c56817f4c9afa2003576aacf, type: 3}
     characterName: "\u6CD5\u5E08"
     description: 
-  defaultCharacterType: "\u6CD5\u5E08"
+  defaultCharacterType: warrior
   playerSpawnTag: {fileID: 0}
   enemyPrefabs:
   - enemyType: wild_boar

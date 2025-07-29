@@ -1222,6 +1222,10 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
         {
             attacker.GainExperience(expReward);
         }
+        
+        // 触发死亡事件，用于任务系统等
+        OnDeath?.Invoke(this);
+        
         // 启动死亡处理协程
         StartCoroutine(HandleDeath());
     }
