@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   questId: 1
   questName: "\u902E\u6355\u5927\u5B89"
-  description: 
+  description: "\u51FB\u6740 \u90E8\u843D\u59163\u53EA\u91CE\u732A\uFF0C\u5E76\u5728\u51FB\u6740\u4E4B\u540E\u4E0E\u795E\u79D8\u4EBA\u5BF9\u8BDD"
   questType: 1
   questIcon: {fileID: 0}
   questStatus: 0
@@ -23,7 +23,9 @@ MonoBehaviour:
   objectives:
   - description: 
     objectiveType: 0
-    targetId: 
+    targetId: 1
+    targetDisplayName: "\u5C0F\u91CE\u732A"
+    idDictionary: {fileID: 11400000, guid: 7c94643e86c852b47b6cd5b6347c4cf3, type: 2}
     currentProgress: 0
     targetProgress: 3
     isCompleted: 0
@@ -35,6 +37,22 @@ MonoBehaviour:
       targetRange: 5
       customParameters: 
       objectiveType: 0
+  - description: 
+    objectiveType: 3
+    targetId: 3
+    targetDisplayName: "\u795E\u79D8\u4EBA"
+    idDictionary: {fileID: 11400000, guid: 7c94643e86c852b47b6cd5b6347c4cf3, type: 2}
+    currentProgress: 0
+    targetProgress: 1
+    isCompleted: 0
+    parameters:
+      minEnemyLevel: 0
+      maxEnemyLevel: 999
+      requiredQuality: 0
+      targetPosition: {x: 0, y: 0, z: 0}
+      targetRange: 5
+      customParameters: 
+      objectiveType: 3
   rewards:
   - experienceReward: 100
     goldReward: 200

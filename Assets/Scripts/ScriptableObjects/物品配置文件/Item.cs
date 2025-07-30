@@ -1,5 +1,7 @@
 using UnityEngine;
 using System;
+using Sirenix.OdinInspector;
+using System.Collections.Generic;
 
 /// <summary>
 /// 物品类型枚举
@@ -27,31 +29,131 @@ public enum ItemRarity
 }
 
 /// <summary>
+/// 物品来源类型枚举
+/// </summary>
+public enum ItemSource
+{
+    [LabelText("商店购买")]
+    Shop,
+    [LabelText("敌人掉落")]
+    EnemyDrop,
+    [LabelText("宝箱获得")]
+    Chest,
+    [LabelText("任务奖励")]
+    QuestReward,
+    [LabelText("制作获得")]
+    Crafting,
+    [LabelText("采集获得")]
+    Gathering,
+    [LabelText("其他")]
+    Other
+}
+
+/// <summary>
 /// 物品基类 - 游戏中所有物品的基础类
 /// 从原Phaser项目的Item.js迁移而来
 /// </summary>
 [System.Serializable]
-public class Item
+[CreateAssetMenu(fileName = "New Item", menuName = "Game/Item")]
+public class Item : ScriptableObject
 {
-    [Header("基础信息")]
-    public string id;                 // 物品ID
-    public string itemName;           // 物品名称
-    public string description;        // 物品描述
-    public Sprite icon;               // 物品图标
-    public ItemType itemType;         // 物品类型
-    public ItemRarity rarity;         // 稀有度
+    [BoxGroup("标识信息", Order = 0)]
+    [LabelText("物品ID")]
+    [InfoBox("唯一标识符，用于任务系统和游戏逻辑识别")]
+    public string id;
     
-    [Header("属性")]
-    public int maxStackSize = 1;      // 最大堆叠数量
-    public int sellPrice;             // 出售价格
-    public int buyPrice;              // 购买价格
-    public bool isDroppable = true;   // 是否可丢弃
-    public bool isTradeable = true;   // 是否可交易
-    public bool isUsable = false;     // 是否可使用
+    [BoxGroup("标识信息")]
+    [LabelText("物品名称")]
+    public string itemName;
     
-    [Header("效果")]
-    public float cooldown = 0f;       // 使用冷却时间
-    public bool consumeOnUse = false; // 使用后是否消耗
+    [BoxGroup("标识信息")]
+    [LabelText("物品描述")]
+    [TextArea(3, 5)]
+    public string description;
+    
+    [BoxGroup("标识信息")]
+    [LabelText("物品图标")]
+    public Sprite icon;
+    
+    [BoxGroup("标识信息")]
+    [LabelText("物品类型")]
+    public ItemType itemType;
+    
+    [BoxGroup("标识信息")]
+    [LabelText("稀有度")]
+    public ItemRarity rarity;
+    
+    [BoxGroup("基础属性")]
+    [LabelText("物品等级")]
+    [PropertyRange(1, 100)]
+    public int itemLevel = 1;
+    
+    [BoxGroup("基础属性")]
+    [LabelText("最大堆叠数量")]
+    [PropertyRange(1, 999)]
+    public int maxStackSize = 1;
+    
+    [BoxGroup("基础属性")]
+    [LabelText("出售价格")]
+    [PropertyRange(0, 999999)]
+    public int sellPrice;
+    
+    [BoxGroup("基础属性")]
+    [LabelText("购买价格")]
+    [PropertyRange(0, 999999)]
+    public int buyPrice;
+    
+    [BoxGroup("基础属性")]
+    [LabelText("物品价值")]
+    [InfoBox("用于评估物品的相对价值")]
+    [PropertyRange(1, 1000)]
+    public int itemValue = 1;
+    
+    [BoxGroup("行为设置")]
+    [LabelText("是否可丢弃")]
+    public bool isDroppable = true;
+    
+    [BoxGroup("行为设置")]
+    [LabelText("是否可交易")]
+    public bool isTradeable = true;
+    
+    [BoxGroup("行为设置")]
+    [LabelText("是否可使用")]
+    public bool isUsable = false;
+    
+    [BoxGroup("行为设置")]
+    [LabelText("使用冷却时间")]
+    [ShowIf("isUsable")]
+    [SuffixLabel("秒")]
+    public float cooldown = 0f;
+    
+    [BoxGroup("行为设置")]
+    [LabelText("使用后是否消耗")]
+    [ShowIf("isUsable")]
+    public bool consumeOnUse = false;
+    
+    [BoxGroup("获取方式")]
+    [LabelText("主要来源")]
+    public ItemSource primarySource = ItemSource.Other;
+    
+    [BoxGroup("获取方式")]
+    [LabelText("掉落敌人")]
+    [ShowIf("@primarySource == ItemSource.EnemyDrop")]
+    public List<string> dropFromEnemies = new List<string>();
+    
+    [BoxGroup("任务相关配置")]
+    [LabelText("可用于收集任务")]
+    public bool canBeCollectTarget = true;
+    
+    [BoxGroup("任务相关配置")]
+    [LabelText("可用于寻找任务")]
+    public bool canBeFindTarget = true;
+    
+    [BoxGroup("任务相关配置")]
+    [LabelText("可用于使用任务")]
+    [ShowIf("isUsable")]
+    public bool canBeUseTarget = false;
+
     
     // 事件
     public static event Action<Item, Character> OnItemUsed;
@@ -101,6 +203,68 @@ public class Item
         }
         
         return true;
+    }
+    
+    /// <summary>
+    /// 验证配置
+    /// </summary>
+    public bool ValidateConfig()
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            Debug.LogError($"物品配置缺少ID: {name}");
+            return false;
+        }
+        
+        if (string.IsNullOrEmpty(itemName))
+        {
+            Debug.LogError($"物品配置缺少名称: {id}");
+            return false;
+        }
+        
+        if (maxStackSize <= 0)
+        {
+            Debug.LogError($"物品配置堆叠数量无效: {id}");
+            return false;
+        }
+        
+        if (itemValue <= 0)
+        {
+            Debug.LogError($"物品配置价值无效: {id}");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /// <summary>
+    /// 检查品质是否匹配
+    /// </summary>
+    public bool MatchesQuality(ItemRarity requiredQuality)
+    {
+        if (requiredQuality == ItemRarity.Common) return true; // Common表示任意品质
+        return rarity == requiredQuality;
+    }
+    
+    /// <summary>
+    /// 获取格式化的物品信息
+    /// </summary>
+    public string GetFormattedInfo()
+    {
+        string info = $"{itemName} (Lv.{itemLevel})";
+        if (maxStackSize > 1)
+        {
+            info += $" [最大堆叠: {maxStackSize}]";
+        }
+        return info;
+    }
+    
+    /// <summary>
+    /// 检查是否可以从指定敌人掉落
+    /// </summary>
+    public bool CanDropFromEnemy(string enemyId)
+    {
+        return primarySource == ItemSource.EnemyDrop && dropFromEnemies.Contains(enemyId);
     }
     
     /// <summary>

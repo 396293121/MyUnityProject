@@ -2,6 +2,9 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using Sirenix.OdinInspector;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>
 /// 任务管理器 - 管理游戏中的所有任务
@@ -10,7 +13,20 @@ using Sirenix.OdinInspector;
 public class QuestManager : MonoBehaviour
 {
     [Header("任务配置")]
-    [SerializeField] private List<QuestData> allQuests = new List<QuestData>();
+    [Tooltip("任务配置文件夹路径（相对于Assets文件夹）")]
+    [SerializeField] private string questConfigPath = "Data/Configs/任务配置";
+    
+    [Tooltip("是否自动加载任务配置文件")]
+    [SerializeField] private bool autoLoadQuestConfigs = true;
+    
+    [Tooltip("手动配置的任务列表（当自动加载关闭时使用）")]
+    [SerializeField] private List<QuestData> manualQuests = new List<QuestData>();
+    
+    [Header("运行时任务数据")]
+    [ReadOnly]
+    [ShowInInspector]
+    [Tooltip("自动加载的任务列表")]
+    private List<QuestData> allQuests = new List<QuestData>();
     
     [Header("系统配置")]
     [Tooltip("是否启用调试日志")]
@@ -21,6 +37,28 @@ public class QuestManager : MonoBehaviour
     private List<QuestData> activeQuests = new List<QuestData>();
     private List<QuestData> completedQuests = new List<QuestData>();
     private List<QuestData> failedQuests = new List<QuestData>();
+    
+    // 优化查找的索引字典 - 避免双重FOR循环
+    private Dictionary<string, List<QuestObjectiveRef>> enemyKillObjectives = new Dictionary<string, List<QuestObjectiveRef>>();
+    private Dictionary<string, List<QuestObjectiveRef>> itemCollectObjectives = new Dictionary<string, List<QuestObjectiveRef>>();
+    private Dictionary<string, List<QuestObjectiveRef>> npcTalkObjectives = new Dictionary<string, List<QuestObjectiveRef>>();
+    private Dictionary<string, List<QuestObjectiveRef>> locationObjectives = new Dictionary<string, List<QuestObjectiveRef>>();
+    private Dictionary<string, List<QuestObjectiveRef>> itemUseObjectives = new Dictionary<string, List<QuestObjectiveRef>>();
+    
+    /// <summary>
+    /// 任务目标引用结构 - 用于快速查找
+    /// </summary>
+    private struct QuestObjectiveRef
+    {
+        public QuestData quest;
+        public QuestObjective objective;
+        
+        public QuestObjectiveRef(QuestData quest, QuestObjective objective)
+        {
+            this.quest = quest;
+            this.objective = objective;
+        }
+    }
     
     // 单例模式
     public static QuestManager Instance { get; private set; }
@@ -92,99 +130,127 @@ public class QuestManager : MonoBehaviour
     }
     
     /// <summary>
-    /// 处理敌人死亡事件
+    /// 处理敌人死亡事件 - 优化版本，使用字典查找
     /// </summary>
-    private void HandleEnemyKilled(string enemyType, int totalKills)
+    private void HandleEnemyKilled(string enemyType, int totalKills, Enemy enemyComponent)
     {
-        // 更新所有相关的击杀任务
-        foreach (var quest in activeQuests)
+        // 直接从字典中获取相关的任务目标，避免双重FOR循环
+        if (enemyKillObjectives.TryGetValue(enemyType, out var objectives))
         {
-            foreach (var objective in quest.objectives)
+            foreach (var objRef in objectives)
             {
-                if ((objective.objectiveType == ObjectiveType.KillEnemy || 
-                     objective.objectiveType == ObjectiveType.KillBoss) && 
-                    objective.targetId == enemyType)
+                // 确保任务仍然是活跃状态
+                if (objRef.quest.questStatus == QuestStatus.InProgress)
                 {
-                    UpdateObjectiveProgress(quest.questId, objective.targetId, totalKills);
+                    UpdateObjectiveProgress(objRef.quest.questId, objRef.objective.targetId, totalKills);
                 }
             }
+        }
+        
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[QuestManager] 处理敌人击杀事件: {enemyType}, 总击杀数: {totalKills}");
         }
     }
     
     /// <summary>
-    /// 处理物品收集事件
+    /// 处理物品收集事件 - 优化版本，使用字典查找
     /// </summary>
     public void HandleItemCollected(string itemId, int quantity)
     {
-        foreach (var quest in activeQuests)
+        // 直接从字典中获取相关的任务目标，避免双重FOR循环
+        if (itemCollectObjectives.TryGetValue(itemId, out var objectives))
         {
-            foreach (var objective in quest.objectives)
+            foreach (var objRef in objectives)
             {
-                if (objective.objectiveType == ObjectiveType.CollectItem && 
-                    objective.targetId == itemId)
+                // 确保任务仍然是活跃状态
+                if (objRef.quest.questStatus == QuestStatus.InProgress)
                 {
-                    AddObjectiveProgress(quest.questId, objective.targetId, quantity);
+                    AddObjectiveProgress(objRef.quest.questId, objRef.objective.targetId, quantity);
                 }
             }
+        }
+        
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[QuestManager] 处理物品收集事件: {itemId}, 数量: {quantity}");
         }
     }
     
     /// <summary>
-    /// 处理NPC对话事件
+    /// 处理NPC对话事件 - 优化版本，使用字典查找
     /// </summary>
     public void HandleNPCTalk(string npcId)
     {
-        foreach (var quest in activeQuests)
+        // 直接从字典中获取相关的任务目标，避免双重FOR循环
+        if (npcTalkObjectives.TryGetValue(npcId, out var objectives))
         {
-            foreach (var objective in quest.objectives)
+            foreach (var objRef in objectives)
             {
-                if (objective.objectiveType == ObjectiveType.TalkToNPC && 
-                    objective.targetId == npcId)
+                // 确保任务仍然是活跃状态
+                if (objRef.quest.questStatus == QuestStatus.InProgress)
                 {
-                    UpdateObjectiveProgress(quest.questId, objective.targetId, 1);
+                    UpdateObjectiveProgress(objRef.quest.questId, objRef.objective.targetId, 1);
                 }
             }
+        }
+        
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[QuestManager] 处理NPC对话事件: {npcId}");
         }
     }
     
     /// <summary>
-    /// 处理到达地点事件
+    /// 处理到达地点事件 - 优化版本，使用字典查找
     /// </summary>
     public void HandleLocationReached(string locationId, Vector3 playerPosition)
     {
-        foreach (var quest in activeQuests)
+        // 直接从字典中获取相关的任务目标，避免双重FOR循环
+        if (locationObjectives.TryGetValue(locationId, out var objectives))
         {
-            foreach (var objective in quest.objectives)
+            foreach (var objRef in objectives)
             {
-                if (objective.objectiveType == ObjectiveType.ReachLocation && 
-                    objective.targetId == locationId)
+                // 确保任务仍然是活跃状态
+                if (objRef.quest.questStatus == QuestStatus.InProgress)
                 {
                     // 检查距离
-                    float distance = Vector3.Distance(playerPosition, objective.parameters.targetPosition);
-                    if (distance <= objective.parameters.targetRange)
+                    float distance = Vector3.Distance(playerPosition, objRef.objective.parameters.targetPosition);
+                    if (distance <= objRef.objective.parameters.targetRange)
                     {
-                        UpdateObjectiveProgress(quest.questId, objective.targetId, 1);
+                        UpdateObjectiveProgress(objRef.quest.questId, objRef.objective.targetId, 1);
                     }
                 }
             }
         }
+        
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[QuestManager] 处理到达地点事件: {locationId}");
+        }
     }
-    
+
     /// <summary>
-    /// 处理物品使用事件
+    /// 处理物品使用事件 - 优化版本，使用字典查找
     /// </summary>
     public void HandleItemUsed(string itemId, int quantity)
     {
-        foreach (var quest in activeQuests)
+        // 直接从字典中获取相关的任务目标，避免双重FOR循环
+        if (itemUseObjectives.TryGetValue(itemId, out var objectives))
         {
-            foreach (var objective in quest.objectives)
+            foreach (var objRef in objectives)
             {
-                if (objective.objectiveType == ObjectiveType.UseItem && 
-                    objective.targetId == itemId)
+                // 确保任务仍然是活跃状态
+                if (objRef.quest.questStatus == QuestStatus.InProgress)
                 {
-                    AddObjectiveProgress(quest.questId, objective.targetId, quantity);
+                    AddObjectiveProgress(objRef.quest.questId, objRef.objective.targetId, quantity);
                 }
             }
+        }
+        
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[QuestManager] 处理物品使用事件: {itemId}, 数量: {quantity}");
         }
     }
     
@@ -193,27 +259,157 @@ public class QuestManager : MonoBehaviour
     /// </summary>
     private void InitializeQuests()
     {
+        // 清空现有任务列表
+        allQuests.Clear();
+        
+        if (autoLoadQuestConfigs)
+        {
+            LoadQuestConfigsFromFolder();
+        }
+        else
+        {
+            // 使用手动配置的任务列表
+            allQuests.AddRange(manualQuests);
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[QuestManager] 使用手动配置的任务列表，共 {manualQuests.Count} 个任务");
+            }
+        }
+        
         // 将所有任务添加到数据库
         foreach (var quest in allQuests)
         {
+            if (quest == null)
+            {
+                Debug.LogWarning("[QuestManager] 发现空的任务配置，跳过");
+                continue;
+            }
+            
             if (!questDatabase.ContainsKey(quest.questId))
             {
+                // 初始化任务数据
+                quest.Initialize();
                 questDatabase.Add(quest.questId, quest);
                 
                 if (enableDebugLogs)
                 {
-                    Debug.Log($"[QuestManager] 预加载任务: {quest.questName}");
+                    Debug.Log($"[QuestManager] 预加载任务: {quest.questName} (ID: {quest.questId})");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[QuestManager] 发现重复的任务ID: {quest.questId}，跳过任务: {quest.questName}");
+            }
+        }
+        
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[QuestManager] 预加载了 {questDatabase.Count} 个任务");
+        }
+        
+        // 加载保存的任务数据
+        LoadQuestData();
+    }
+    
+    /// <summary>
+    /// 从指定文件夹加载所有任务配置文件
+    /// </summary>
+    private void LoadQuestConfigsFromFolder()
+    {
+        try
+        {
+#if UNITY_EDITOR
+            // 编辑器模式下使用AssetDatabase
+            LoadQuestConfigsInEditor();
+#else
+            // 运行时模式下使用Resources
+            LoadQuestConfigsAtRuntime();
+#endif
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[QuestManager] 加载任务配置文件时发生错误: {e.Message}");
+            
+            // 如果自动加载失败，回退到手动配置
+            if (manualQuests.Count > 0)
+            {
+                allQuests.AddRange(manualQuests);
+                Debug.LogWarning($"[QuestManager] 自动加载失败，使用手动配置的 {manualQuests.Count} 个任务");
+            }
+        }
+    }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// 编辑器模式下加载任务配置
+    /// </summary>
+    private void LoadQuestConfigsInEditor()
+    {
+        string fullPath = System.IO.Path.Combine(Application.dataPath, questConfigPath);
+        
+        if (!System.IO.Directory.Exists(fullPath))
+        {
+            Debug.LogWarning($"[QuestManager] 任务配置文件夹不存在: {fullPath}");
+            return;
+        }
+        
+        // 获取文件夹中所有的.asset文件
+        string[] assetPaths = UnityEditor.AssetDatabase.FindAssets("t:QuestData", new[] { "Assets/" + questConfigPath });
+        
+        foreach (string guid in assetPaths)
+        {
+            string assetPath = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+            QuestData questData = UnityEditor.AssetDatabase.LoadAssetAtPath<QuestData>(assetPath);
+            
+            if (questData != null)
+            {
+                allQuests.Add(questData);
+                if (enableDebugLogs)
+                {
+                    Debug.Log($"[QuestManager] 从编辑器加载任务配置: {questData.questName} ({assetPath})");
                 }
             }
         }
         
         if (enableDebugLogs)
         {
-            Debug.Log($"[QuestManager] 预加载了 {allQuests.Count} 个任务");
+            Debug.Log($"[QuestManager] 编辑器模式下从文件夹加载了 {allQuests.Count} 个任务配置");
+        }
+    }
+#endif
+
+    /// <summary>
+    /// 运行时模式下加载任务配置
+    /// </summary>
+    private void LoadQuestConfigsAtRuntime()
+    {
+        // 将路径转换为Resources相对路径
+        string resourcesPath = questConfigPath;
+        if (resourcesPath.StartsWith("Assets/"))
+        {
+            resourcesPath = resourcesPath.Substring(7); // 移除"Assets/"前缀
+        }
+        if (resourcesPath.StartsWith("Resources/"))
+        {
+            resourcesPath = resourcesPath.Substring(10); // 移除"Resources/"前缀
         }
         
-        // 加载保存的任务数据
-        LoadQuestData();
+        // 尝试从Resources文件夹加载
+        QuestData[] questConfigs = Resources.LoadAll<QuestData>(resourcesPath);
+        
+        if (questConfigs.Length > 0)
+        {
+            allQuests.AddRange(questConfigs);
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[QuestManager] 运行时从Resources加载了 {questConfigs.Length} 个任务配置");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[QuestManager] 在Resources路径中未找到任务配置: {resourcesPath}");
+            Debug.LogWarning($"[QuestManager] 提示: 如果要在运行时自动加载，请将任务配置文件放在Resources文件夹下");
+        }
     }
     
     /// <summary>
@@ -226,26 +422,32 @@ public class QuestManager : MonoBehaviour
             Debug.LogWarning($"[QuestManager] 找不到任务: {questId}");
             return false;
         }
-        
+
         var quest = questDatabase[questId];
-        
+
         // 检查前置条件
         if (!CanStartQuest(quest))
         {
             Debug.LogWarning($"[QuestManager] 不满足任务开始条件: {questId}");
             return false;
         }
-        
+
         // 开始任务
         quest.StartQuest();
         activeQuests.Add(quest);
         
+        // 构建任务目标索引，优化后续查找性能
+        BuildObjectiveIndexes(quest);
+
         OnQuestStarted?.Invoke(quest);
-        
+
         Debug.Log($"[QuestManager] 开始任务: {quest.questName}");
         return true;
     }
-    
+       public bool CanComplete(string questId)
+    {
+       return  GetQuestById(questId).CanComplete();
+    }
     /// <summary>
     /// 完成任务
     /// </summary>
@@ -257,27 +459,30 @@ public class QuestManager : MonoBehaviour
             Debug.LogWarning($"[QuestManager] 找不到活跃任务: {questId}");
             return false;
         }
-        
+
         if (!quest.CanComplete())
         {
             Debug.LogWarning($"[QuestManager] 任务目标未完成: {questId}");
             return false;
         }
-        
+
         // 完成任务
         quest.CompleteQuest();
         activeQuests.Remove(quest);
         completedQuests.Add(quest);
         
+        // 清理任务目标索引
+        RemoveObjectiveIndexes(quest);
+
         // 给予奖励
         GiveQuestReward(quest);
-        
+
         OnQuestCompleted?.Invoke(quest);
-        
+
         Debug.Log($"[QuestManager] 完成任务: {quest.questName}");
         return true;
     }
-    
+
     /// <summary>
     /// 失败任务
     /// </summary>
@@ -285,17 +490,20 @@ public class QuestManager : MonoBehaviour
     {
         var quest = GetActiveQuest(questId);
         if (quest == null) return false;
-        
+
         quest.FailQuest();
         activeQuests.Remove(quest);
         failedQuests.Add(quest);
         
+        // 清理任务目标索引
+        RemoveObjectiveIndexes(quest);
+
         OnQuestFailed?.Invoke(quest);
-        
+
         Debug.Log($"[QuestManager] 任务失败: {quest.questName}");
         return true;
     }
-    
+
     /// <summary>
     /// 放弃任务
     /// </summary>
@@ -303,12 +511,15 @@ public class QuestManager : MonoBehaviour
     {
         var quest = GetActiveQuest(questId);
         if (quest == null) return false;
-        
+
         quest.questStatus = QuestStatus.Abandoned;
         activeQuests.Remove(quest);
         
+        // 清理任务目标索引
+        RemoveObjectiveIndexes(quest);
+
         OnQuestAbandoned?.Invoke(quest);
-        
+
         Debug.Log($"[QuestManager] 放弃任务: {quest.questName}");
         return true;
     }
@@ -539,6 +750,9 @@ public class QuestManager : MonoBehaviour
         // 这里应该实现实际的加载逻辑
         // 可以从PlayerPrefs、JSON文件或其他地方加载
         Debug.Log("[QuestManager] 加载任务数据");
+        
+        // 加载完成后重建索引
+        RebuildAllObjectiveIndexes();
     }
     
     /// <summary>
@@ -554,6 +768,145 @@ public class QuestManager : MonoBehaviour
     }
     
     /// <summary>
+    /// 构建任务目标索引 - 优化查找性能
+    /// </summary>
+    private void BuildObjectiveIndexes(QuestData quest)
+    {
+        foreach (var objective in quest.objectives)
+        {
+            var objRef = new QuestObjectiveRef(quest, objective);
+            
+            switch (objective.objectiveType)
+            {
+                case ObjectiveType.KillEnemy:
+                case ObjectiveType.KillBoss:
+                    AddToObjectiveIndex(enemyKillObjectives, objective.targetId, objRef);
+                    break;
+                    
+                case ObjectiveType.CollectItem:
+                    AddToObjectiveIndex(itemCollectObjectives, objective.targetId, objRef);
+                    break;
+                    
+                case ObjectiveType.TalkToNPC:
+                    AddToObjectiveIndex(npcTalkObjectives, objective.targetId, objRef);
+                    break;
+                    
+                case ObjectiveType.ReachLocation:
+                    AddToObjectiveIndex(locationObjectives, objective.targetId, objRef);
+                    break;
+                    
+                case ObjectiveType.UseItem:
+                    AddToObjectiveIndex(itemUseObjectives, objective.targetId, objRef);
+                    break;
+            }
+        }
+        
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[QuestManager] 为任务 {quest.questName} 构建了 {quest.objectives.Count} 个目标索引");
+        }
+    }
+    
+    /// <summary>
+    /// 清理任务目标索引
+    /// </summary>
+    private void RemoveObjectiveIndexes(QuestData quest)
+    {
+        foreach (var objective in quest.objectives)
+        {
+            switch (objective.objectiveType)
+            {
+                case ObjectiveType.KillEnemy:
+                case ObjectiveType.KillBoss:
+                    RemoveFromObjectiveIndex(enemyKillObjectives, objective.targetId, quest);
+                    break;
+                    
+                case ObjectiveType.CollectItem:
+                    RemoveFromObjectiveIndex(itemCollectObjectives, objective.targetId, quest);
+                    break;
+                    
+                case ObjectiveType.TalkToNPC:
+                    RemoveFromObjectiveIndex(npcTalkObjectives, objective.targetId, quest);
+                    break;
+                    
+                case ObjectiveType.ReachLocation:
+                    RemoveFromObjectiveIndex(locationObjectives, objective.targetId, quest);
+                    break;
+                    
+                case ObjectiveType.UseItem:
+                    RemoveFromObjectiveIndex(itemUseObjectives, objective.targetId, quest);
+                    break;
+            }
+        }
+        
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[QuestManager] 清理了任务 {quest.questName} 的目标索引");
+        }
+    }
+    
+    /// <summary>
+    /// 添加到目标索引字典
+    /// </summary>
+    private void AddToObjectiveIndex(Dictionary<string, List<QuestObjectiveRef>> indexDict, string targetId, QuestObjectiveRef objRef)
+    {
+        if (!indexDict.ContainsKey(targetId))
+        {
+            indexDict[targetId] = new List<QuestObjectiveRef>();
+        }
+        indexDict[targetId].Add(objRef);
+    }
+    
+    /// <summary>
+    /// 从目标索引字典中移除
+    /// </summary>
+    private void RemoveFromObjectiveIndex(Dictionary<string, List<QuestObjectiveRef>> indexDict, string targetId, QuestData quest)
+    {
+        if (indexDict.TryGetValue(targetId, out var objectives))
+        {
+            objectives.RemoveAll(objRef => objRef.quest == quest);
+            
+            // 如果列表为空，移除整个键
+            if (objectives.Count == 0)
+            {
+                indexDict.Remove(targetId);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 重建所有活跃任务的索引 - 用于系统初始化或重置后
+    /// </summary>
+    private void RebuildAllObjectiveIndexes()
+    {
+        // 清空所有索引
+        ClearAllObjectiveIndexes();
+        
+        // 重建所有活跃任务的索引
+        foreach (var quest in activeQuests)
+        {
+            BuildObjectiveIndexes(quest);
+        }
+        
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[QuestManager] 重建了 {activeQuests.Count} 个活跃任务的索引");
+        }
+    }
+    
+    /// <summary>
+    /// 清空所有目标索引
+    /// </summary>
+    private void ClearAllObjectiveIndexes()
+    {
+        enemyKillObjectives.Clear();
+        itemCollectObjectives.Clear();
+        npcTalkObjectives.Clear();
+        locationObjectives.Clear();
+        itemUseObjectives.Clear();
+    }
+
+    /// <summary>
     /// 重置所有任务（用于测试）
     /// </summary>
     [Button("重置所有任务")]
@@ -563,6 +916,9 @@ public class QuestManager : MonoBehaviour
         completedQuests.Clear();
         failedQuests.Clear();
         
+        // 清空所有索引
+        ClearAllObjectiveIndexes();
+
         foreach (var quest in questDatabase.Values)
         {
             quest.questStatus = QuestStatus.NotStarted;
@@ -572,7 +928,60 @@ public class QuestManager : MonoBehaviour
                 objective.isCompleted = false;
             }
         }
-        
+
         Debug.Log("[QuestManager] 所有任务已重置");
     }
+    
+    #region 调试和监控方法
+    
+    /// <summary>
+    /// 显示索引字典状态（调试用）
+    /// </summary>
+    [Button("显示索引状态")]
+    public void ShowIndexStatus()
+    {
+        Debug.Log($"[QuestManager] 索引状态统计:");
+        Debug.Log($"  敌人击杀目标: {enemyKillObjectives.Count} 个不同目标");
+        Debug.Log($"  物品收集目标: {itemCollectObjectives.Count} 个不同目标");
+        Debug.Log($"  NPC对话目标: {npcTalkObjectives.Count} 个不同目标");
+        Debug.Log($"  地点到达目标: {locationObjectives.Count} 个不同目标");
+        Debug.Log($"  物品使用目标: {itemUseObjectives.Count} 个不同目标");
+        
+        int totalObjectives = 0;
+        totalObjectives += enemyKillObjectives.Values.Sum(list => list.Count);
+        totalObjectives += itemCollectObjectives.Values.Sum(list => list.Count);
+        totalObjectives += npcTalkObjectives.Values.Sum(list => list.Count);
+        totalObjectives += locationObjectives.Values.Sum(list => list.Count);
+        totalObjectives += itemUseObjectives.Values.Sum(list => list.Count);
+        
+        Debug.Log($"  总索引目标数: {totalObjectives}");
+    }
+    
+    /// <summary>
+    /// 重建索引（调试用）
+    /// </summary>
+    [Button("重建索引")]
+    public void DebugRebuildIndexes()
+    {
+        RebuildAllObjectiveIndexes();
+        ShowIndexStatus();
+    }
+    
+    /// <summary>
+    /// 获取性能统计信息
+    /// </summary>
+    public string GetPerformanceStats()
+    {
+        int totalActiveObjectives = activeQuests.Sum(q => q.objectives.Count);
+        int totalIndexedObjectives = 0;
+        totalIndexedObjectives += enemyKillObjectives.Values.Sum(list => list.Count);
+        totalIndexedObjectives += itemCollectObjectives.Values.Sum(list => list.Count);
+        totalIndexedObjectives += npcTalkObjectives.Values.Sum(list => list.Count);
+        totalIndexedObjectives += locationObjectives.Values.Sum(list => list.Count);
+        totalIndexedObjectives += itemUseObjectives.Values.Sum(list => list.Count);
+        
+        return $"活跃任务: {activeQuests.Count}, 活跃目标: {totalActiveObjectives}, 索引目标: {totalIndexedObjectives}";
+    }
+    
+    #endregion
 }

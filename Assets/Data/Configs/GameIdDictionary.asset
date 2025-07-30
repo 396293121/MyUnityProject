@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3db28d6c673728046a9ca66680a54348, type: 3}
+  m_Name: GameIdDictionary
+  m_EditorClassIdentifier: 
+  enemyIds:
+  - id: 1
+    displayName: "\u5C0F\u91CE\u732A"
+    category: 0
+    rarity: 0
+    canBeKillTarget: 1
+    canBeBossTarget: 0
+    recommendedLevel: 1
+    config: {fileID: 11400000, guid: 092ca990afdc6a142998532bc5a2daf8, type: 2}
+  - id: 2
+    displayName: "\u5927\u578B\u91CE\u732A"
+    category: 0
+    rarity: 0
+    canBeKillTarget: 1
+    canBeBossTarget: 0
+    recommendedLevel: 1
+    config: {fileID: 11400000, guid: 0c8439119c6f28f489046ff03ff85ba3, type: 2}
+  npcIds:
+  - id: 1
+    displayName: "\u5927\u578B\u91CE\u732A"
+    npcType: 6
+    canBeTalkTarget: 1
+    canGiveQuests: 0
+    canCompleteQuests: 0
+    config: {fileID: 11400000, guid: c0848491f9af93c4ea774581ed247c24, type: 2}
+  - id: 2
+    displayName: "\u5E74\u8F7B\u6218\u58EB"
+    npcType: 3
+    canBeTalkTarget: 1
+    canGiveQuests: 0
+    canCompleteQuests: 0
+    config: {fileID: 11400000, guid: 8feef173ee056594eb890c562f07f81b, type: 2}
+  - id: 3
+    displayName: "\u795E\u79D8\u4EBA"
+    npcType: 6
+    canBeTalkTarget: 1
+    canGiveQuests: 0
+    canCompleteQuests: 0
+    config: {fileID: 11400000, guid: 721bdc3290965c2459f106fbb4ebee11, type: 2}
+  - id: 4
+    displayName: "\u914B\u957F"
+    npcType: 3
+    canBeTalkTarget: 1
+    canGiveQuests: 0
+    canCompleteQuests: 0
+    config: {fileID: 11400000, guid: f5efa54fe96f5084280af804c0bf11d5, type: 2}
+  itemIds: []
+  enemyConfigFolder: "Assets/Data/Configs/\u654C\u4EBA\u914D\u7F6E"
+  npcConfigFolder: Assets/Data/Configs/NPC
+  itemConfigFolder: "Assets/Scripts/ScriptableObjects/\u7269\u54C1\u914D\u7F6E\u6587\u4EF6"

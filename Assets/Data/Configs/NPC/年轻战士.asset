@@ -12,10 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80294c3f83516f241b4e11d16344cfdc, type: 3}
   m_Name: "\u5E74\u8F7B\u6218\u58EB"
   m_EditorClassIdentifier: 
+  npcId: 2
   npcName: "\u5E74\u8F7B\u6218\u58EB"
   npcType: 3
+  availableQuests:
+  - {fileID: 11400000, guid: 8364992da861c17428df2546190ecb97, type: 2}
   description: 
   interactionRange: 2
   promptOffset: {x: 0, y: 2, z: 0}
   firstDialogueBlock: Start
   repeatDialogueBlock: Repeat
+  canTrade: 0
+  canGiveQuests: 0
+  canCompleteQuests: 0
+  services: 
+  canBeTalkTarget: 1

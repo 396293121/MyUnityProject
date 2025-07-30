@@ -8,6 +8,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using Object = UnityEngine.Object;
+using Fungus.EditorUtils;
 
 namespace Fungus.EditorUtils
 {
@@ -832,11 +833,11 @@ namespace Fungus.EditorUtils
                 Repaint();
             }
         }
-
+        
         protected virtual void DrawOverlay(Event e)
         {
             // Main toolbar group
-            GUILayout.BeginHorizontal(EditorStyles.toolbar);
+         using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Space(2);
 
@@ -906,14 +907,14 @@ namespace Fungus.EditorUtils
                     }
                 }
             }
-            GUILayout.EndHorizontal();
+            // GUILayout.EndHorizontal();
 
             // Name and description group
-            GUILayout.BeginHorizontal();
+            using (new GUILayout.HorizontalScope())
             {
                 GUILayout.FlexibleSpace();
 
-                GUILayout.BeginVertical();
+                using (new GUILayout.VerticalScope())
                 {
                     GUILayout.Label(flowchart.name, EditorStyles.boldLabel);
 
@@ -924,9 +925,9 @@ namespace Fungus.EditorUtils
                         GUILayout.Label(flowchart.Description, EditorStyles.helpBox);
                     }
                 }
-                GUILayout.EndVertical();
+                // GUILayout.EndVertical();
             }
-            GUILayout.EndHorizontal();
+            // GUILayout.EndHorizontal();
 
 
             // Draw block search popup on top of other controls
@@ -941,18 +942,17 @@ namespace Fungus.EditorUtils
         protected virtual void DrawVariablesBlock(Event e)
         {
             // Variables group
-            GUILayout.BeginHorizontal();
+            using (new GUILayout.HorizontalScope())
             {
-                GUILayout.BeginVertical(GUILayout.Width(440));
+                using (new GUILayout.VerticalScope(GUILayout.Width(440)))
+                // GUILayout.BeginVertical(GUILayout.Width(440));
                 {
                     GUILayout.FlexibleSpace();
-
-                    flowchart.VariablesScrollPos = GUILayout.BeginScrollView(flowchart.VariablesScrollPos);
+using (var scrollView = new GUILayout.ScrollViewScope(flowchart.VariablesScrollPos))
                     {
                         GUILayout.Space(8);
 
                         EditorGUI.BeginChangeCheck();
-
                         if (variableListAdaptor != null)
                         {
                             if (variableListAdaptor.TargetFlowchart != null)
@@ -971,7 +971,7 @@ namespace Fungus.EditorUtils
                             EditorUtility.SetDirty(flowchart);
                         }
                     }
-                    GUILayout.EndScrollView();
+                    // GUILayout.EndScrollView();
 
 
                     // Eat mouse events
@@ -990,11 +990,11 @@ namespace Fungus.EditorUtils
                         }
                     }
                 }
-                GUILayout.EndVertical();
+                // GUILayout.EndVertical();
 
                 GUILayout.FlexibleSpace();
             }
-            GUILayout.EndHorizontal();
+            // GUILayout.EndHorizontal();
         }
 
         protected virtual void DrawBlockPopup(Event e)
@@ -1013,57 +1013,61 @@ namespace Fungus.EditorUtils
 
                 e.Use();
             }
-
-            GUILayout.BeginArea(popupRect);
+using (new AreaScope(popupRect))
+            // GUILayout.BeginArea(popupRect);
             {
-                popupScroll = EditorGUILayout.BeginScrollView(popupScroll, GUIStyle.none, GUI.skin.verticalScrollbar);
-                {
-                    for (int i = 0; i < filteredBlocks.Count; ++i)
-                    {
-                        DrawBlockSearchPopUpItem(filteredBlocks[i], i == blockPopupSelection);
-                    }
 
-                    if(filteredBlocks.Count == 0)
-                    {
-                        DrawBlockSearchPopUpItem(null, false);
-                    }
+                using var scrollView = new EditorGUILayout.ScrollViewScope(
+       popupScroll,
+       GUIStyle.none,
+       GUI.skin.verticalScrollbar
+   );
+           {     for (int i = 0; i < filteredBlocks.Count; ++i)
+                {
+                    DrawBlockSearchPopUpItem(filteredBlocks[i], i == blockPopupSelection);
                 }
-                EditorGUILayout.EndScrollView();
+
+                if (filteredBlocks.Count == 0)
+                {
+                    DrawBlockSearchPopUpItem(null, false);
+                }}
+                //  EditorGUILayout.EndScrollView();
             }
-            GUILayout.EndArea();
+       //     GUILayout.EndArea();
         }
 
         protected void DrawBlockSearchPopUpItem(Block block, bool selected)
         {
-            EditorGUILayout.BeginHorizontal(GUILayout.Height(16));
-
-            var style = selected ? blockSearchPopupSelectedStyle : blockSearchPopupNormalStyle;
-
-            GUI.contentColor = block != null ? GetBlockGraphics(block).tint : Color.white;
-
-            var buttonPressed = false;
-            if (GUILayout.Button(FungusEditorResources.BulletPoint, style, GUILayout.Width(16)))
+            //        EditorGUILayout.BeginHorizontal(GUILayout.Height(16));
+            using (new EditorGUILayout.HorizontalScope(GUILayout.Height(16)))
             {
-                buttonPressed = true;
+                var style = selected ? blockSearchPopupSelectedStyle : blockSearchPopupNormalStyle;
+
+                GUI.contentColor = block != null ? GetBlockGraphics(block).tint : Color.white;
+
+                var buttonPressed = false;
+                if (GUILayout.Button(FungusEditorResources.BulletPoint, style, GUILayout.Width(16)))
+                {
+                    buttonPressed = true;
+                }
+
+                GUI.contentColor = Color.white;
+
+                if (GUILayout.Button(block != null ? block.BlockName : "No Matches", style))
+                {
+                    buttonPressed = true;
+                }
+
+                if (buttonPressed)
+                {
+                    CenterBlock(block);
+                    SelectBlock(block);
+                    CloseBlockPopup();
+                }
+
+                // EditorGUILayout.EndHorizontal();
             }
-
-            GUI.contentColor = Color.white;
-
-            if (GUILayout.Button(block != null ? block.BlockName : "No Matches", style))
-            {
-                buttonPressed = true;
-            }
-
-            if (buttonPressed)
-            {
-                CenterBlock(block);
-                SelectBlock(block);
-                CloseBlockPopup();
-            }
-
-            EditorGUILayout.EndHorizontal();
         }
-
         protected Block GetBlockAtPoint(Vector2 point)
         {
             for (int i = blocks.Length - 1; i > -1; --i)
@@ -1417,9 +1421,9 @@ namespace Fungus.EditorUtils
             // Calc rect for script view
             Rect scriptViewRect = CalcFlowchartWindowViewRect();
 
-            EditorZoomArea.Begin(flowchart.Zoom, scriptViewRect);
-
-            if (e.type == EventType.Repaint)
+         //   EditorZoomArea.Begin(flowchart.Zoom, scriptViewRect);
+            using (new ZoomAreaScope(flowchart.Zoom, scriptViewRect)){
+                    if (e.type == EventType.Repaint)
             {
                 DrawGrid();
 
@@ -1467,7 +1471,9 @@ namespace Fungus.EditorUtils
                 GUI.color = Color.white;
             }
 
-            EditorZoomArea.End();
+            }
+        
+            // EditorZoomArea.End();
         }
 
         private void DrawExecutingBlockIcon(Block b, Rect scriptViewRect, float alpha, GUIStyle style)
@@ -2195,5 +2201,74 @@ namespace Fungus.EditorUtils
 
             DrawConnections(block);
         }
+    }
+}
+
+public struct AreaScope : IDisposable
+{
+    public AreaScope(Rect screenRect)
+    {
+        GUILayout.BeginArea(screenRect);
+    }
+    
+    public AreaScope(Rect screenRect, string text)
+    {
+        GUILayout.BeginArea(screenRect, text);
+    }
+    
+    public AreaScope(Rect screenRect, Texture image)
+    {
+        GUILayout.BeginArea(screenRect, image);
+    }
+    
+    public AreaScope(Rect screenRect, GUIContent content)
+    {
+        GUILayout.BeginArea(screenRect, content);
+    }
+    
+    public AreaScope(Rect screenRect, GUIStyle style)
+    {
+        GUILayout.BeginArea(screenRect, style);
+    }
+    
+    public AreaScope(Rect screenRect, string text, GUIStyle style)
+    {
+        GUILayout.BeginArea(screenRect, text, style);
+    }
+    
+    public AreaScope(Rect screenRect, Texture image, GUIStyle style)
+    {
+        GUILayout.BeginArea(screenRect, image, style);
+    }
+    
+    public void Dispose()
+    {
+        GUILayout.EndArea();
+    }
+}
+public struct ZoomAreaScope : IDisposable
+{
+    private readonly Matrix4x4 _originalMatrix;
+    private readonly Rect _zoomArea;
+    
+    public ZoomAreaScope(float zoomLevel, Rect area)
+    {
+        // 保存原始矩阵状态
+        _originalMatrix = GUI.matrix;
+        
+        // 应用缩放变换
+        EditorZoomArea.Begin(zoomLevel, area);
+        
+        // 保存缩放区域
+        _zoomArea = area;
+    }
+    
+    public void Dispose()
+    {
+        // 恢复原始矩阵
+        GUI.matrix = _originalMatrix;
+        
+        // 调用结束缩放区域的方法
+        EditorZoomArea.End();
     }
 }

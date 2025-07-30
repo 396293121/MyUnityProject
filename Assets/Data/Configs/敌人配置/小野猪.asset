@@ -12,22 +12,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd1a82cc43a3b6e4b9a9a37e95ad9aee, type: 3}
   m_Name: "\u5C0F\u91CE\u732A"
   m_EditorClassIdentifier: 
+  enemyId: 1
+  displayName: "\u5C0F\u91CE\u732A"
+  description: 
+  enemyIcon: {fileID: 0}
+  category: 0
+  rarity: 0
   health: 50
   moveSpeed: 3
   chaseSpeedRate: 1.2
+  canAttack: 1
   attackDamage: 15
   damageType: 0
-  defense: 5
   attackRange: 1.5
+  attackCooldown: 2
+  defense: 5
   detectionRange: 10
   loseTargetRange: 12
-  attackCooldown: 2
   patrolSpeed: 1
   patrolWaitTime: 2
   offScreenUpdateInterval: 0.5
   onScreenUpdateInterval: 0.05
   screenBoundaryExtension: 5
   expReward: 10
+  canBeKillTarget: 1
+  canBeBossTarget: 0
+  recommendedLevel: 1
   chargeDistance: 8
   enrageHealthThreshold: 0.5
   stunDuration: 1.5

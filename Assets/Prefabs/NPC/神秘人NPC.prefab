@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3614252741834051113}
-  - component: {fileID: 7714789566736275952}
   - component: {fileID: 851220641030111932}
+  - component: {fileID: 7714789566736275952}
   - component: {fileID: 6227797491673758966}
   - component: {fileID: 195893641320630194}
   m_Layer: 0
@@ -35,6 +35,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &851220641030111932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3440237828263258495}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95372353ddde0e84a962bf8b4fb3b4dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  npcConfig: {fileID: 11400000, guid: 721bdc3290965c2459f106fbb4ebee11, type: 2}
+  dialogueFlowchart: {fileID: 290462809166452371, guid: d122ab77b7f33754b89335cd3b891294, type: 3}
+  interactionPrompt: {fileID: 0}
+  availableQuests: []
+  questIndicator: {fileID: 0}
+  questActiveIndicator: {fileID: 0}
+  questCompleteIndicator: {fileID: 0}
 --- !u!61 &7714789566736275952
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -80,21 +99,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 2.96, y: 3.3399997}
   m_EdgeRadius: 0
---- !u!114 &851220641030111932
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3440237828263258495}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 95372353ddde0e84a962bf8b4fb3b4dc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  npcConfig: {fileID: 11400000, guid: 721bdc3290965c2459f106fbb4ebee11, type: 2}
-  dialogueFlowchart: {fileID: 290462809166452371, guid: d122ab77b7f33754b89335cd3b891294, type: 3}
-  interactionPrompt: {fileID: 0}
 --- !u!212 &6227797491673758966
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -134,7 +138,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -1102604333
-  m_SortingLayer: 5
+  m_SortingLayer: 8
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 806a2a8e2619606479958f845a78225d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}

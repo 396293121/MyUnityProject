@@ -16,6 +16,38 @@ using Sirenix.OdinInspector;
 [InlineProperty]
 public class EnemyConfig: ScriptableObject
 {
+    [BoxGroup("标识信息", Order = 0)]
+    [LabelText("敌人ID")]
+    [InfoBox("唯一标识符，用于任务系统和游戏逻辑识别")]
+    [PropertyOrder(0)]
+    public string enemyId = "";
+    
+    [BoxGroup("标识信息")]
+    [LabelText("显示名称")]
+    [PropertyOrder(0.1f)]
+    public string displayName = "";
+    
+    [BoxGroup("标识信息")]
+    [LabelText("敌人描述")]
+    [TextArea(2, 4)]
+    [PropertyOrder(0.2f)]
+    public string description = "";
+    
+    [BoxGroup("标识信息")]
+    [LabelText("敌人图标")]
+    [PropertyOrder(0.3f)]
+    public Sprite enemyIcon;
+    
+    [BoxGroup("标识信息")]
+    [LabelText("敌人类型")]
+    [PropertyOrder(0.4f)]
+    public EnemyCategory category = EnemyCategory.Normal;
+    
+    [BoxGroup("标识信息")]
+    [LabelText("稀有度")]
+    [PropertyOrder(0.5f)]
+    public EnemyRarity rarity = EnemyRarity.Common;
+    
     [FoldoutGroup("基础属性", expanded: true)]
     [LabelText("生命值")]
     [PropertyRange(1, 1000)]
@@ -99,13 +131,6 @@ public class EnemyConfig: ScriptableObject
     [PropertyOrder(13)]
     public float patrolWaitTime = 2f;
     
-    // [FoldoutGroup("巡逻属性")]
-    // [LabelText("巡逻半径")]
-    // [PropertyRange(1f, 10f)]
-    // [SuffixLabel("米")]
-    // [PropertyOrder(14)]
-    // public float patrolRadius = 3f;
-    
     [FoldoutGroup("性能优化", expanded: false)]
     [LabelText("屏幕外更新间隔")]
     [PropertyRange(0.1f, 2f)]
@@ -132,7 +157,65 @@ public class EnemyConfig: ScriptableObject
     [PropertyRange(1, 1000)]
     [PropertyOrder(15)]
     public int expReward = 10;
+    
+    [BoxGroup("任务相关配置", Order = 20)]
+    [LabelText("可用于击杀任务")]
+    [PropertyOrder(20)]
+    public bool canBeKillTarget = true;
+    
+    [BoxGroup("任务相关配置")]
+    [LabelText("可用于BOSS任务")]
+    [PropertyOrder(21)]
+    public bool canBeBossTarget = false;
+    
+    [BoxGroup("任务相关配置")]
+    [LabelText("推荐等级")]
+    [InfoBox("推荐玩家等级")]
+    [PropertyRange(1, 100)]
+    [PropertyOrder(23)]
+    public int recommendedLevel = 1;
 
+    [BoxGroup("任务相关配置")]
+
+
+    /// <summary>
+    /// 验证配置
+    /// </summary>
+    public bool ValidateConfig()
+    {
+        if (string.IsNullOrEmpty(enemyId))
+        {
+            Debug.LogError($"敌人配置缺少ID: {name}");
+            return false;
+        }
+        
+        if (string.IsNullOrEmpty(displayName))
+        {
+            Debug.LogError($"敌人配置缺少显示名称: {enemyId}");
+            return false;
+        }
+        
+        if (health <= 0)
+        {
+            Debug.LogError($"敌人配置生命值无效: {enemyId}");
+            return false;
+        }
+        
+        return true;
+    }
+    
+ 
+    
+
+
+#if UNITY_EDITOR
+    private Color GetHealthBarColor()
+    {
+        if (health <= 50) return Color.red;
+        if (health <= 200) return Color.yellow;
+        return Color.green;
+    }
+#endif
 }
 
 
@@ -212,7 +295,44 @@ public enum EnemyStateType
     Death       // 死亡
 }
 
+/// <summary>
+/// 敌人类型枚举
+/// </summary>
+public enum EnemyCategory
+{
+    [LabelText("普通敌人")]
+    Normal,
+    [LabelText("精英敌人")]
+    Elite,
+    [LabelText("BOSS")]
+    Boss,
+    [LabelText("小BOSS")]
+    MiniBoss,
+    [LabelText("野兽")]
+    Beast,
+    [LabelText("不死族")]
+    Undead,
+    [LabelText("魔法生物")]
+    Magical,
+    [LabelText("机械")]
+    Mechanical
+}
 
-
+/// <summary>
+/// 敌人稀有度枚举
+/// </summary>
+public enum EnemyRarity
+{
+    [LabelText("普通")]
+    Common,
+    [LabelText("稀有")]
+    Rare,
+    [LabelText("史诗")]
+    Epic,
+    [LabelText("传说")]
+    Legendary,
+    [LabelText("神话")]
+    Mythic
+}
 
 // 移除旧的EnemyConfig类，现在使用WildBoarConfig等具体配置

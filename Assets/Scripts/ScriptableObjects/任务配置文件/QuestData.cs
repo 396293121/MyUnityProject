@@ -56,6 +56,31 @@ public class QuestData : ScriptableObject
     [ListDrawerSettings(ShowIndexLabels = true)]
     public List<QuestReward> rewards = new List<QuestReward>();
     
+    [BoxGroup("配置引用")]
+    [LabelText("ID字典引用")]
+    [InfoBox("自动通过GameIdDictionaryManager加载，无需手动设置")]
+    [ReadOnly]
+    [ShowInInspector]
+    public GameIdDictionary idDictionary
+    {
+        get
+        {
+            return GameIdDictionaryManager.GetIdDictionary();
+        }
+    }
+    
+    /// <summary>
+    /// 手动刷新ID字典引用
+    /// </summary>
+    [BoxGroup("配置引用")]
+    [Button("重新加载ID字典")]
+    [InfoBox("如果ID字典文件有更新，点击此按钮重新加载")]
+    public void ReloadIdDictionary()
+    {
+        GameIdDictionaryManager.Instance.ReloadIdDictionary();
+        RefreshIdDictionaryReferences();
+    }
+    
     // 运行时数据
     [System.NonSerialized]
     public System.DateTime startTime;
@@ -72,6 +97,29 @@ public class QuestData : ScriptableObject
         {
             objective.currentProgress = 0;
             objective.isCompleted = false;
+            // 设置ID字典引用
+            objective.SetIdDictionary(idDictionary);
+        }
+    }
+    
+    /// <summary>
+    /// 刷新所有目标的ID字典引用
+    /// </summary>
+    [Button("刷新ID字典引用")]
+    [InfoBox("当ID字典更新后，点击此按钮刷新所有目标的引用")]
+    public void RefreshIdDictionaryReferences()
+    {
+        if (idDictionary != null)
+        {
+            foreach (var objective in objectives)
+            {
+                objective.SetIdDictionary(idDictionary);
+            }
+            Debug.Log($"[QuestData] 已刷新任务 {questName} 的ID字典引用");
+        }
+        else
+        {
+            Debug.LogWarning($"[QuestData] 任务 {questName} 的ID字典引用为空");
         }
     }
     
@@ -125,6 +173,7 @@ public class QuestData : ScriptableObject
         }
         return true;
     }
+ 
     
     /// <summary>
     /// 开始任务
@@ -200,12 +249,105 @@ public class QuestObjective
     
     [BoxGroup("目标配置")]
     [LabelText("目标类型")]
+    [OnValueChanged("OnObjectiveTypeChanged")]
     public ObjectiveType objectiveType;
     
     [BoxGroup("目标配置")]
     [LabelText("目标ID")]
-    [InfoBox("击杀任务填写敌人类型（如：WildBoar），收集任务填写物品ID")]
+    [InfoBox("根据目标类型自动筛选可用的ID")]
+    [ValueDropdown("GetAvailableTargetIds")]
+    [OnValueChanged("OnTargetIdChanged")]
     public string targetId;
+    
+    [BoxGroup("目标配置")]
+    [LabelText("目标显示名称")]
+    [ReadOnly]
+    [ShowInInspector]
+    public string targetDisplayName;
+    
+
+    
+    // 隐藏的引用，用于获取ID字典
+    [HideInInspector]
+    public GameIdDictionary idDictionary;
+    
+    /// <summary>
+    /// 当目标类型改变时调用
+    /// </summary>
+    private void OnObjectiveTypeChanged()
+    {
+        // 清空当前选择的目标ID
+        targetId = "";
+        targetDisplayName = "";
+        
+        // 更新参数的目标类型引用
+        if (parameters != null)
+        {
+            parameters.objectiveType = objectiveType;
+        }
+    }
+    
+    /// <summary>
+    /// 当目标ID改变时调用
+    /// </summary>
+    private void OnTargetIdChanged()
+    {
+        UpdateTargetDisplayName();
+    }
+    
+    /// <summary>
+    /// 更新目标显示名称
+    /// </summary>
+    private void UpdateTargetDisplayName()
+    {
+        if (idDictionary != null && !string.IsNullOrEmpty(targetId))
+        {
+            targetDisplayName = idDictionary.GetDisplayName(targetId, objectiveType);
+        }
+        else
+        {
+            targetDisplayName = targetId;
+        }
+    }
+    
+    /// <summary>
+    /// 获取可用的目标ID列表（用于下拉菜单）
+    /// </summary>
+    private IEnumerable<ValueDropdownItem<string>> GetAvailableTargetIds()
+    {
+        var items = new List<ValueDropdownItem<string>>();
+        
+        if (idDictionary == null)
+        {
+            items.Add(new ValueDropdownItem<string>("请先设置ID字典引用", ""));
+            return items;
+        }
+        
+        var targetIds = idDictionary.GetTargetIdsByObjectiveType(objectiveType);
+        
+        if (targetIds.Count == 0)
+        {
+            items.Add(new ValueDropdownItem<string>("没有可用的目标ID", ""));
+            return items;
+        }
+        
+        foreach (var id in targetIds)
+        {
+            var displayName = idDictionary.GetDisplayName(id, objectiveType);
+            items.Add(new ValueDropdownItem<string>($"{displayName} ({id})", id));
+        }
+        
+        return items;
+    }
+    
+    /// <summary>
+    /// 设置ID字典引用
+    /// </summary>
+    public void SetIdDictionary(GameIdDictionary dictionary)
+    {
+        idDictionary = dictionary;
+        UpdateTargetDisplayName();
+    }
     
     [BoxGroup("进度跟踪")]
     [LabelText("当前进度")]
@@ -274,46 +416,26 @@ public class QuestObjective
     /// </summary>
     public string GetFormattedDescription()
     {
+        string displayName = !string.IsNullOrEmpty(targetDisplayName) ? targetDisplayName : targetId;
+        
         switch (objectiveType)
         {
             case ObjectiveType.KillEnemy:
-                return $"击杀 {GetEnemyDisplayName(targetId)} {GetProgressText()}";
+                return $"击杀 {displayName} {GetProgressText()}";
             case ObjectiveType.CollectItem:
-                return $"收集 {GetItemDisplayName(targetId)} {GetProgressText()}";
+                return $"收集 {displayName} {GetProgressText()}";
             case ObjectiveType.KillBoss:
-                return $"击败BOSS {GetEnemyDisplayName(targetId)} {GetProgressText()}";
+                return $"击败BOSS {displayName} {GetProgressText()}";
             case ObjectiveType.TalkToNPC:
-                return $"与 {GetNPCDisplayName(targetId)} 对话";
+                return $"与 {displayName} 对话";
+            case ObjectiveType.FindItem:
+                return $"寻找 {displayName} {GetProgressText()}";
+            case ObjectiveType.UseItem:
+                return $"使用 {displayName} {GetProgressText()}";
             default:
                 return $"{description} {GetProgressText()}";
         }
-    }
-    
-    private string GetEnemyDisplayName(string enemyType)
-    {
-        switch (enemyType)
-        {
-            case "WildBoar": return "野猪";
-            case "Wolf": return "狼";
-            case "Goblin": return "哥布林";
-            case "Orc": return "兽人";
-            default: return enemyType;
-        }
-    }
-    
-    private string GetItemDisplayName(string itemId)
-    {
-        // 这里可以从物品数据库获取物品名称
-        // 暂时返回ID
-        return itemId;
-    }
-    
-    private string GetNPCDisplayName(string npcId)
-    {
-        // 这里可以从NPC数据库获取NPC名称
-        // 暂时返回ID
-        return npcId;
-    }
+}
 }
 
 /// <summary>

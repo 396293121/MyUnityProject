@@ -15,7 +15,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     [Required]
     [SerializeField]
     public EnemyConfig enemyConfig;
-
+    private string enemyId;
     [LabelText("敌人音频类型")]
     public AudioCategory audioCategory;
     [LabelText("敌人技能系统")]
@@ -639,6 +639,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
 
             if (baseConfig != null)
             {
+                enemyId = baseConfig.enemyId;
                 // 初始化基础属性
                 maxHealth = baseConfig.health;
                 currentHealth = maxHealth;

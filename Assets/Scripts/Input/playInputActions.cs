@@ -230,7 +230,7 @@ public partial class @PlayInputActions: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""28d1d268-b8f5-46da-bb93-176f013cbda9"",
-                    ""path"": ""<Keyboard>/e"",
+                    ""path"": ""<Keyboard>/f"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
