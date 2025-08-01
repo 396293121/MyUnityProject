@@ -23,7 +23,7 @@ MonoBehaviour:
     config: {fileID: 11400000, guid: 092ca990afdc6a142998532bc5a2daf8, type: 2}
   - id: 2
     displayName: "\u5927\u578B\u91CE\u732A"
-    category: 0
+    category: 1
     rarity: 0
     canBeKillTarget: 1
     canBeBossTarget: 0
@@ -34,31 +34,72 @@ MonoBehaviour:
     displayName: "\u5927\u578B\u91CE\u732A"
     npcType: 6
     canBeTalkTarget: 1
-    canGiveQuests: 0
-    canCompleteQuests: 0
     config: {fileID: 11400000, guid: c0848491f9af93c4ea774581ed247c24, type: 2}
   - id: 2
     displayName: "\u5E74\u8F7B\u6218\u58EB"
     npcType: 3
     canBeTalkTarget: 1
-    canGiveQuests: 0
-    canCompleteQuests: 0
     config: {fileID: 11400000, guid: 8feef173ee056594eb890c562f07f81b, type: 2}
   - id: 3
     displayName: "\u795E\u79D8\u4EBA"
-    npcType: 6
+    npcType: 3
     canBeTalkTarget: 1
-    canGiveQuests: 0
-    canCompleteQuests: 0
     config: {fileID: 11400000, guid: 721bdc3290965c2459f106fbb4ebee11, type: 2}
   - id: 4
     displayName: "\u914B\u957F"
     npcType: 3
     canBeTalkTarget: 1
-    canGiveQuests: 0
-    canCompleteQuests: 0
     config: {fileID: 11400000, guid: f5efa54fe96f5084280af804c0bf11d5, type: 2}
   itemIds: []
+  mainAreaIds:
+  - id: 1
+    displayName: "\u94C1\u8840\u9AD8\u539F"
+    description: 
+    areaType: 0
+    config: {fileID: 11400000, guid: c88364c32419adb43a5aa47abbc6dc08, type: 2}
+  subAreaIds:
+  - id: 1
+    displayName: "\u96F7\u9E23\u90E8\u843D"
+    description: "\u94C1\u8840\u9AD8\u539F\u4E0A\u6700\u5927\u7684\u6218\u58EB\u90E8\u843D\u805A\u5C45\u5730\uFF0C\u4E5F\u662F\u4E3B\u89D2\u5361\u5C14\xB7\u94C1\u62F3\u7684\u6545\u4E61\u3002\u8425\u5730\u7531\u575A\u56FA\u7684\u6728\u8D28\u548C\u77F3\u8D28\u7ED3\u6784\u7EC4\u6210\uFF0C\u4E2D\u592E\u6709\u5DE8\u5927\u7684\u7BDD\u706B\u548C\u56FE\u817E\u67F1\u3002\u8FD9\u91CC\u662F\u90E8\u843D\u8BAE\u4E8B\u3001\u8BAD\u7EC3\u548C\u65E5\u5E38\u751F\u6D3B\u7684\u4E2D\u5FC3\u3002"
+    mainAreaId: 1
+    mainAreaName: "\u94C1\u8840\u9AD8\u539F"
+    config: {fileID: 11400000, guid: c88364c32419adb43a5aa47abbc6dc08, type: 2}
+  - id: 2
+    displayName: "\u7194\u5CA9\u88C2\u8C37"
+    description: "\u94C1\u8840\u9AD8\u539F\u8FB9\u7F18\u7684\u4E00\u9053\u5DE8\u5927\u88C2\u8C37\uFF0C\u5E95\u90E8\u6D41\u6DCC\u7740\u70BD\u70ED\u7684\u7194\u5CA9\u3002\u8FD9\u91CC\u73AF\u5883\u6076\u52A3\uFF0C\u4F46\u8574\u85CF\u7740\u7A00\u6709\u7684\u77FF\u4EA7\u8D44\u6E90\uFF0C\u4E5F\u662F\u67D0\u4E9B\u8010\u9AD8\u6E29\u751F\u7269\u7684\u5DE2\u7A74\u3002\u7A7A\u6C14\u4E2D\u5F25\u6F2B\u7740\u786B\u78FA\u5473\u548C\u70ED\u6D6A\u3002"
+    mainAreaId: 1
+    mainAreaName: "\u94C1\u8840\u9AD8\u539F"
+    config: {fileID: 11400000, guid: c88364c32419adb43a5aa47abbc6dc08, type: 2}
+  - id: 3
+    displayName: "\u56DE\u97F3\u8C37\u6751"
+    description: "\u4E00\u4E2A\u4F4D\u4E8E\u96F7\u9E23\u90E8\u843D\u9644\u8FD1\u5C71\u8C37\u4E2D\u7684\u5C0F\u6751\u843D\uFF0C\u5C45\u4F4F\u7740\u4E00\u4E9B\u4E0D\u613F\u5B8C\u5168\u878D\u5165\u90E8\u843D\u751F\u6D3B\u7684\u6218\u58EB\u5BB6\u65CF\u548C\u9690\u58EB\u3002\u6751\u5E84\u88AB\u8302\u5BC6\u7684\u68EE\u6797\u548C\u56DE\u97F3\u7F2D\u7ED5\u7684\u5C71\u8C37\u73AF\u7ED5\uFF0C\u663E\u5F97\u5B81\u9759\u800C\u53E4\u6734\u3002\u8FD9\u91CC\u6D41\u4F20\u7740\u5173\u4E8E\u53E4\u8001\u529B\u91CF\u7684\u4F20\u8BF4\u3002"
+    mainAreaId: 1
+    mainAreaName: "\u94C1\u8840\u9AD8\u539F"
+    config: {fileID: 11400000, guid: c88364c32419adb43a5aa47abbc6dc08, type: 2}
+  - id: 4
+    displayName: "\u738B\u57CE\u53E4\u9053"
+    description: "\u4E00\u6761\u873F\u8712\u5D0E\u5C96\u7684\u5C71\u8DEF\uFF0C\u8FDE\u63A5\u7740\u94C1\u8840\u9AD8\u539F\u4E0E\u8FDC\u65B9\u7684\u738B\u56FD\u90FD\u57CE\u3002\u8FD9\u6761\u53E4\u9053\u7A7F\u8D8A\u9669\u5CFB\u7684\u5C71\u8109\u548C\u8352\u51C9\u7684\u5CE1\u8C37\uFF0C\u6CBF\u9014\u53EF\u80FD\u906D\u9047\u5F3A\u76D7\u3001\u91CE\u517D\u6216\u6697\u5F71\u519B\u56E2\u7684\u5DE1\u903B\u961F\u3002"
+    mainAreaId: 1
+    mainAreaName: "\u94C1\u8840\u9AD8\u539F"
+    config: {fileID: 11400000, guid: c88364c32419adb43a5aa47abbc6dc08, type: 2}
+  sceneAreaIds:
+  - id: 1
+    displayName: "\u90E8\u843D\u4E2D\u5FC3"
+    description: "\u90E8\u843D\u8BAE\u4E8B\u3001\u8BAD\u7EC3\u548C\u65E5\u5E38\u751F\u6D3B\u7684\u4E2D\u5FC3"
+    mainAreaId: 1
+    mainAreaName: "\u94C1\u8840\u9AD8\u539F"
+    subAreaId: 1
+    subAreaName: "\u96F7\u9E23\u90E8\u843D"
+    config: {fileID: 11400000, guid: c88364c32419adb43a5aa47abbc6dc08, type: 2}
+  - id: 2
+    displayName: "\u540E\u5C71\u5C0F\u5F84-\u524D\u6BB5"
+    description: "\u901A\u5F80\u90E8\u843D\u540E\u5C71\u7684\u873F\u8712\u5C0F\u5F84\uFF0C\u6709\u91CE\u732A\uFF0C\u7070\u72FC\u7B49\u602A\u7269\u51FA\u6CA1\uFF0C\u6709\u4E00\u5B9A\u7684\u5371\u9669\uFF0C\u9002\u5408\u521D\u7EA7\u6218\u58EB\u5386\u7EC3"
+    mainAreaId: 1
+    mainAreaName: "\u94C1\u8840\u9AD8\u539F"
+    subAreaId: 1
+    subAreaName: "\u96F7\u9E23\u90E8\u843D"
+    config: {fileID: 11400000, guid: c88364c32419adb43a5aa47abbc6dc08, type: 2}
   enemyConfigFolder: "Assets/Data/Configs/\u654C\u4EBA\u914D\u7F6E"
   npcConfigFolder: Assets/Data/Configs/NPC
   itemConfigFolder: "Assets/Scripts/ScriptableObjects/\u7269\u54C1\u914D\u7F6E\u6587\u4EF6"
+  mapConfigFolder: Assets/Data

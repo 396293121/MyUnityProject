@@ -1,0 +1,162 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 020776b1055b51b45a38ee480ef20a3c, type: 3}
+  m_Name: MapSystemConfig
+  m_EditorClassIdentifier: 
+  systemName: "\u6E38\u620F\u5730\u56FE\u7CFB\u7EDF"
+  systemVersion: 1.0.0
+  systemDescription: "\u57FA\u4E8E\u5C42\u7EA7\u7ED3\u6784\u7684\u5730\u56FE\u7BA1\u7406\u7CFB\u7EDF"
+  characterPrefabs:
+  - characterType: "\u6218\u58EB"
+    prefab: {fileID: 5332153218383502975, guid: 0af60e9c735588e4b8aaa4a0ea67de4e, type: 3}
+  - characterType: "\u6CD5\u5E08"
+    prefab: {fileID: 5332153218383502975, guid: a7e0e9f2c56817f4c9afa2003576aacf, type: 3}
+  defaultCharacterType: "\u6218\u58EB"
+  enemyPrefabs:
+  - enemyType: "\u91CE\u732A"
+    prefab: {fileID: 1485609283496898506, guid: bb356399f2db90e468c51fe5d8ef2b45, type: 3}
+  - enemyType: "\u5927\u578B\u91CE\u732A"
+    prefab: {fileID: 9212761363567956610, guid: e2831909b7fec034a81282dc9e7338ab, type: 3}
+  npcPrefabs:
+  - npcType: "\u5E74\u8F7B\u6218\u58EB"
+    prefab: {fileID: 7407948314649650544, guid: 4935618181d43c24b9e5619e68e37a2f, type: 3}
+  - npcType: "\u795E\u79D8\u4EBA"
+    prefab: {fileID: 3440237828263258495, guid: 55a21637996bd8f48bd7e42c4b6bcf58, type: 3}
+  enableMapCaching: 1
+  maxCachedMaps: 3
+  enableStatePersistence: 1
+  autoCleanupInterval: 120
+  transitionDuration: 0.5
+  transitionMaskColor: {r: 0, g: 0, b: 0, a: 1}
+  characterInitialAreas: []
+  defaultInitialMainAreaId: 1
+  defaultInitialSubAreaId: 1
+  defaultInitialSceneAreaId: 1
+  mainAreas:
+  - areaId: 1
+    areaName: "\u94C1\u8840\u9AD8\u539F"
+    areaDescription: 
+    areaType: 0
+    areaIcon: {fileID: 0}
+    areaColor: {r: 1, g: 1, b: 1, a: 1}
+    subAreas:
+    - areaId: 1
+      areaName: "\u96F7\u9E23\u90E8\u843D"
+      areaDescription: "\u94C1\u8840\u9AD8\u539F\u4E0A\u6700\u5927\u7684\u6218\u58EB\u90E8\u843D\u805A\u5C45\u5730\uFF0C\u4E5F\u662F\u4E3B\u89D2\u5361\u5C14\xB7\u94C1\u62F3\u7684\u6545\u4E61\u3002\u8425\u5730\u7531\u575A\u56FA\u7684\u6728\u8D28\u548C\u77F3\u8D28\u7ED3\u6784\u7EC4\u6210\uFF0C\u4E2D\u592E\u6709\u5DE8\u5927\u7684\u7BDD\u706B\u548C\u56FE\u817E\u67F1\u3002\u8FD9\u91CC\u662F\u90E8\u843D\u8BAE\u4E8B\u3001\u8BAD\u7EC3\u548C\u65E5\u5E38\u751F\u6D3B\u7684\u4E2D\u5FC3\u3002"
+      areaType: 0
+      areaIcon: {fileID: 0}
+      areaColor: {r: 1, g: 1, b: 1, a: 1}
+      sceneAreas:
+      - areaId: 1
+        areaName: "\u90E8\u843D\u4E2D\u5FC3"
+        areaDescription: "\u90E8\u843D\u8BAE\u4E8B\u3001\u8BAD\u7EC3\u548C\u65E5\u5E38\u751F\u6D3B\u7684\u4E2D\u5FC3"
+        areaType: 0
+        backgroundMusic: {fileID: 0}
+        isInitArea: 0
+        mapPrefab: {fileID: 8076007621738116656, guid: d166eca942bcbd941b217ab2746c0650, type: 3}
+        mapSpawnPosition: {x: 0, y: 0, z: 0}
+        areaTransitionTriggers:
+        - triggerName: "\u90E8\u843D\u4E2D\u5FC3\u95E8"
+          triggerPosition: {x: -3.23, y: 31.67, z: 0}
+        playerSpawnPosition: {x: 0, y: 0, z: 0}
+        enemySpawns:
+        - enemyType: "\u91CE\u732A"
+          enemyDisplayName: "\u91CE\u732A"
+          spawnPosition: {x: 37.97, y: -0.62, z: -0.92}
+          spawnDelay: 0
+          spawnCount: 3
+          randomizePosition: 1
+          spawnRadius: 2
+          autoSpawn: 1
+          autoGeneratePatrolPoints: 1
+          patrolRadius: 5
+          patrolPoints: []
+        - enemyType: "\u91CE\u732A"
+          enemyDisplayName: "\u91CE\u732A"
+          spawnPosition: {x: 19.63, y: 18.36, z: 0}
+          spawnDelay: 0
+          spawnCount: 2
+          randomizePosition: 0
+          spawnRadius: 2
+          autoSpawn: 1
+          autoGeneratePatrolPoints: 1
+          patrolRadius: 5
+          patrolPoints: []
+        - enemyType: "\u5927\u578B\u91CE\u732A"
+          enemyDisplayName: "\u5927\u578B\u91CE\u732A"
+          spawnPosition: {x: 6.3, y: 30.4, z: 0}
+          spawnDelay: 0
+          spawnCount: 1
+          randomizePosition: 0
+          spawnRadius: 2
+          autoSpawn: 1
+          autoGeneratePatrolPoints: 1
+          patrolRadius: 8
+          patrolPoints: []
+        npcSpawns:
+        - npcType: "\u5E74\u8F7B\u6218\u58EB"
+          npcDisplayName: "\u5E74\u8F7B\u6218\u58EB"
+          spawnPosition: {x: 23.36, y: -0.23, z: 0}
+          autoSpawn: 1
+          facingAngle: 0
+          npcConfig: {fileID: 0}
+        - npcType: "\u795E\u79D8\u4EBA"
+          npcDisplayName: "\u795E\u79D8\u4EBA"
+          spawnPosition: {x: 59.6, y: -0.6, z: 0}
+          autoSpawn: 1
+          facingAngle: 0
+          npcConfig: {fileID: 0}
+        sceneConfig: {fileID: 0}
+        enableStatePersistence: 1
+        preloadOnStart: 0
+      - areaId: 2
+        areaName: "\u540E\u5C71\u5C0F\u5F84-\u524D\u6BB5"
+        areaDescription: "\u901A\u5F80\u90E8\u843D\u540E\u5C71\u7684\u873F\u8712\u5C0F\u5F84\uFF0C\u6709\u91CE\u732A\uFF0C\u7070\u72FC\u7B49\u602A\u7269\u51FA\u6CA1\uFF0C\u6709\u4E00\u5B9A\u7684\u5371\u9669\uFF0C\u9002\u5408\u521D\u7EA7\u6218\u58EB\u5386\u7EC3"
+        areaType: 0
+        backgroundMusic: {fileID: 0}
+        isInitArea: 0
+        mapPrefab: {fileID: 8076007621738116656, guid: 81ea8720e8107324d8d8fb361dbd2259, type: 3}
+        mapSpawnPosition: {x: 0, y: 0, z: 0}
+        areaTransitionTriggers:
+        - triggerName: "\u540E\u5C71\u5C0F\u5F84\u95E8"
+          triggerPosition: {x: 87.01, y: 0.32, z: 0}
+        playerSpawnPosition: {x: 0, y: 0, z: 0}
+        enemySpawns: []
+        npcSpawns: []
+        sceneConfig: {fileID: 0}
+        enableStatePersistence: 1
+        preloadOnStart: 0
+    - areaId: 2
+      areaName: "\u7194\u5CA9\u88C2\u8C37"
+      areaDescription: "\u94C1\u8840\u9AD8\u539F\u8FB9\u7F18\u7684\u4E00\u9053\u5DE8\u5927\u88C2\u8C37\uFF0C\u5E95\u90E8\u6D41\u6DCC\u7740\u70BD\u70ED\u7684\u7194\u5CA9\u3002\u8FD9\u91CC\u73AF\u5883\u6076\u52A3\uFF0C\u4F46\u8574\u85CF\u7740\u7A00\u6709\u7684\u77FF\u4EA7\u8D44\u6E90\uFF0C\u4E5F\u662F\u67D0\u4E9B\u8010\u9AD8\u6E29\u751F\u7269\u7684\u5DE2\u7A74\u3002\u7A7A\u6C14\u4E2D\u5F25\u6F2B\u7740\u786B\u78FA\u5473\u548C\u70ED\u6D6A\u3002"
+      areaType: 0
+      areaIcon: {fileID: 0}
+      areaColor: {r: 1, g: 1, b: 1, a: 1}
+      sceneAreas: []
+    - areaId: 3
+      areaName: "\u56DE\u97F3\u8C37\u6751"
+      areaDescription: "\u4E00\u4E2A\u4F4D\u4E8E\u96F7\u9E23\u90E8\u843D\u9644\u8FD1\u5C71\u8C37\u4E2D\u7684\u5C0F\u6751\u843D\uFF0C\u5C45\u4F4F\u7740\u4E00\u4E9B\u4E0D\u613F\u5B8C\u5168\u878D\u5165\u90E8\u843D\u751F\u6D3B\u7684\u6218\u58EB\u5BB6\u65CF\u548C\u9690\u58EB\u3002\u6751\u5E84\u88AB\u8302\u5BC6\u7684\u68EE\u6797\u548C\u56DE\u97F3\u7F2D\u7ED5\u7684\u5C71\u8C37\u73AF\u7ED5\uFF0C\u663E\u5F97\u5B81\u9759\u800C\u53E4\u6734\u3002\u8FD9\u91CC\u6D41\u4F20\u7740\u5173\u4E8E\u53E4\u8001\u529B\u91CF\u7684\u4F20\u8BF4\u3002"
+      areaType: 0
+      areaIcon: {fileID: 0}
+      areaColor: {r: 1, g: 1, b: 1, a: 1}
+      sceneAreas: []
+    - areaId: 4
+      areaName: "\u738B\u57CE\u53E4\u9053"
+      areaDescription: "\u4E00\u6761\u873F\u8712\u5D0E\u5C96\u7684\u5C71\u8DEF\uFF0C\u8FDE\u63A5\u7740\u94C1\u8840\u9AD8\u539F\u4E0E\u8FDC\u65B9\u7684\u738B\u56FD\u90FD\u57CE\u3002\u8FD9\u6761\u53E4\u9053\u7A7F\u8D8A\u9669\u5CFB\u7684\u5C71\u8109\u548C\u8352\u51C9\u7684\u5CE1\u8C37\uFF0C\u6CBF\u9014\u53EF\u80FD\u906D\u9047\u5F3A\u76D7\u3001\u91CE\u517D\u6216\u6697\u5F71\u519B\u56E2\u7684\u5DE1\u903B\u961F\u3002"
+      areaType: 0
+      areaIcon: {fileID: 0}
+      areaColor: {r: 1, g: 1, b: 1, a: 1}
+      sceneAreas: []
+    areaConfig: {fileID: 0}
+  selectedMainAreaId: 1
+  selectedSubAreaId: 1
+  selectedSceneAreaId: 2

@@ -45,10 +45,15 @@ public class CameraFollow : MonoBehaviour
     // 死区相关
     private Vector3 deadZoneCenter;
     
-    private void Start()
+    // private void Start()
+    // {
+      
+    // }
+    public void initCamera(Transform playerTarget)
     {
-        // 如果没有指定目标，尝试找到玩家
-        if (target == null)
+        Debug.Log(playerTarget.position + "123123123123");
+          // 如果没有指定目标，尝试找到玩家
+        if (playerTarget == null)
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
@@ -58,13 +63,13 @@ public class CameraFollow : MonoBehaviour
         }
         
         // 初始化
-        if (target != null)
+        if (playerTarget != null)
         {
-            lastTargetPosition = target.position;
-            deadZoneCenter = target.position;
+               target = playerTarget;
+            lastTargetPosition = playerTarget.position;
+            deadZoneCenter = playerTarget.position;
         }
     }
-    
     private void LateUpdate()
     {
         if (target == null) return;
@@ -72,10 +77,8 @@ public class CameraFollow : MonoBehaviour
         // 计算目标速度
         targetVelocity = (target.position - lastTargetPosition) / Time.deltaTime;
         lastTargetPosition = target.position;
-        
         // 计算目标位置
         Vector3 desiredPosition = CalculateDesiredPosition();
-        
         // 应用边界限制
         if (useBounds)
         {
@@ -91,7 +94,6 @@ public class CameraFollow : MonoBehaviour
             smoothedPosition += CalculateShakeOffset();
             UpdateShake();
         }
-        
         transform.position = smoothedPosition;
     }
     
@@ -212,18 +214,6 @@ public class CameraFollow : MonoBehaviour
         // 或者可以用于强制更新相机位置
     }
     
-    /// <summary>
-    /// 设置跟随目标
-    /// </summary>
-    public void SetTarget(Transform newTarget)
-    {
-        target = newTarget;
-        if (target != null)
-        {
-            lastTargetPosition = target.position;
-            deadZoneCenter = target.position;
-        }
-    }
     
     /// <summary>
     /// 立即移动到目标位置

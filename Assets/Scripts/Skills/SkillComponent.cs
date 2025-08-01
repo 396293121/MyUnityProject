@@ -582,9 +582,9 @@ public class SkillComponent : MonoBehaviour
         PlayerAudioConfig.Instance.PlaySound("skillStart",AudioCategory.Skill);
         //技能开始音效0.2S左右
         yield return new WaitForSeconds(0.2f);
-        if (AudioManager.Instance != null && skillData.skillSound != null)
+        if (BGMManager.Instance != null && skillData.skillSound != null)
         {
-            //直接调用AUDIOMANAGER播放音效
+            //直接调用BGMManager播放音效
             PlayerAudioConfig.Instance.PlaySound(skillData.skillSound, skillData.audioCategory);
         }
     }

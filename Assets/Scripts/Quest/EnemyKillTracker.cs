@@ -51,7 +51,7 @@ public class EnemyKillTracker : MonoBehaviour
     void Start()
     {
         // 延迟注册，确保所有敌人都已初始化
-        Invoke("RegisterExistingEnemies", 0.5f);
+      //  Invoke("RegisterExistingEnemies", 0.5f);
     }
     
     private void InitializeKillTracker()

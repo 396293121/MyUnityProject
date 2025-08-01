@@ -2,7 +2,7 @@
 
 ## 概述
 
-`PlayerAudioConfig` 是一个可配置的玩家音频系统，支持拖入音频文件、设置音量、音调等参数，提供了比传统 `AudioManager` 更灵活和易扩展的音效管理方案。
+`PlayerAudioConfig` 是一个可配置的玩家音频系统，支持拖入音频文件、设置音量、音调等参数，提供了比传统 `BGMManager` 更灵活和易扩展的音效管理方案。
 
 ## 主要特性
 
@@ -19,7 +19,7 @@
 - **调试功能**：详细的播放日志和统计信息
 
 ### 3. 向后兼容
-- 自动回退到原有的 `AudioManager` 系统
+- 自动回退到原有的 `BGMManager` 系统
 - 无缝集成，不影响现有代码
 
 ## 使用方法
@@ -112,7 +112,7 @@ PlayAudioEffect("hurt");
 
 ### 自动回退机制
 
-如果没有配置 `PlayerAudioConfig`，系统会自动回退到原有的 `AudioManager`：
+如果没有配置 `PlayerAudioConfig`，系统会自动回退到原有的 `BGMManager`：
 
 ```csharp
 private void PlayAudioEffect(string effectType)
@@ -125,10 +125,10 @@ private void PlayAudioEffect(string effectType)
         return;
     }
     
-    // 回退到原有的AudioManager系统
-    if (AudioManager.Instance != null)
+    // 回退到原有的BGMManager系统
+    if (BGMManager.Instance != null)
     {
-        AudioManager.Instance.PlaySFX("jump_sound");
+        BGMManager.Instance.PlaySFX("jump_sound");
     }
 }
 ```

@@ -107,9 +107,9 @@ private List<CharacterClassSprite> classSprites = new List<CharacterClassSprite>
     [LabelText("技能槽位预制体")]
     public GameObject skillSlotPrefab;
     
-    [BoxGroup("配置/UI元素/状态系统")]
-    [LabelText("状态图标容器")]
-    public Transform statusIconsContainer;
+    // [BoxGroup("配置/UI元素/状态系统")]
+    // [LabelText("状态图标容器")]
+    // public Transform statusIconsContainer;
     
     // [BoxGroup("配置/UI元素/状态系统")]
     // [LabelText("状态图标预制体")]
@@ -153,31 +153,6 @@ private List<CharacterClassSprite> classSprites = new List<CharacterClassSprite>
     [ReadOnly]
     [ShowInInspector]
     private Coroutine expAnimCoroutine;
-    
-    [TabGroup("状态", "缓存数据")]
-    [FoldoutGroup("状态/缓存数据/数值缓存", expanded: false)]
-    [LabelText("上次生命值")]
-    [ReadOnly]
-    [ShowInInspector]
-    private float lastHealth = -1f;
-    
-    [FoldoutGroup("状态/缓存数据/数值缓存")]
-    [LabelText("上次魔力值")]
-    [ReadOnly]
-    [ShowInInspector]
-    private float lastMana = -1f;
-    
-    [FoldoutGroup("状态/缓存数据/数值缓存")]
-    [LabelText("上次经验值")]
-    [ReadOnly]
-    [ShowInInspector]
-    private float lastExp = -1f;
-    
-    [FoldoutGroup("状态/缓存数据/数值缓存")]
-    [LabelText("上次等级")]
-    [ReadOnly]
-    [ShowInInspector]
-    private int lastLevel = -1;
     private static ModernHUDComponent _instance;
     public static ModernHUDComponent Instance => _instance;
     private void Awake()

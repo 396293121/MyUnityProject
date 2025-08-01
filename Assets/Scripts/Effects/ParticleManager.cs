@@ -231,9 +231,9 @@ public class ParticleManager : MonoBehaviour
     {
         PlayEffect("heal_effect", position);
         
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX("heal_sound");
+            BGMManager.Instance.PlaySFX("heal_sound");
         }
     }
     
@@ -253,9 +253,9 @@ public class ParticleManager : MonoBehaviour
     {
         PlayEffect("death_effect", position);
         
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX("death_sound");
+            BGMManager.Instance.PlaySFX("death_sound");
         }
     }
     
@@ -270,9 +270,9 @@ public class ParticleManager : MonoBehaviour
             particles.transform.localScale = Vector3.one * scale;
         }
         
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX("explosion_sound");
+            BGMManager.Instance.PlaySFX("explosion_sound");
         }
     }
     
@@ -303,9 +303,9 @@ public class ParticleManager : MonoBehaviour
         burnEffect.StartBurnEffect();
         
         // 播放燃烧音效
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX("burn_sound");
+            BGMManager.Instance.PlaySFX("burn_sound");
         }
         
         return burnEffect;
@@ -326,9 +326,9 @@ public class ParticleManager : MonoBehaviour
         }
         
         // 播放音效
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX("fire_hit_sound");
+            BGMManager.Instance.PlaySFX("fire_hit_sound");
         }
     }
     

@@ -333,14 +333,14 @@ public class SaveSystem : MonoBehaviour
         }
         
         // 游戏设置
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
             saveData.gameSettings = new GameSettings
             {
-                masterVolume = AudioManager.Instance.masterVolume,
-                musicVolume = AudioManager.Instance.musicVolume,
-                sfxVolume = AudioManager.Instance.sfxVolume,
-                voiceVolume = AudioManager.Instance.voiceVolume
+                masterVolume = BGMManager.Instance.masterVolume,
+                musicVolume = BGMManager.Instance.musicVolume,
+                sfxVolume = BGMManager.Instance.sfxVolume,
+                voiceVolume = BGMManager.Instance.voiceVolume
             };
         }
         
@@ -376,12 +376,12 @@ public class SaveSystem : MonoBehaviour
         StartCoroutine(ApplyPlayerDataAfterSceneLoad(saveData));
         
         // 应用游戏设置
-        if (AudioManager.Instance != null && saveData.gameSettings != null)
+        if (BGMManager.Instance != null && saveData.gameSettings != null)
         {
-            AudioManager.Instance.SetMasterVolume(saveData.gameSettings.masterVolume);
-            AudioManager.Instance.SetMusicVolume(saveData.gameSettings.musicVolume);
-            AudioManager.Instance.SetSfxVolume(saveData.gameSettings.sfxVolume);
-            AudioManager.Instance.SetVoiceVolume(saveData.gameSettings.voiceVolume);
+            BGMManager.Instance.SetMasterVolume(saveData.gameSettings.masterVolume);
+            BGMManager.Instance.SetMusicVolume(saveData.gameSettings.musicVolume);
+            BGMManager.Instance.SetSfxVolume(saveData.gameSettings.sfxVolume);
+            BGMManager.Instance.SetVoiceVolume(saveData.gameSettings.voiceVolume);
         }
     }
     

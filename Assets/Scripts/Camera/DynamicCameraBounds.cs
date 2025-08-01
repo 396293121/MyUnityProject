@@ -11,104 +11,96 @@ using Sirenix.OdinInspector;
 public class DynamicCameraBounds : MonoBehaviour
 {
     #region 边界检测设置
-    [FoldoutGroup("边界检测设置", expanded: true)]
-    [LabelText("启动时自动检测")]
-    [InfoBox("勾选后，脚本会在Start()时自动检测并设置相机边界")]
-    public bool autoDetectOnStart = true;
-    
+
     [FoldoutGroup("边界检测设置")]
     [LabelText("使用Tilemap边界")]
     [InfoBox("勾选后，会检测Tilemap的边界来确定地图范围")]
     public bool useTilemapBounds = true;
-    
+
     #endregion
-    
+
     #region 边界偏移设置
     [FoldoutGroup("边界偏移设置", expanded: true)]
     [LabelText("左边界偏移")]
     [InfoBox("向左扩展边界的距离（单位：Unity单位）")]
     [Range(0f, 10f)]
     public float leftOffset = 0f;
-    
+
     [FoldoutGroup("边界偏移设置")]
     [LabelText("右边界偏移")]
     [InfoBox("向右扩展边界的距离（单位：Unity单位）")]
     [Range(0f, 10f)]
     public float rightOffset = 0f;
-    
+
     [FoldoutGroup("边界偏移设置")]
     [LabelText("上边界偏移")]
     [InfoBox("向上扩展边界的距离（单位：Unity单位）")]
     [Range(0f, 10f)]
     public float topOffset = 0f;
-    
+
     [FoldoutGroup("边界偏移设置")]
     [LabelText("下边界偏移")]
     [InfoBox("向下扩展边界的距离（单位：Unity单位）")]
     [Range(0f, 10f)]
     public float bottomOffset = 0f;
     #endregion
-    
+
     #region 相机设置
     [FoldoutGroup("相机设置", expanded: true)]
     [LabelText("目标相机")]
     [InfoBox("要设置边界的相机，如果为空则自动使用主相机")]
     [Required("必须指定目标相机")]
     public Camera targetCamera;
-    
+
     [FoldoutGroup("相机设置")]
     [LabelText("相机跟随脚本")]
     [InfoBox("CameraFollow组件的引用，用于设置相机边界")]
     [Required("必须指定CameraFollow组件")]
     public CameraFollow cameraFollow;
     #endregion
-    
+
     #region 检测对象设置
     [FoldoutGroup("检测对象设置", expanded: true)]
     [LabelText("Tilemap数组")]
-    [InfoBox("要检测边界的Tilemap对象数组，可以包含多个地图层")]
+    [InfoBox("要检测边界的Tilemap对象数组")]
     [ListDrawerSettings(ShowIndexLabels = true, ListElementLabelName = "name")]
     public Tilemap[] tilemaps;
     #endregion
-    
+
     #region 调试设置
     [FoldoutGroup("调试设置", expanded: false)]
     [LabelText("显示调试信息")]
     [InfoBox("勾选后，会在控制台输出详细的边界计算信息")]
     public bool showDebugInfo = true;
     #endregion
-    
+
     #region 运行时数据
     [FoldoutGroup("运行时信息", expanded: false)]
     [LabelText("计算出的边界")]
     [InfoBox("当前计算出的边界信息")]
     [ShowInInspector, ReadOnly]
     private Bounds calculatedBounds;
-    
+
     [FoldoutGroup("运行时信息")]
     [LabelText("边界是否已计算")]
     [ShowInInspector, ReadOnly]
     private bool boundsCalculated = false;
     #endregion
-    
+
     #region Unity生命周期
     private void Start()
     {
         // 自动获取组件
         if (targetCamera == null)
             targetCamera = Camera.main;
-            
+
         if (cameraFollow == null)
             cameraFollow = FindObjectOfType<CameraFollow>();
-        
-        // 自动检测边界
-        if (autoDetectOnStart)
-        {
-            DetectAndSetBounds();
-        }
+
+
     }
     #endregion
-    
+
     #region 公共方法
     /// <summary>
     /// 检测并设置边界
@@ -116,37 +108,16 @@ public class DynamicCameraBounds : MonoBehaviour
     [FoldoutGroup("操作按钮", expanded: true)]
     [Button("检测并设置边界", ButtonSizes.Large)]
     [InfoBox("点击此按钮手动触发边界检测和设置")]
-    public void DetectAndSetBounds()
+    public void DetectAndSetBounds(Tilemap[] tilemaps)
     {
+        Debug.Log(tilemaps + "地图12345");
+        this.tilemaps = tilemaps;
         CalculateBounds();
         ApplyBoundsToCamera();
     }
-    
-    /// <summary>
-    /// 手动设置Tilemap数组
-    /// </summary>
-    /// <param name="newTilemaps">新的Tilemap数组</param>
-    [FoldoutGroup("操作按钮")]
-    [Button("设置Tilemap数组")]
-    public void SetTilemaps(Tilemap[] newTilemaps)
-    {
-        tilemaps = newTilemaps;
-    }
-    
-    
-    /// <summary>
-    /// 自动查找场景中的Tilemap
-    /// </summary>
-    [FoldoutGroup("操作按钮")]
-    [Button("自动查找Tilemap", ButtonSizes.Medium)]
-    [InfoBox("自动在场景中查找所有Tilemap组件")]
-    public void AutoFindTilemaps()
-    {
-        tilemaps = FindObjectsOfType<Tilemap>();
-        if (showDebugInfo)
-            Debug.Log($"在场景中找到 {tilemaps.Length} 个Tilemap");
-    }
-    
+
+
+
     /// <summary>
     /// 获取计算出的边界
     /// </summary>
@@ -155,7 +126,7 @@ public class DynamicCameraBounds : MonoBehaviour
     {
         return calculatedBounds;
     }
-    
+
     /// <summary>
     /// 强制重新计算边界
     /// </summary>
@@ -164,10 +135,10 @@ public class DynamicCameraBounds : MonoBehaviour
     [InfoBox("强制重新计算并应用边界设置")]
     public void RecalculateBounds()
     {
-        DetectAndSetBounds();
+        DetectAndSetBounds(tilemaps);
     }
     #endregion
-    
+
     #region 私有方法
     /// <summary>
     /// 计算地图边界
@@ -177,11 +148,11 @@ public class DynamicCameraBounds : MonoBehaviour
         Vector3 minBounds = Vector3.positiveInfinity;
         Vector3 maxBounds = Vector3.negativeInfinity;
         bool foundAnyBounds = false;
-        
+
         // 1. 检测Tilemap边界
         if (useTilemapBounds && tilemaps != null)
         {
-            foreach (var tilemap in tilemaps)
+            foreach (Tilemap tilemap in tilemaps)
             {
                 if (tilemap != null && tilemap.cellBounds.size.x > 0)
                 {
@@ -190,8 +161,9 @@ public class DynamicCameraBounds : MonoBehaviour
                     foundAnyBounds = true;
                 }
             }
+
         }
-        
+
         // 4. 如果没有找到任何边界，使用默认值
         if (!foundAnyBounds)
         {
@@ -204,7 +176,7 @@ public class DynamicCameraBounds : MonoBehaviour
         minBounds.y -= bottomOffset;
         maxBounds.x += rightOffset;
         maxBounds.y += topOffset;
-        
+
         // 6. 创建最终边界
         Vector3 center = (minBounds + maxBounds) * 0.5f;
         Vector3 size = maxBounds - minBounds;
@@ -216,7 +188,7 @@ public class DynamicCameraBounds : MonoBehaviour
             Debug.Log($"边界中心: {center}, 尺寸: {size}");
         }
     }
-    
+
     /// <summary>
     /// 获取Tilemap的世界坐标边界
     /// </summary>
@@ -226,29 +198,29 @@ public class DynamicCameraBounds : MonoBehaviour
     {
         //删除历史边界
         tilemap.CompressBounds();
-          // 获取包含所有有效tile的单元格边界
-    BoundsInt cellBounds = tilemap.cellBounds;
+        // 获取包含所有有效tile的单元格边界
+        BoundsInt cellBounds = tilemap.cellBounds;
+
+        // 转换为世界坐标时需要考虑tile锚点和单元格尺寸
+        Vector3 cellSize = tilemap.cellSize;
+        Vector3 origin = tilemap.CellToWorld(new Vector3Int(cellBounds.x, cellBounds.y, 0));
+
+        // 计算实际世界坐标边界
+        Vector3 min = origin + new Vector3(0, 0, 0);
+        Vector3 max = origin + new Vector3(
+            cellBounds.size.x * cellSize.x,
+            cellBounds.size.y * cellSize.y,
+            0
+        );
     
-    // 转换为世界坐标时需要考虑tile锚点和单元格尺寸
-    Vector3 cellSize = tilemap.cellSize;
-    Vector3 origin = tilemap.CellToWorld(new Vector3Int(cellBounds.x, cellBounds.y, 0));
-    
-    // 计算实际世界坐标边界
-    Vector3 min = origin + new Vector3(0, 0, 0);
-    Vector3 max = origin + new Vector3(
-        cellBounds.size.x * cellSize.x,
-        cellBounds.size.y * cellSize.y,
-        0
-    );
-    
-    // 创建包含整个tilemap的边界
-    Bounds bounds = new Bounds();
-    bounds.SetMinMax(min, max);
-    
-    
-    return bounds;
+        // 创建包含整个tilemap的边界
+        Bounds bounds = new Bounds();
+        bounds.SetMinMax(min, max);
+
+
+        return bounds;
     }
-    
+
     /// <summary>
     /// 更新最小最大边界
     /// </summary>
@@ -257,11 +229,11 @@ public class DynamicCameraBounds : MonoBehaviour
     /// <param name="bounds">要比较的新边界</param>
     private void UpdateMinMaxBounds(ref Vector3 minBounds, ref Vector3 maxBounds, Bounds bounds)
     {
-        
+
         minBounds = Vector3.Min(minBounds, bounds.min);
         maxBounds = Vector3.Max(maxBounds, bounds.max);
     }
-    
+
     /// <summary>
     /// 将计算出的边界应用到相机
     /// </summary>
@@ -272,37 +244,37 @@ public class DynamicCameraBounds : MonoBehaviour
             Debug.LogError("边界尚未计算！");
             return;
         }
-        
+
         if (cameraFollow != null)
         {
             // 考虑相机的视野大小
             float cameraHeight = targetCamera.orthographicSize;
             float cameraWidth = cameraHeight * targetCamera.aspect;
-            
+
             // 调整边界以考虑相机视野
             float minX = calculatedBounds.min.x + cameraWidth;
             float maxX = calculatedBounds.max.x - cameraWidth;
             float minY = calculatedBounds.min.y + cameraHeight;
             float maxY = calculatedBounds.max.y - cameraHeight;
-            
+
             // 确保边界有效
-            if (minX >= maxX) 
+            if (minX >= maxX)
             {
                 float center = (calculatedBounds.min.x + calculatedBounds.max.x) * 0.5f;
                 minX = center - 1f;
                 maxX = center + 1f;
             }
-            
+
             if (minY >= maxY)
             {
                 float center = (calculatedBounds.min.y + calculatedBounds.max.y) * 0.5f;
                 minY = center - 1f;
                 maxY = center + 1f;
             }
-            
+
             // 设置相机边界
             cameraFollow.SetBounds(minX, maxX, minY, maxY);
-            
+
             if (showDebugInfo)
             {
                 Debug.Log($"应用相机边界: MinX={minX:F2}, MaxX={maxX:F2}, MinY={minY:F2}, MaxY={maxY:F2}");
@@ -315,7 +287,7 @@ public class DynamicCameraBounds : MonoBehaviour
         }
     }
     #endregion
-    
+
     #region 调试绘制
     /// <summary>
     /// 绘制调试信息
@@ -326,8 +298,8 @@ public class DynamicCameraBounds : MonoBehaviour
         // 绘制检测到的Tilemap边界
         if (useTilemapBounds && tilemaps != null)
         {
-            Gizmos.color = Color.green;
-            foreach (var tilemap in tilemaps)
+           Gizmos.color = Color.green;
+            foreach (Tilemap tilemap in tilemaps)
             {
                 if (tilemap != null)
                 {
@@ -336,6 +308,6 @@ public class DynamicCameraBounds : MonoBehaviour
                 }
             }
         }
+        #endregion
     }
-    #endregion
 }

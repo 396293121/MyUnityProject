@@ -318,9 +318,9 @@ public class MinimapUI : MonoBehaviour
         UpdateZoomDisplay();
         
         // 播放音效
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX("ui_click", 0.5f);
+            BGMManager.Instance.PlaySFX("ui_click", 0.5f);
         }
     }
     
@@ -333,9 +333,9 @@ public class MinimapUI : MonoBehaviour
         UpdateZoomDisplay();
         
         // 播放音效
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX("ui_click", 0.5f);
+            BGMManager.Instance.PlaySFX("ui_click", 0.5f);
         }
     }
     

@@ -49,9 +49,9 @@ public class BurnEffect : MonoBehaviour
         }
         
         // 播放音效
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX("burn_sound");
+            BGMManager.Instance.PlaySFX("burn_sound");
         }
         
         // 启动燃烧协程

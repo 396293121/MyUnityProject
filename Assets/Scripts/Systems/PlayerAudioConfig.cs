@@ -51,7 +51,7 @@ public class PlayerAudioConfig : MonoBehaviour
      [TabGroup("高级设置", "音频源设置")]
     [BoxGroup("高级设置/音频源设置/音频源")]
     [LabelText("专用音频源")]
-    [InfoBox("如果不指定，将使用AudioManager的默认音频源")]
+    [InfoBox("如果不指定，将使用BGMManager的默认音频源")]
     public AudioSource dedicatedAudioSource;
 
     [BoxGroup("高级设置/音频源设置/音频源")]

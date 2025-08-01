@@ -300,7 +300,7 @@ Debug.Log("[Dialogue] 当前对话状态: " + DialogueManager.Instance.IsInDialo
 - 确认SayDialog组件配置正确
 
 **音效不播放：**
-- 检查AudioManager是否存在
+- 检查BGMManager是否存在
 - 确认音效文件路径正确
 - 检查音量设置
 

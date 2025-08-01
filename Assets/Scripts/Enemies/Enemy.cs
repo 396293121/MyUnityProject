@@ -16,6 +16,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     [SerializeField]
     public EnemyConfig enemyConfig;
     private string enemyId;
+    public string EnemyId { get { return enemyId; } }
     [LabelText("敌人音频类型")]
     public AudioCategory audioCategory;
     [LabelText("敌人技能系统")]

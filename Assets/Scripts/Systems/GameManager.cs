@@ -21,7 +21,8 @@ public class GameManager : MonoBehaviour
     
     // 事件系统
     public System.Action<GameState> OnGameStateChanged;
-    
+    private PlayerController playerController;
+    private Character character;
     void Awake()
     {
         // 单例模式实现
@@ -47,7 +48,14 @@ public class GameManager : MonoBehaviour
             Debug.Log("[GameManager] 游戏初始化完成");
         }
     }
-    
+    public void RegisterPlayerController(PlayerController playerController)
+    {
+        this.playerController = playerController;
+    }
+      public void RegisterCharacter(Character character)
+    {
+        this.character = character;
+    }
     /// <summary>
     /// 改变游戏状态
     /// </summary>
@@ -119,8 +127,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public int GetPlayerLevel()
     {
-        var player = FindObjectOfType<PlayerController>();
-        return player != null ? player.GetComponent<Character>().level : 1;
+        return character != null ? character.level : 1;
     }
     
     /// <summary>
@@ -128,15 +135,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void AddPlayerExperience(int amount)
     {
-        var player = FindObjectOfType<PlayerController>();
-        if (player != null)
-        {
-            var character = player.GetComponent<Character>();
-            if (character != null)
-            {
-                character.AddExperience(amount);
-            }
-        }
+            character?.AddExperience(amount);
     }
     
     /// <summary>
@@ -156,10 +155,9 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void AddPlayerGold(int amount)
     {
-        var player = FindObjectOfType<PlayerController>();
-        if (player != null)
+        if (playerController != null)
         {
-            var inventory = player.GetComponent<Inventory>();
+            var inventory = playerController.GetComponent<Inventory>();
             if (inventory != null)
             {
                 // 假设金币存储在inventory中，这里需要根据实际实现调整
@@ -194,8 +192,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public string GetPlayerName()
     {
-        var player = FindObjectOfType<PlayerController>();
-        return player != null ? player.name : "Player";
+        return playerController != null ? playerController.name : "Player";
     }
     
     /// <summary>
@@ -235,10 +232,6 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public string GetPlayerClass()
     {
-        var player = FindObjectOfType<PlayerController>();
-        if (player != null)
-        {
-            var character = player.GetComponent<Character>();
             if (character != null)
             {
                 // 根据角色类型返回职业名称
@@ -246,7 +239,6 @@ public class GameManager : MonoBehaviour
                 if (character is Archer) return "Archer";
                 if (character is Mage) return "Mage";
             }
-        }
         return "Unknown";
     }
     
@@ -255,16 +247,11 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public int GetPlayerSkillPoints()
     {
-        var player = FindObjectOfType<PlayerController>();
-        if (player != null)
-        {
-            var character = player.GetComponent<Character>();
             if (character != null)
             {
                 // 假设技能点基于等级计算
                 return character.level - 1;
             }
-        }
         return 0;
     }
     
@@ -348,15 +335,10 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public int GetPlayerMana()
     {
-        var player = FindObjectOfType<PlayerController>();
-        if (player != null)
-        {
-            var character = player.GetComponent<Character>();
             if (character != null)
             {
                 return character.currentMana;
             }
-        }
         return 0;
     }
     

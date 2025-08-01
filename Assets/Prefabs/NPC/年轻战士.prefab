@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 8978979335717214756}
   - component: {fileID: 4828042768105315172}
   - component: {fileID: 7531239863870693263}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: "\u5E74\u8F7B\u6218\u58EB"
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -47,7 +47,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   npcConfig: {fileID: 11400000, guid: 8feef173ee056594eb890c562f07f81b, type: 2}
-  dialogueFlowchart: {fileID: 1467271784485249699, guid: 5e7b7ad473ae1314fad3241a6cd05d5b, type: 3}
+  collider2D: {fileID: 7531239863870693263}
+  dialogueFlowchart: {fileID: 1130656374993832726, guid: 5e7b7ad473ae1314fad3241a6cd05d5b, type: 3}
   questIndicator: {fileID: 0}
   questActiveIndicator: {fileID: 0}
   questCompleteIndicator: {fileID: 0}

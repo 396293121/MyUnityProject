@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d478051caaed5204f9388696034ff09b, type: 3}
+  m_Name: "NPC\u4EFB\u52A1\u76F8\u5173\u914D\u7F6E"
+  m_EditorClassIdentifier: 
+  interactPrompt: "\u6309 F \u4EA4\u4E92"
+  dialogueStartSound: {fileID: 0}
+  dialogueEndSound: {fileID: 0}
+  typingSound: {fileID: 0}
+  debugMode: 0
+  questIndicator: {fileID: 5477830621860078835, guid: b4309c6f1ef2941409be341ebf5e286b, type: 3}
+  questActiveIndicator: {fileID: 4303416743753856055, guid: 5710249ebf91fbb4da5d99d2b8e64005, type: 3}
+  questCompleteIndicator: {fileID: 6238350909409210625, guid: ea7cde506791b784ba33dbcdf4544dda, type: 3}
+  interactionPrompt: {fileID: 0}
+  promptText: "\u6309 E \u952E\u5BF9\u8BDD"

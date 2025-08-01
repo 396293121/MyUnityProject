@@ -31,7 +31,7 @@ public class LadderController : MonoBehaviour
         if (autoUpdate && topPart && middlePart && bottomPart)
         {
             CacheHeights();
-          //  UpdateLadder();
+           UpdateLadder();
         }
     }
 

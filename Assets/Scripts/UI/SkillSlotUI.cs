@@ -258,9 +258,9 @@ public class SkillSlotUI : MonoBehaviour
         }
         
         // 播放悬停音效
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX("ui_hover", 0.5f);
+            BGMManager.Instance.PlaySFX("ui_hover", 0.5f);
         }
     }
     
@@ -294,9 +294,9 @@ public class SkillSlotUI : MonoBehaviour
             skillComponent.TryUseSkill(skillIndex);
             
             // 播放点击音效
-            if (AudioManager.Instance != null)
+            if (BGMManager.Instance != null)
             {
-                AudioManager.Instance.PlaySFX("ui_click", 0.7f);
+                BGMManager.Instance.PlaySFX("ui_click", 0.7f);
             }
             
     

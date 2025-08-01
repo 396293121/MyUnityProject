@@ -20,7 +20,9 @@ public class NPCController : MonoBehaviour, IInputListener
     [ShowInInspector]
     [ReadOnly]
     private string npcName = "NPC";
-
+    [BoxGroup("NPC基础配置")]
+    [LabelText("NPC碰撞体")]
+    public BoxCollider2D c2d;
     [BoxGroup("NPC基础配置")]
     [LabelText("NPC角色类型")]
     [ShowInInspector]
@@ -39,19 +41,6 @@ public class NPCController : MonoBehaviour, IInputListener
     [InfoBox("Fungus对话系统的Flowchart组件")]
     [Required]
     public Flowchart dialogueFlowchart;
-
-    [BoxGroup("对话系统")]
-    [LabelText("开始对话块")]
-    [ShowInInspector]
-    [ReadOnly]
-    private string startBlockName = "Start";
-    
-    [BoxGroup("对话系统")]
-    [LabelText("重复对话块")]
-    [ShowInInspector]
-    [ReadOnly]
-    private string repeatBlockName = "Repeat";
-
     [BoxGroup("交互设置")]
     [LabelText("交互范围")]
     [ShowInInspector]
@@ -91,18 +80,11 @@ public class NPCController : MonoBehaviour, IInputListener
     [ShowInInspector]
     [ReadOnly]
     private string promptText = "按 E 键对话";
-
     [BoxGroup("对话状态")]
     [LabelText("是否已对话")]
     [ShowInInspector]
     [ReadOnly]
     private bool hasSpokenBefore = false;
-
-    [BoxGroup("对话状态")]
-    [LabelText("可重复对话")]
-    [ShowInInspector]
-    [ReadOnly]
-    private bool canRepeatDialogue = true;
 
     [BoxGroup("任务系统", VisibleIf = "@npcType == NPCType.QuestGiver")]
     [LabelText("可分发任务")]
@@ -110,7 +92,6 @@ public class NPCController : MonoBehaviour, IInputListener
     [ShowInInspector]
     [ListDrawerSettings(ShowIndexLabels = true, DraggableItems = true)]
     [SerializeField] private List<QuestData> availableQuests = new List<QuestData>();
-    
 
     
 
@@ -132,6 +113,11 @@ public class NPCController : MonoBehaviour, IInputListener
     [ReadOnly]
     private bool hasActiveQuests = false;
     [BoxGroup("运行时状态")]
+    [LabelText("有未完成对话任务")]
+    [ShowInInspector]
+    [ReadOnly]
+    private bool hasUncompletedTalkObjective = false;
+    [BoxGroup("运行时状态")]
     [LabelText("有可完成任务")]
     [ShowInInspector]
     [ReadOnly]
@@ -140,7 +126,6 @@ public class NPCController : MonoBehaviour, IInputListener
     // 私有变量
     private Transform playerTransform;
     private bool playerInRange = false;
-    private CircleCollider2D interactionCollider;
     private Enemy enemyComponent;
     // 事件
     void Awake()
@@ -207,10 +192,15 @@ public class NPCController : MonoBehaviour, IInputListener
             npcType = npcConfig.npcType;
             description = npcConfig.description;
             promptOffset = npcConfig.promptOffset;
-            startBlockName = npcConfig.firstDialogueBlock;
-            repeatBlockName = npcConfig.repeatDialogueBlock;
             interactionRange = npcConfig.interactionRange;
             availableQuests = npcConfig.availableQuests;
+        
+            // 初始化任务对话块配置
+            if (npcType == NPCType.QuestGiver)
+            {
+                // 这些字段会在GetDialogueBlockWithQuestLogic中使用
+                // 无需额外的字段存储，直接从npcConfig读取
+            }
         }
         else
         {
@@ -224,10 +214,13 @@ public class NPCController : MonoBehaviour, IInputListener
             if (config)
             {
                 promptText = config.interactPrompt;
-                questIndicator = config.questIndicator;
-                questActiveIndicator = config.questActiveIndicator;
-                questCompleteIndicator = config.questCompleteIndicator;
                 interactionPrompt = config.interactionPrompt;
+                if (npcType == NPCType.QuestGiver)
+                {
+                    questIndicator = config.questIndicator;
+                    questActiveIndicator = config.questActiveIndicator;
+                    questCompleteIndicator = config.questCompleteIndicator;
+                }
 
             }
             else
@@ -259,14 +252,18 @@ public class NPCController : MonoBehaviour, IInputListener
         // 注销 Fungus 事件
         BlockSignals.OnBlockStart -= OnBlockStart;
         BlockSignals.OnBlockEnd -= OnBlockEnd;
-        // 注销事件
-        // EventHandler.UnregisterEvent<Flowchart, Block>("BlockStart", OnBlockStart);
-        // EventHandler.UnregisterEvent<Flowchart>("FlowchartEnd", OnBlockEnd);
     }
     void OnDestroy()
     {
         BlockSignals.OnBlockStart -= OnBlockStart;
         BlockSignals.OnBlockEnd -= OnBlockEnd;
+           if (QuestManager.Instance != null)
+        {
+            // 取消订阅任务事件
+            QuestManager.Instance.OnQuestStarted -= OnQuestStarted;
+            QuestManager.Instance.OnQuestCompleted -= OnQuestCompleted;
+            QuestManager.Instance.OnQuestProgressUpdated -= OnQuestProgressUpdated;
+        }
     }
 
     private void OnBlockStart(Block block)
@@ -274,10 +271,10 @@ public class NPCController : MonoBehaviour, IInputListener
         if (block.GetFlowchart() != dialogueFlowchart) return;
 
         // NPC 对话时播放动画
-        if (TryGetComponent(out Animator animator))
-        {
-            animator.Play("Talking");
-        }
+        // if (TryGetComponent(out Animator animator))
+        // {
+        //     animator.Play("Talking");
+        // }
     }
 
     private void OnBlockEnd(Block block)
@@ -285,10 +282,10 @@ public class NPCController : MonoBehaviour, IInputListener
         if (block.GetFlowchart() != dialogueFlowchart) return;
 
         // 对话结束逻辑
-        if (TryGetComponent(out Animator animator))
-        {
-            animator.Play("Idle");
-        }
+        // if (TryGetComponent(out Animator animator))
+        // {
+        //     animator.Play("Idle");
+        // }
         // 恢复玩家控制
         GamePauseManager.Instance.SetPaused(false);
         //如果是敌人NPC恢复敌人控制
@@ -335,13 +332,10 @@ public class NPCController : MonoBehaviour, IInputListener
     /// </summary>
     public void StartDialogue()
     {
-        Debug.Log("大安" + dialogueFlowchart);
         if (!playerInRange || dialogueFlowchart == null)
         {
             return;
         }
-        // 确定要执行的对话块
-        string blockToExecute = GetDialogueBlock();
 
         if (dialogueFlowchart == null)
         {
@@ -349,26 +343,135 @@ public class NPCController : MonoBehaviour, IInputListener
             return;
         }
 
-
         // 恶魔城风格：面向玩家
         FacePlayer();
         // 隐藏交互提示
         ShowInteractionPrompt(false);
-        // 触发对话开始事件
+
+        // 处理任务相关对话逻辑
+        string blockToExecute = GetDialogueBlockWithQuestLogic();
+        
+        // 记录NPC对话事件到任务系统
+        RecordNPCTalkEvent();
 
         if (dialogueFlowchart.ExecuteBlock(blockToExecute))
         {
             GamePauseManager.Instance.SetPaused(true);
             // 标记已经对话过
             hasSpokenBefore = true;
-
         }
         else
         {
-            Debug.LogWarning($"[NPCController] 对话块 {blockToExecute} 不存在");
+            Debug.LogWarning($"[NPCController] 对话块 {blockToExecute} 不存在，尝试使用默认对话块");
+            // 回退到原有逻辑
+            string fallbackBlock =  npcConfig.defaultQuestBlock;
+            if (dialogueFlowchart.ExecuteBlock(fallbackBlock))
+            {
+                GamePauseManager.Instance.SetPaused(true);
+                hasSpokenBefore = true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 根据任务状态获取对话块
+    /// </summary>
+    private string GetDialogueBlockWithQuestLogic()
+    {
+        // 如果不是任务NPC，使用原有逻辑
+        if (npcType != NPCType.QuestGiver || npcConfig == null)
+        {
+            return npcConfig.defaultQuestBlock;
         }
 
+        // 更新任务状态（确保状态是最新的）
+        UpdateQuestStatus();
+        
+        // 设置Fungus变量，供对话流程图使用
+        SetFungusQuestVariables();
 
+        // 根据任务状态优先级选择对话块
+        string questBlock = DetermineQuestDialogueBlock();
+        
+        if (!string.IsNullOrEmpty(questBlock))
+        {
+            return questBlock;
+        }
+        return npcConfig.defaultQuestBlock;
+
+    }
+
+    /// <summary>
+    /// 确定任务对话块（按优先级）
+    /// </summary>
+    private string DetermineQuestDialogueBlock()
+    {
+        // 优先级1: 可完成任务
+        if (hasCompletableQuests && !string.IsNullOrEmpty(npcConfig.completeQuestBlock))
+        {
+            return npcConfig.completeQuestBlock;
+        }
+        
+        // 优先级2: 未完成对话任务
+        if (hasUncompletedTalkObjective && !string.IsNullOrEmpty(npcConfig.uncompletedTalkObjectiveBlock))
+        {
+            return npcConfig.uncompletedTalkObjectiveBlock;
+        }
+        // 优先级3: 可接取任务
+        if (hasAvailableQuests && !string.IsNullOrEmpty(npcConfig.availableQuestBlock))
+        {
+            return npcConfig.availableQuestBlock;
+        }
+        // 优先级4: 进行中任务
+        if (hasActiveQuests && !string.IsNullOrEmpty(npcConfig.activeQuestBlock))
+        {
+            return npcConfig.activeQuestBlock;
+        }
+        
+        // 优先级4: 默认任务对话
+        if (!string.IsNullOrEmpty(npcConfig.defaultQuestBlock))
+        {
+            return npcConfig.defaultQuestBlock;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// 设置Fungus变量供对话流程图使用
+    /// </summary>
+    private void SetFungusQuestVariables()
+    {
+        if (dialogueFlowchart == null) return;
+
+        // 设置任务状态变量
+        dialogueFlowchart.SetBooleanVariable("HasAvailableQuests", hasAvailableQuests);
+        dialogueFlowchart.SetBooleanVariable("HasActiveQuests", hasActiveQuests);
+        dialogueFlowchart.SetBooleanVariable("HasCompletableQuests", hasCompletableQuests);
+        
+        // 设置NPC信息变量
+        dialogueFlowchart.SetStringVariable("NPCId", npcConfig?.npcId ?? gameObject.name);
+        dialogueFlowchart.SetStringVariable("NPCName", npcName);
+        
+        // 设置首次对话标记
+        dialogueFlowchart.SetBooleanVariable("IsFirstTalk", !hasSpokenBefore);
+    }
+
+    /// <summary>
+    /// 记录NPC对话事件到任务系统
+    /// </summary>
+    private void RecordNPCTalkEvent()
+    {
+        if (QuestManager.Instance == null || npcConfig == null) return;
+        
+        // 使用NPC ID记录对话事件
+        string npcId = !string.IsNullOrEmpty(npcConfig.npcId) ? npcConfig.npcId : gameObject.name;
+        QuestManager.Instance.HandleNPCTalk(npcId);
+        
+        if (QuestManager.Instance.enableDebugLogs)
+        {
+            Debug.Log($"[NPCController] 记录NPC对话事件: {npcId}");
+        }
     }
     private void FacePlayer()
     {
@@ -376,17 +479,6 @@ public class NPCController : MonoBehaviour, IInputListener
         {
             transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
         }
-    }
-    /// <summary>
-    /// 获取要执行的对话块
-    /// </summary>
-    private string GetDialogueBlock()
-    {
-        if (hasSpokenBefore && canRepeatDialogue && !string.IsNullOrEmpty(repeatBlockName))
-        {
-            return repeatBlockName;
-        }
-        return startBlockName;
     }
 
     /// <summary>
@@ -452,35 +544,50 @@ public class NPCController : MonoBehaviour, IInputListener
             QuestManager.Instance.OnQuestCompleted += OnQuestCompleted;
             QuestManager.Instance.OnQuestProgressUpdated += OnQuestProgressUpdated;
         }
-        
+        InitIndicator();
         // 更新任务状态
         UpdateQuestStatus();
     }
-    
+    private void InitIndicator()
+    {
+        if (c2d == null)
+        {   
+            c2d=GetComponent<BoxCollider2D>();
+            if(c2d==null)
+            {
+                c2d = gameObject.AddComponent<BoxCollider2D>();
+            }
+        }
+        Vector3 position = c2d.bounds.max + Vector3.left * c2d.bounds.extents.x+Vector3.up*0.5f;
+       questIndicator= Instantiate(questIndicator, position, Quaternion.identity,transform);
+       questActiveIndicator= Instantiate(questActiveIndicator, position, Quaternion.identity,transform);
+      questCompleteIndicator= Instantiate(questCompleteIndicator, position, Quaternion.identity,transform);
+    }
     /// <summary>
     /// 更新任务状态
     /// </summary>
-    private void UpdateQuestStatus()
+    public void UpdateQuestStatus()
     {
         if (QuestManager.Instance == null) return;
-        
+
         hasAvailableQuests = false;
         hasCompletableQuests = false;
         hasActiveQuests = false;
+        hasUncompletedTalkObjective = false;
         // 检查可分发的任务
         foreach (var quest in availableQuests)
         {
             if (quest == null) continue;
-            
+
             // 检查是否有可以开始的任务
-            if (!givenQuestIds.Contains(quest.questId) && 
+            if (!givenQuestIds.Contains(quest.questId) &&
                 !QuestManager.Instance.IsQuestActive(quest.questId) &&
-                !QuestManager.Instance.IsQuestCompleted(quest.questId))
+                !QuestManager.Instance.IsQuestCompleted(quest.questId) &&
+                QuestManager.Instance.CanStartQuest(quest.questId))
             {
                 hasAvailableQuests = true;
             }
-            
-            // 检查是否有正在进行的任务
+            // 检查是否有正在进行的任务 
             if (QuestManager.Instance.IsQuestActive(quest.questId))
             {
                 hasActiveQuests = true;
@@ -495,7 +602,12 @@ public class NPCController : MonoBehaviour, IInputListener
                 }
             }
         }
-        
+
+            //检查是否有未完成的对话任务
+            if (QuestManager.Instance.HasUncompletedTalkObjective(npcConfig.npcId))
+            {
+                hasUncompletedTalkObjective = true;
+            }
         // 更新指示器
         UpdateQuestIndicators();
     }
@@ -511,7 +623,7 @@ public class NPCController : MonoBehaviour, IInputListener
         }
         if (questActiveIndicator != null)
         {
-            questActiveIndicator.SetActive(hasActiveQuests);
+            questActiveIndicator.SetActive(hasActiveQuests||hasUncompletedTalkObjective);
         }
         if (questCompleteIndicator != null)
         {

@@ -31,7 +31,7 @@ TestSceneController (主控制器)
 ├── TestSceneEnemySystem (敌人管理系统)
 ├── TestSceneUIManager (UI管理系统)
 ├── TestSceneInputManager (输入管理系统)
-└── TestSceneAudioManager (音频管理系统)
+└── TestSceneBGMManager (音频管理系统)
 ```
 
 ## 文件结构
@@ -52,7 +52,7 @@ Assets/Scripts/Systems/
 ├── TestSceneEventBus.cs       # 事件总线系统
 ├── TestSceneEnemySystem.cs    # 敌人管理系统
 ├── TestSceneInputManager.cs   # 输入管理系统
-└── TestSceneAudioManager.cs   # 音频管理系统
+└── TestSceneBGMManager.cs   # 音频管理系统
 ```
 
 ### UI管理器
@@ -115,7 +115,7 @@ Assets/Scripts/Characters/
   - 手柄输入
   - 触摸输入 (移动端扩展)
 
-### 6. TestSceneAudioManager (音频系统)
+### 6. TestSceneBGMManager (音频系统)
 - **职责**: 管理所有音频播放和控制
 - **特点**: 3D音频、音频池、淡入淡出
 - **音频类型**:

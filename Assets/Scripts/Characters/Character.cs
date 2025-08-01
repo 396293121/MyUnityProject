@@ -258,7 +258,7 @@ public abstract class Character : MonoBehaviour, IDamageable
         collider2D = GetComponent<Collider2D>();
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-
+        GameManager.Instance?.RegisterCharacter(this);
         // 初始化属性
     }
 
@@ -392,12 +392,15 @@ public abstract class Character : MonoBehaviour, IDamageable
     public virtual void GainExperience(int exp)
     {
         experience += exp;
-        OnExpChanged?.Invoke(experienceToNext, experience);
         // 检查升级
         while (experience >= experienceToNext)
         {
             LevelUp();
         }
+
+
+    
+    OnExpChanged?.Invoke(experienceToNext, experience);
         Debug.Log($"[{gameObject.name}] 获得 {exp} 点经验值，当前经验: {experience}/{experienceToNext}");
     }
 

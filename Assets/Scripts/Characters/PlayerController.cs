@@ -238,7 +238,7 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
         {
             stateMachine = gameObject.AddComponent<PlayerStateMachine>();
         }
-
+        GameManager.Instance?.RegisterPlayerController(this);
         // 初始化动画哈希
         InitializeAnimationHashes();
     }

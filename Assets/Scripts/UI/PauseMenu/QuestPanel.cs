@@ -545,8 +545,6 @@ public class QuestPanel : MonoBehaviour, IPauseMenuContent
         {
             case QuestType.MainQuest: return "主线任务";
             case QuestType.SideQuest: return "支线任务";
-            case QuestType.DailyQuest: return "日常任务";
-            case QuestType.Achievement: return "成就任务";
             default: return "未知任务";
         }
     }

@@ -10,6 +10,8 @@ TagManager:
   - Obstacle
   - PlayerTrigger
   - "\u68AF\u5B50"
+  - NPC
+  - MAP
   layers:
   - Default
   - TransparentFX
@@ -27,7 +29,7 @@ TagManager:
   - Wall
   - Obstacle
   - Trigger
-  - 
+  - "\u5783\u573E"
   - 
   - 
   - 

@@ -98,9 +98,9 @@ public class Inventory : MonoBehaviour
             OnInventoryChanged?.Invoke(this);
             
             // 播放音效
-            if (AudioManager.Instance != null)
+            if (BGMManager.Instance != null)
             {
-                AudioManager.Instance.PlaySFX("item_pickup");
+                BGMManager.Instance.PlaySFX("item_pickup");
             }
             
             if (showDebugInfo)

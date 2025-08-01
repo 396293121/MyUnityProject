@@ -365,9 +365,9 @@ public class UIManager : MonoBehaviour
         }
         
         // 播放UI音效
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX("ui_cancel");
+            BGMManager.Instance.PlaySFX("ui_cancel");
         }
     }
     
@@ -519,9 +519,9 @@ public class UIManager : MonoBehaviour
     //     if (currentCharacter == null) return;
         
     //     // 播放UI音效
-    //     if (AudioManager.Instance != null)
+    //     if (BGMManager.Instance != null)
     //     {
-    //         AudioManager.Instance.PlaySFX("ui_click");
+    //         BGMManager.Instance.PlaySFX("ui_click");
     //     }
         
     //     // 根据角色类型执行技能

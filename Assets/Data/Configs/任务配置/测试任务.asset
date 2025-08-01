@@ -16,12 +16,12 @@ MonoBehaviour:
   questName: "\u902E\u6355\u5927\u5B89"
   description: "\u51FB\u6740 \u90E8\u843D\u59163\u53EA\u91CE\u732A\uFF0C\u5E76\u5728\u51FB\u6740\u4E4B\u540E\u4E0E\u795E\u79D8\u4EBA\u5BF9\u8BDD"
   questType: 1
-  questIcon: {fileID: 0}
+  questIcon: {fileID: 1041388216, guid: fe947e49ab348e244a59414e99568a46, type: 3}
   questStatus: 0
   requiredLevel: 1
   prerequisiteQuests: []
   objectives:
-  - description: 
+  - description: "\u51FB\u67403\u53EA\u5C0F\u91CE\u732A"
     objectiveType: 0
     targetId: 1
     targetDisplayName: "\u5C0F\u91CE\u732A"
@@ -37,7 +37,7 @@ MonoBehaviour:
       targetRange: 5
       customParameters: 
       objectiveType: 0
-  - description: 
+  - description: "\u4E0E\u8FBE\u65AF\u5BF9\u8BDD"
     objectiveType: 3
     targetId: 3
     targetDisplayName: "\u795E\u79D8\u4EBA"

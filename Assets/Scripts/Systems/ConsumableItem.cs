@@ -75,9 +75,9 @@ public class ConsumableItem : Item
         }
         
         // 播放使用音效
-        if (useSound != null && AudioManager.Instance != null)
+        if (useSound != null && BGMManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX(useSound.name, 1f);
+            BGMManager.Instance.PlaySFX(useSound.name, 1f);
         }
         
         // 显示使用特效

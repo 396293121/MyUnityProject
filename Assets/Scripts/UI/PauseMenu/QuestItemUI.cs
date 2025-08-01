@@ -202,19 +202,11 @@ public class QuestItemUI : MonoBehaviour
         switch (questType)
         {
             case QuestType.MainQuest:
-                return "主线";
+                return "主线任务";
             case QuestType.SideQuest:
-                return "支线";
-            case QuestType.DailyQuest:
-                return "日常";
-            case QuestType.Achievement:
-                return "成就";
-            case QuestType.KillQuest:
-                return "击杀";
-            case QuestType.CollectQuest:
-                return "收集";
+                return "支线任务";
             default:
-                return "未知";
+                return "未知任务";
         }
     }
     

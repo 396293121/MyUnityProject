@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Sirenix.OdinInspector;
+using UnityEngine.Tilemaps;
 
 /// <summary>
 /// 增强版测试场景控制器
@@ -20,20 +21,27 @@ public class SceneController : MonoBehaviour
     [Required("必须指定统一场景配置文件")]
     [AssetsOnly]
     [SerializeField] private UnifiedSceneConfig unifiedConfig;
-    [LabelText("游戏层")]
-    [Tooltip("玩家与敌人生成的游戏层")]
-    [Required("必须指定游戏层")]
-    [SerializeField] private GameObject gameLayer;
+    [LabelText("玩家层")]
+    [Tooltip("玩家生成的游戏层")]
+    [Required("必须指定玩家层")]
+    [SerializeField] private GameObject PlayerLayer;
+    [LabelText("敌人层")]
+    [Tooltip("敌人生成的游戏层")]
+    [Required("必须指定敌人层")]
+    [SerializeField] private GameObject EnemyLayer;
+    [LabelText("NPC层")]
+    [Tooltip("npc生成的游戏层")]
+    [Required("必须指定npc层")]
+    [SerializeField] private GameObject NPCLayer;
+        [LabelText("地图层")]
+    [Tooltip("地图生成的游戏层")]
+    [Required("必须指定地图层")]
+    [SerializeField] private GameObject MapLayer;
     [TabGroup("配置", "场景引用")]
     [FoldoutGroup("配置/场景引用/核心组件", expanded: true)]
     [LabelText("主摄像机")]
     [Required("必须指定主摄像机")]
     [SerializeField] private Camera mainCamera;
-
-    [FoldoutGroup("配置/场景引用/核心组件")]
-    [LabelText("地图容器")]
-    [InfoBox("地图预制体的父对象，如果为空则使用当前对象")]
-    [SerializeField] private GameObject mapContainer;
 
     [TabGroup("配置", "调试设置")]
     [FoldoutGroup("配置/调试设置/调试选项", expanded: true)]
@@ -45,11 +53,6 @@ public class SceneController : MonoBehaviour
     [LabelText("显示调试UI")]
     [InfoBox("在游戏中显示调试信息界面")]
     [SerializeField] private bool showDebugUI = false;
-
-    [FoldoutGroup("配置/调试设置/调试选项")]
-    [LabelText("启用音效")]
-    [InfoBox("控制是否播放音效")]
-    [SerializeField] private bool enableAudioEffects = true;
     #region 性能优化配置
     [FoldoutGroup("性能优化", expanded: false)]
     [LabelText("FPS更新间隔")]
@@ -63,16 +66,9 @@ public class SceneController : MonoBehaviour
     [SuffixLabel("秒")]
     [SerializeField] private float debugUpdateInterval = 0.5f;
 
-    [FoldoutGroup("性能优化")]
-    [LabelText("UI更新间隔")]
-    [PropertyRange(0.016f, 0.1f)]
-    [SuffixLabel("秒")]
-    [SerializeField] private float uiUpdateInterval = 0.05f; // 30 FPS
-
     // 性能优化计时器
     private float lastFpsUpdateTime;
     private float lastDebugUpdateTime;
-    private float lastUIUpdateTime;
     #endregion
 
     #region 私有字段
@@ -104,6 +100,20 @@ public class SceneController : MonoBehaviour
     [ListDrawerSettings(ShowIndexLabels = true)]
     private List<Enemy> enemyControllers = new List<Enemy>();
 
+    public List<Enemy> EnemyControllers => enemyControllers;
+    [FoldoutGroup("状态/游戏对象/实例引用")]
+    [LabelText("活跃NPC列表")]
+    [ReadOnly]
+    [ShowInInspector]
+    [ListDrawerSettings(ShowIndexLabels = true, ListElementLabelName = "name")]
+    private List<GameObject> activeNPCs = new List<GameObject>();
+    [FoldoutGroup("状态/游戏对象/实例引用")]
+    [LabelText("所有NPC列表")]
+    [ReadOnly]
+    [ShowInInspector]
+    [ListDrawerSettings(ShowIndexLabels = true, ListElementLabelName = "name")]
+    private List<NPCController> npcs = new List<NPCController>();
+    public List<NPCController> NPCControllers => npcs;
     [FoldoutGroup("状态/游戏对象/实例引用")]
     [LabelText("当前地图")]
     [ReadOnly]
@@ -111,6 +121,23 @@ public class SceneController : MonoBehaviour
     private GameObject currentMap;
 
     [TabGroup("状态", "系统管理器")]
+    [FoldoutGroup("状态/系统管理器/地图系统", expanded: true)]
+    [LabelText("地图管理器")]
+    [ReadOnly]
+    [ShowInInspector]
+    private MapManager mapManager;
+
+    [FoldoutGroup("状态/系统管理器/地图系统")]
+    [LabelText("地图状态管理器")]
+    [ReadOnly]
+    [ShowInInspector]
+    private MapStateManager mapStateManager;
+
+    [FoldoutGroup("状态/系统管理器/地图系统")]
+    [LabelText("当前区域ID")]
+    [ReadOnly]
+    [ShowInInspector]
+    private string currentAreaId;
 
 
 
@@ -122,7 +149,7 @@ public class SceneController : MonoBehaviour
     [ReadOnly]
     [ShowInInspector]
     private PlayerController playerController;
-
+    public PlayerController PlayerController => playerController;
     [FoldoutGroup("状态/组件引用/控制器组件")]
     [LabelText("玩家角色组件")]
     [ReadOnly]
@@ -267,14 +294,6 @@ public class SceneController : MonoBehaviour
     [ReadOnly]
     private bool HasPlayer => currentPlayer != null;
 
-    [FoldoutGroup("实时状态/玩家信息/角色状态")]
-    [LabelText("玩家位置")]
-    [ShowInInspector]
-    [ReadOnly]
-    [ShowIf("HasPlayer")]
-    private Vector3 PlayerPosition => currentPlayer != null ? currentPlayer.transform.position : Vector3.zero;
-
-
 
 
     #endregion
@@ -285,6 +304,163 @@ public class SceneController : MonoBehaviour
     public static SceneController Instance { get; private set; }
     #endregion
 
+    #region 地图切换事件处理
+    /// <summary>
+    /// 初始化事件监听器
+    /// </summary>
+    private void InitializeEventListeners()
+    {
+        if (MapManager.Instance != null)
+        {
+            MapManager.Instance.OnMapTransitionComplete += OnMapTransitionComplete;
+            Debug.Log("[SceneController] 已订阅地图切换完成事件");
+        }
+        else
+        {
+            Debug.LogWarning("[SceneController] MapManager实例未找到，无法订阅地图切换事件");
+        }
+    }
+
+    /// <summary>
+    /// 清理事件监听器
+    /// </summary>
+    private void CleanupEventListeners()
+    {
+        if (MapManager.Instance != null)
+        {
+            MapManager.Instance.OnMapTransitionComplete -= OnMapTransitionComplete;
+            Debug.Log("[SceneController] 已取消订阅地图切换完成事件");
+        }
+    }
+
+    /// <summary>
+    /// 地图切换完成事件处理
+    /// </summary>
+    /// <param name="targetAreaId">目标区域ID</param>
+    private void OnMapTransitionComplete(string targetAreaId)
+    {
+        Debug.Log($"[SceneController] 地图切换完成，目标区域: {targetAreaId}");
+        
+        // 只有在场景已经初始化完成后才响应地图切换事件
+        // 避免在初始化期间重复生成敌人/NPC
+        if (isSceneInitialized)
+        {
+            // 重新加载场景内容
+            StartCoroutine(ReloadSceneContentAfterTransition(targetAreaId));
+        }
+        else
+        {
+            Debug.Log("[SceneController] 场景正在初始化中，跳过地图切换事件处理");
+        }
+    }
+
+    /// <summary>
+    /// 场景内容重新加载完成事件
+    /// </summary>
+
+
+
+
+
+
+    // 修改事件定义，添加场景加载状态参数
+    public static System.Action<string> OnSceneContentReloaded; // 保持原有
+    public static System.Action<Enemy> OnEnemySpawned; // 修改为携带敌人实例
+
+    // 修改场景重载协程
+    private IEnumerator ReloadSceneContentAfterTransition(string targetAreaId)
+    {
+        Debug.Log("[SceneController] 开始重新加载场景内容...");
+
+        // 清理现有的敌人和NPC（但不清理地图，因为MapManager已经处理了）
+        CleanupExistingContentExceptMap();
+
+        // 等待一帧确保清理完成
+        yield return null;
+
+        // 引用MapManager创建的新地图实例
+        yield return StartCoroutine(InitializeMapAsync());
+    QuestManager.Instance.SetBatchMode(true);
+
+        // 重新生成NPC
+        yield return StartCoroutine(SpawnNPCsAsync());
+
+        // 重新生成敌人
+        yield return StartCoroutine(SpawnEnemiesAsync());
+        
+        // 重新设置相机
+        SetupCamera();
+
+        // 等待一帧确保所有内容完全加载
+        yield return null;
+
+        Debug.Log("[SceneController] 场景内容重新加载完成");
+        
+        // 关闭批量模式并触发场景加载完成事件
+    QuestManager.Instance.SetBatchMode(false);
+        OnSceneContentReloaded?.Invoke(targetAreaId);
+    }
+
+    /// <summary>
+    /// 清理现有的场景内容（除了地图）
+    /// </summary>
+    private void CleanupExistingContentExceptMap()
+    {
+        Debug.Log("[SceneController] 清理现有场景内容（保留地图）...");
+
+        // 清理敌人
+        foreach (var enemy in enemies.ToList())
+        {
+            if (enemy != null)
+            {
+                Destroy(enemy);
+            }
+        }
+        enemies.Clear();
+        enemyControllers.Clear();
+
+        // 清理NPC
+        foreach (var npc in npcs.ToList())
+        {
+            if (npc != null && npc.gameObject != null)
+            {
+                Destroy(npc.gameObject);
+            }
+        }
+        npcs.Clear();
+        activeNPCs.Clear();
+
+        // 不清理地图，因为MapManager已经处理了地图的切换
+        // currentMap将在InitializeMapAsync中重新引用
+
+        Debug.Log("[SceneController] 现有场景内容清理完成（地图由MapManager管理）");
+    }
+
+    /// <summary>
+    /// 设置玩家位置到指定传送门位置
+    /// </summary>
+    /// <param name="portalName">传送门名称</param>
+    public void SetPlayerToPortalPosition(string portalName)
+    {
+        Debug.Log($"[SceneController] 尝试设置玩家位置到传送门: {portalName}");
+        if (currentPlayer != null && mapManager != null && mapManager.CurrentSceneArea != null)
+        {
+            // 查找指定传送门的位置
+            var portalConfig = mapManager.CurrentSceneArea.areaTransitionTriggers.Find(p => p.triggerName == portalName);
+            if (portalConfig != null)
+            {
+                Vector3 portalPosition = portalConfig.triggerPosition;
+                currentPlayer.transform.position = portalPosition;
+                Debug.Log($"[SceneController] 玩家位置已设置到传送门: {portalName} 位置: {portalPosition}");
+            }
+            else
+            {
+                Debug.LogWarning($"[SceneController] 未找到传送门: {portalName}");
+            }
+        }
+    }
+    #endregion
+
     #region Unity生命周期
     private void Awake()
     {
@@ -292,7 +468,6 @@ public class SceneController : MonoBehaviour
         // 验证配置
         ValidateConfigurations();
 
-        // 初始化事件系统
 
         // 记录场景开始时间
         sceneStartTime = Time.time;
@@ -304,8 +479,16 @@ public class SceneController : MonoBehaviour
     [SerializeField] private bool enableAutoGC = true;
     [SerializeField] private float gcInterval = 30f;
 
+    [FoldoutGroup("性能优化")]
+    [LabelText("状态持久化")]
+    [InfoBox("是否启用场景切换时的状态保存")]
+    [SerializeField] private bool enableStatePersistence = true;
+
     private void Start()
     {
+        
+        // 初始化事件系统
+        InitializeEventListeners();
         StartCoroutine(InitializeTestSceneAsync());
             if (enableAutoGC)
     {
@@ -348,6 +531,9 @@ public class SceneController : MonoBehaviour
 
     private void OnDestroy()
     {
+        // 清理事件监听
+        CleanupEventListeners();
+        
         CleanupTestScene();
     }
     public void OnPlayerDied()
@@ -366,6 +552,12 @@ public class SceneController : MonoBehaviour
     {
         Debug.Log("[TestSceneController] 开始清理测试场景...");
 
+        // 保存当前状态到地图状态管理器
+        if (mapStateManager != null && enableStatePersistence)
+        {
+            mapStateManager.SaveCurrentState();
+        }
+
         // 清理敌人列表
         foreach (var enemy in enemies.ToList())
         {
@@ -377,7 +569,16 @@ public class SceneController : MonoBehaviour
         enemies.Clear();
         enemyControllers.Clear();
 
-
+        // 清理NPC列表
+        foreach (var npc in npcs.ToList())
+        {
+            if (npc != null)
+            {
+                Destroy(npc);
+            }
+        }
+        npcs.Clear();
+        activeNPCs.Clear();
 
         // 停止所有协程
         StopAllCoroutines();
@@ -411,54 +612,106 @@ public class SceneController : MonoBehaviour
         if (isSceneInitialized) yield break;
 
         Debug.Log("[TestSceneController] 开始异步初始化测试场景");
-        AudioManager.Instance.PlayMusic("menu_music", 0.6f, true);
+        // BGMManager.Instance.PlayMusic("menu_music", 0.6f, true);
+        
         // 获取选择的角色类型
         selectedCharacterType = PlayerPrefs.GetString("SelectedCharacter", "warrior");
 
-        // 步骤1: 初始化地图
+        // 步骤0: 初始化地图系统
+        yield return StartCoroutine(InitializeMapSystemAsync());
+
+        // 步骤1: 引用MapManager创建的地图实例（MapManager在初始化时已经创建了地图）
         yield return StartCoroutine(InitializeMapAsync());
 
+        // 步骤2: 生成NPC
+        yield return StartCoroutine(SpawnNPCsAsync());
 
-        // 步骤4: 创建玩家
+        // 步骤3: 创建玩家
         yield return StartCoroutine(CreatePlayerAsync());
 
-        // 步骤5: 生成敌人
+        // 步骤4: 生成敌人
         yield return StartCoroutine(SpawnEnemiesAsync());
 
-
-        // 步骤7: 设置摄像机
-        yield return StartCoroutine(SetupCameraAsync());
-
-        // 步骤8: 设置游戏状态
+        // 步骤5: 设置游戏状态
         SetupGameState();
 
         isSceneInitialized = true;
 
         Debug.Log("[TestSceneController] 测试场景异步初始化完成");
-
     }
 
     /// <summary>
-    /// 初始化地图
+    /// 初始化地图系统
+    /// </summary>
+    private IEnumerator InitializeMapSystemAsync()
+    {
+        Debug.Log("[TestSceneController] 初始化地图系统...");
+
+        // 获取或创建MapManager
+    
+        if (mapManager == null)
+        {
+            mapManager = FindObjectOfType<MapManager>();
+            if (mapManager == null)
+            {
+                GameObject mapManagerObj = new GameObject("MapManager");
+                mapManager = mapManagerObj.AddComponent<MapManager>();
+            }
+        }
+
+        // 获取或创建MapStateManager
+        if (mapStateManager == null)
+        {
+            mapStateManager = FindObjectOfType<MapStateManager>();
+            if (mapStateManager == null)
+            {
+                mapStateManager = mapManager.gameObject.AddComponent<MapStateManager>();
+            }
+        }
+
+        // 设置当前区域ID（如果需要）
+        if (!string.IsNullOrEmpty(currentAreaId))
+        {
+            mapStateManager.SetCurrentAreaId(currentAreaId);
+        }
+
+        // 直接使用MapSystemConfig初始化（如果已配置）
+        mapManager.InitializeMapSystem();
+        yield return null;
+        Debug.Log("[TestSceneController] 地图系统初始化完成");
+    }
+
+    /// <summary>
+    /// 初始化地图（引用MapManager创建的地图实例）
     /// </summary>
     private IEnumerator InitializeMapAsync()
     {
-        Debug.Log("[TestSceneController] 初始化地图...");
+        Debug.Log("[TestSceneController] 初始化地图引用...");
 
-        if (unifiedConfig.mapPrefab != null)
+        // 等待MapManager创建地图实例
+        float timeout = 5f;
+        float elapsed = 0f;
+        
+        while (elapsed < timeout)
         {
-            currentMap = Instantiate(unifiedConfig.mapPrefab, mapContainer != null ? mapContainer.transform : transform);
-            currentMap.name = "TestScene_Map";
+            if (mapManager != null && mapManager.CurrentMapInstance != null)
+            {
+                // 引用MapManager创建的地图实例，而不是重新创建
+                currentMap = mapManager.CurrentMapInstance;
+                Debug.Log($"[TestSceneController] 成功引用MapManager的地图实例: {currentMap.name}");
+                break;
+            }
+            
+            elapsed += Time.deltaTime;
+            yield return null;
         }
 
-        // 设置背景色
-        if (mainCamera != null)
+        if (currentMap == null)
         {
-            mainCamera.backgroundColor = unifiedConfig.backgroundColor;
+            Debug.LogWarning("[TestSceneController] 未能获取MapManager的地图实例，可能需要检查MapManager初始化");
         }
-
         yield return null;
-        Debug.Log("[TestSceneController] 地图初始化完成");
+        Debug.Log("[TestSceneController] 地图引用初始化完成");
     }
 
 
@@ -483,7 +736,7 @@ public class SceneController : MonoBehaviour
                 currentPlayer.GetComponent<SkillComponent>()
             );
         }
-
+        SetupCamera();
         Debug.Log("[TestSceneController] 玩家创建完成");
     }
     /// <summary>
@@ -494,25 +747,11 @@ public class SceneController : MonoBehaviour
         Debug.Log("[TestSceneController] 生成敌人...");
 
         // 直接创建敌人，不再使用TestSceneEnemySystem
-        CreateEnemies();
+      CreateEnemies();
 
         yield return null;
         Debug.Log("[TestSceneController] 敌人生成完成");
     }
-
-    /// <summary>
-    /// 异步设置摄像机
-    /// </summary>
-    private IEnumerator SetupCameraAsync()
-    {
-        Debug.Log("[TestSceneController] 设置摄像机...");
-
-        SetupCamera();
-
-        yield return null;
-        Debug.Log("[TestSceneController] 摄像机设置完成");
-    }
-
     /// <summary>
     /// 设置游戏状态
     /// </summary>
@@ -592,7 +831,7 @@ public class SceneController : MonoBehaviour
         GameObject playerPrefab = GetPlayerPrefab(selectedCharacterType);
         if (playerPrefab != null)
         {
-            currentPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity,gameLayer.transform);
+            currentPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity,PlayerLayer.transform);
             currentPlayer.name = $"Player_{selectedCharacterType}";
 
             // 获取玩家控制器
@@ -621,50 +860,76 @@ public class SceneController : MonoBehaviour
     /// </summary>
     GameObject GetPlayerPrefab(string characterType)
     {
-        return unifiedConfig.GetCharacterPrefab(characterType) ?? unifiedConfig.GetCharacterPrefab(unifiedConfig.defaultCharacterType);
+        // 优先从MapManager的配置获取角色预制体
+        if (mapManager != null && mapManager.MapSystemConfig != null)
+        {
+            GameObject prefab = mapManager.MapSystemConfig.GetCharacterPrefab(characterType);
+            if (prefab != null) return prefab;
+            
+            // 如果指定类型不存在，尝试获取默认角色类型
+            if (!string.IsNullOrEmpty(mapManager.MapSystemConfig.defaultCharacterType))
+            {
+                prefab = mapManager.MapSystemConfig.GetCharacterPrefab(mapManager.MapSystemConfig.defaultCharacterType);
+                if (prefab != null) return prefab;
+            }
+        }
+        
+        // 如果MapManager不可用，记录警告
+        Debug.LogWarning($"[TestSceneController] MapManager或MapSystemConfig不可用，无法获取角色预制体: {characterType}");
+        return null;
     }
     /// <summary>
     /// 创建敌人
     /// </summary>
     void CreateEnemies()
     {
-        // 使用统一配置中的敌人生成配置
-        if (unifiedConfig.enemySpawns != null && unifiedConfig.enemySpawns.Count > 0)
+        // 从MapManager获取当前场景区域的敌人生成配置
+        if (mapManager != null && mapManager.CurrentSceneArea != null)
         {
-            foreach (var enemySpawn in unifiedConfig.enemySpawns)
+            var currentSceneArea = mapManager.CurrentSceneArea;
+            if (currentSceneArea.enemySpawns != null && currentSceneArea.enemySpawns.Count > 0)
             {
-                if (enemySpawn.autoSpawn)
+                foreach (var enemySpawn in currentSceneArea.enemySpawns)
                 {
-                    StartCoroutine(SpawnEnemyWithDelay(enemySpawn));
+                    if (enemySpawn.autoSpawn)
+                    {
+                        StartCoroutine(SpawnEnemyWithDelay(enemySpawn));
+                    }
                 }
             }
         }
+
         if (debugMode)
         {
             Debug.Log($"[TestSceneController] 创建了 {enemies.Count} 个敌人");
         }
     }
-
     /// <summary>
-    /// 在指定位置创建敌人
-    /// </summary>
-    void CreateEnemyAtPosition(string enemyType, Vector3 position, float patrolRadius)
+        /// 在指定位置创建敌人
+        /// </summary>
+        void CreateEnemyAtPosition(string enemyType, Vector3 position, float patrolRadius)
     {
         GameObject enemyPrefab = GetEnemyPrefab(enemyType);
         if (enemyPrefab != null)
         {
-            GameObject enemy = Instantiate(enemyPrefab, position, Quaternion.identity,gameLayer.transform);
+            GameObject enemy = Instantiate(enemyPrefab, position, Quaternion.identity,EnemyLayer.transform);
             enemy.name = $"Enemy_{enemyType}_{enemies.Count}";
             enemies.Add(enemy);
             // 设置事件监听
             Enemy enemyController = enemy.GetComponent<Enemy>();
+
+            //通知敌人已生成
+                    OnEnemySpawned?.Invoke(enemyController); // 传递生成的敌人实例
+
             //设置敌人巡逻半径
             enemyController.patrolRange = patrolRadius;
             if (enemyController != null)
             {
                 enemyControllers.Add(enemyController);
                 //   SetupEnemyEvents(enemyController);
+                
             }
+            
         }
     }
     /// <summary>
@@ -672,7 +937,15 @@ public class SceneController : MonoBehaviour
     /// </summary>
     GameObject GetEnemyPrefab(string enemyType)
     {
-        return unifiedConfig.GetEnemyPrefab(enemyType);
+        // 优先从MapManager的配置获取
+        if (mapManager != null && mapManager.MapSystemConfig != null)
+        {
+            GameObject prefab = mapManager.MapSystemConfig.GetEnemyPrefab(enemyType);
+            if (prefab != null) return prefab;
+        }
+
+        // 回退到UnifiedConfig
+        return null;
     }
 
 
@@ -710,8 +983,15 @@ public class SceneController : MonoBehaviour
             {
                 cameraFollow = mainCamera.gameObject.AddComponent<CameraFollow>();
             }
-
-            cameraFollow.target = currentPlayer.transform;
+            cameraFollow.initCamera(playerController.transform);
+            DynamicCameraBounds d= mainCamera.GetComponent<DynamicCameraBounds>();
+            //设置地图边界
+            if (d != null)
+            {
+                Tilemap[] tilemaps = currentMap.GetComponentsInChildren<Tilemap>();
+                d.DetectAndSetBounds(System.Array.FindAll(tilemaps, t => t.tag == "Ground"));
+            }
+        //    cameraFollow.target = currentPlayer.transform;
         }
     }
 
@@ -730,9 +1010,9 @@ public class SceneController : MonoBehaviour
         Debug.Log("[TestSceneController] 返回主菜单");
 
         // 停止背景音乐
-        if (AudioManager.Instance != null)
+        if (BGMManager.Instance != null)
         {
-            AudioManager.Instance.StopMusic();
+            BGMManager.Instance.StopMusic();
         }
 
         // 恢复时间缩放
@@ -833,4 +1113,103 @@ private IEnumerator AutoGarbageCollection()
         }
     }
 }
+
+    /// <summary>
+    /// 异步生成NPC
+    /// </summary>
+    private IEnumerator SpawnNPCsAsync()
+    {
+        Debug.Log("[TestSceneController] 生成NPC...");
+
+        CreateNPCs();
+
+        yield return null;
+        Debug.Log("[TestSceneController] NPC生成完成");
+    }
+
+    /// <summary>
+    /// 创建NPC
+    /// </summary>
+    void CreateNPCs()
+    {
+        // 从MapManager获取当前场景区域的NPC生成配置
+        if (mapManager != null && mapManager.CurrentSceneArea != null)
+        {
+            var currentSceneArea = mapManager.CurrentSceneArea;
+            if (currentSceneArea.npcSpawns != null && currentSceneArea.npcSpawns.Count > 0)
+            {
+                foreach (var npcSpawn in currentSceneArea.npcSpawns)
+                {
+                    if (npcSpawn.autoSpawn)
+                    {
+                        CreateNPCAtPosition(npcSpawn);
+                    }
+                }
+            }
+        }
+        if (debugMode)
+        {
+            Debug.Log($"[TestSceneController] 创建了 {activeNPCs.Count} 个NPC");
+        }
+    }
+
+    /// <summary>
+    /// 在指定位置创建NPC
+    /// </summary>
+    void CreateNPCAtPosition(NPCSpawnConfig npcSpawn)
+    {
+        GameObject npcPrefab = GetNPCPrefab(npcSpawn.npcType);
+        if (npcPrefab != null)
+        {
+            GameObject npc = Instantiate(npcPrefab, npcSpawn.spawnPosition, 
+                Quaternion.Euler(0, npcSpawn.facingAngle, 0), NPCLayer.transform);
+            npc.name = $"NPC_{npcSpawn.npcType}_{activeNPCs.Count}";
+            
+            // 添加到NPC列表
+            activeNPCs.Add(npc);
+            // 获取NPC控制器并配置
+            NPCController npcController = npc.GetComponent<NPCController>();
+            
+            npcs.Add(npcController);
+
+            if (npcController != null)
+            {
+                // 如果配置中指定了特定的NPC配置文件，则使用它
+                if (npcSpawn.npcConfig != null)
+                {
+                    npcController.npcConfig = npcSpawn.npcConfig;
+                }
+
+                if (debugMode)
+                {
+                    Debug.Log($"[TestSceneController] 创建NPC: {npcSpawn.npcType} at {npcSpawn.spawnPosition}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[TestSceneController] NPC预制体 {npcSpawn.npcType} 缺少NPCController组件");
+            }
+        }
+        else
+        {
+            Debug.LogError($"[TestSceneController] 找不到NPC预制体: {npcSpawn.npcType}");
+        }
+    }
+
+    /// <summary>
+    /// 获取NPC预制体
+    /// </summary>
+    GameObject GetNPCPrefab(string npcType)
+    {
+        // 优先从MapManager的配置获取
+        if (mapManager != null && mapManager.MapSystemConfig != null)
+        {
+            GameObject prefab = mapManager.MapSystemConfig.GetNPCPrefab(npcType);
+            if (prefab != null) return prefab;
+        }
+        
+        // 回退到UnifiedConfig
+        return null;
+    }
+    
 }

@@ -15,32 +15,23 @@ MonoBehaviour:
   sceneName: "\u6D4B\u8BD5"
   sceneDescription: "\u6D4B\u8BD5\u573A\u666F"
   ScenesType: 0
-  backgroundColor: {r: 0.19215688, g: 0.3019608, b: 0.47450984, a: 1}
-  mapPrefab: {fileID: 0}
+  mapPrefab: {fileID: 8076007621738116656, guid: 81ea8720e8107324d8d8fb361dbd2259, type: 3}
+  mapSpawnPosition: {x: 0, y: 0, z: 0}
   characterPrefabs:
   - characterType: warrior
     prefab: {fileID: 5332153218383502975, guid: 0af60e9c735588e4b8aaa4a0ea67de4e, type: 3}
-    characterName: "\u6218\u58EB"
-    description: 
   - characterType: "\u6CD5\u5E08"
     prefab: {fileID: 5332153218383502975, guid: a7e0e9f2c56817f4c9afa2003576aacf, type: 3}
-    characterName: "\u6CD5\u5E08"
-    description: 
   defaultCharacterType: warrior
-  playerSpawnTag: {fileID: 0}
+  playerSpawnPosition: {x: 0, y: 0, z: 0}
   enemyPrefabs:
   - enemyType: wild_boar
     prefab: {fileID: 1485609283496898506, guid: bb356399f2db90e468c51fe5d8ef2b45, type: 3}
-    enemyName: "\u91CE\u732A"
-    description: 
   - enemyType: "\u5927\u578B\u91CE\u732A"
     prefab: {fileID: 9212761363567956610, guid: e2831909b7fec034a81282dc9e7338ab, type: 3}
-    enemyName: "\u5927\u578B\u91CE\u732A"
-    description: 
-  enemySpawnTag: EnemySpawn
   enemySpawns:
   - enemyType: wild_boar
-    spawnPosition: {x: 32, y: 0, z: 0}
+    spawnPosition: {x: 34.54, y: -0.68, z: 0}
     spawnDelay: 0
     spawnCount: 2
     randomizePosition: 1
@@ -50,7 +41,7 @@ MonoBehaviour:
     patrolRadius: 5
     patrolPoints: []
   - enemyType: "\u5927\u578B\u91CE\u732A"
-    spawnPosition: {x: 32, y: 0, z: 0}
+    spawnPosition: {x: 3.9, y: 30.3, z: 0}
     spawnDelay: 5
     spawnCount: 1
     randomizePosition: 1
@@ -60,7 +51,7 @@ MonoBehaviour:
     patrolRadius: 5
     patrolPoints: []
   - enemyType: wild_boar
-    spawnPosition: {x: 9.3, y: 14.6, z: 0}
+    spawnPosition: {x: 11.2, y: 18.2, z: 0}
     spawnDelay: 0
     spawnCount: 4
     randomizePosition: 0
@@ -70,7 +61,7 @@ MonoBehaviour:
     patrolRadius: 7
     patrolPoints: []
   - enemyType: "\u5927\u578B\u91CE\u732A"
-    spawnPosition: {x: 18, y: 27, z: 0}
+    spawnPosition: {x: 19.36, y: 18.26, z: 0}
     spawnDelay: 0
     spawnCount: 5
     randomizePosition: 1
@@ -79,6 +70,22 @@ MonoBehaviour:
     autoGeneratePatrolPoints: 1
     patrolRadius: 5
     patrolPoints: []
+  npcPrefabs:
+  - npcType: NPC1
+    prefab: {fileID: 7407948314649650544, guid: 4935618181d43c24b9e5619e68e37a2f, type: 3}
+  - npcType: NPC2
+    prefab: {fileID: 3440237828263258495, guid: 55a21637996bd8f48bd7e42c4b6bcf58, type: 3}
+  npcSpawns:
+  - npcType: NPC1
+    spawnPosition: {x: 14.23, y: -0.2, z: 0}
+    autoSpawn: 1
+    facingAngle: 0
+    npcConfig: {fileID: 0}
+  - npcType: NPC2
+    spawnPosition: {x: 43.2, y: -0.6, z: 0}
+    autoSpawn: 1
+    facingAngle: 0
+    npcConfig: {fileID: 0}
   hudUIPrefab: {fileID: 0}
   pauseMenuPrefab: {fileID: 0}
   gameOverUIPrefab: {fileID: 0}

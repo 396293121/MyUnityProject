@@ -42,33 +42,35 @@ public class NPCConfig : ScriptableObject
     [LabelText("交互提示偏移")]
     public Vector3 promptOffset = new Vector3(0, 2, 0);
 
-    [BoxGroup("对话设置")]
-    [LabelText("初次对话Block名称")]
-    public string firstDialogueBlock = "Start";
+    [BoxGroup("任务对话设置", VisibleIf = "@npcType == NPCType.QuestGiver")]
+    [LabelText("可接取任务对话块")]
+    [InfoBox("当NPC有可接取任务时使用的对话块")]
+    public string availableQuestBlock = "AvailableQuest";
+    [BoxGroup("任务对话设置")]
+    [LabelText("未完成对话任务对话块")]
+    [InfoBox("当NPC有未完成对话任务时使用的对话块")]
+    public string uncompletedTalkObjectiveBlock = "UncompletedTalkObjective";
+    [BoxGroup("任务对话设置")]
+    [LabelText("进行中任务对话块")]
+    [InfoBox("当NPC有进行中任务时使用的对话块")]
+    public string activeQuestBlock = "ActiveQuest";
 
-    [BoxGroup("对话设置")]
-    [LabelText("重复对话Block名称")]
-    public string repeatDialogueBlock = "Repeat";
+    [BoxGroup("任务对话设置")]
+    [LabelText("可完成任务对话块")]
+    [InfoBox("当NPC有可完成任务时使用的对话块")]
+    public string completeQuestBlock = "CompleteQuest";
 
-
-
-
-
+    [BoxGroup("任务对话设置")]
+    [LabelText("默认任务对话块")]
+    [InfoBox("当没有任务状态时使用的默认对话块")]
+    public string defaultQuestBlock = "DefaultQuest";
     [BoxGroup("功能设置")]
     [LabelText("可以交易")]
     public bool canTrade = false;
 
     [BoxGroup("功能设置")]
-    [LabelText("可分发任务")]
-    public bool canGiveQuests = false;
-
-    [BoxGroup("功能设置")]
-    [LabelText("可完成任务")]
-    public bool canCompleteQuests = false;
-
-    [BoxGroup("功能设置")]
     [LabelText("提供服务")]
-    [ShowIf("@canTrade || canGiveQuests || canCompleteQuests")]
+    [ShowIf("@canTrade")]
     public List<NPCService> services = new List<NPCService>();
 
     [BoxGroup("任务相关配置")]

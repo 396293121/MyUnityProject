@@ -587,14 +587,6 @@ public enum QuestType
     MainQuest,
     [LabelText("支线任务")]
     SideQuest,
-    [LabelText("日常任务")]
-    DailyQuest,
-    [LabelText("成就任务")]
-    Achievement,
-    [LabelText("击杀任务")]
-    KillQuest,
-    [LabelText("收集任务")]
-    CollectQuest
 }
 
 /// <summary>
