@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e33d9df2f0f147d49a6282c7128dcf79, type: 3}
+  m_Name: "\u666E\u901A\u5C71\u8D3C"
+  m_EditorClassIdentifier: 
+  enemyId: 6
+  displayName: "\u666E\u901A\u5C71\u8D3C"
+  description: 
+  enemyIcon: {fileID: 0}
+  category: 0
+  rarity: 0
+  enemyUI: {fileID: 0}
+  health: 110
+  moveSpeed: 3
+  chaseSpeedRate: 1.3
+  canAttack: 1
+  attackDamage: 30
+  damageType: 0
+  attackCooldown: 1.5
+  defense: 20
+  detectionRange: 10
+  loseTargetRange: 12
+  keepDistance: 0
+  patrolSpeed: 2
+  patrolWaitTime: 3
+  offScreenUpdateInterval: 0.5
+  onScreenUpdateInterval: 0.05
+  screenBoundaryExtension: 5
+  expReward: 50
+  canBeKillTarget: 1
+  canBeBossTarget: 0
+  enrageHealthThreshold: 0.5
+  stunDuration: 1

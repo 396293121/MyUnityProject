@@ -272,7 +272,6 @@ private void InitializeCharacterImage()
             return;
         }
         
-        Debug.Log("[ModernHUDComponent] 组件验证通过");
     }
     
     /// <summary>
@@ -294,7 +293,6 @@ private void InitializeCharacterImage()
         // 初始化小地图
         InitializeMinimap();
  
-        Debug.Log("[ModernHUDComponent] HUD初始化完成");
     }
     
 
@@ -385,7 +383,6 @@ private void InitializeCharacterImage()
             skillSlots.Add(slotUI);
         }
         
-        Debug.Log($"[ModernHUDComponent] 创建了 {skillCount} 个技能槽位");
     }
     
     /// <summary>

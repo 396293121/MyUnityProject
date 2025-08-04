@@ -51,7 +51,6 @@ public class CameraFollow : MonoBehaviour
     // }
     public void initCamera(Transform playerTarget)
     {
-        Debug.Log(playerTarget.position + "123123123123");
           // 如果没有指定目标，尝试找到玩家
         if (playerTarget == null)
         {

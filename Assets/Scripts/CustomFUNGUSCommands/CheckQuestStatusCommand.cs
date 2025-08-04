@@ -56,14 +56,14 @@ using UnityEngine;
 
             if (statusMatches && targetBlock.block != null)
             {
-                // 先调用Continue()确保当前Block正常结束，然后跳转到目标Block
-                Continue();
+                // StopParentBlock()确保当前Block正常结束，然后跳转到目标Block
+                    StopParentBlock();
                 GetFlowchart().ExecuteBlock(targetBlock.block);
             }
             else if (!statusMatches && elseBlock.block != null)
             {
-                // 先调用Continue()确保当前Block正常结束，然后跳转到else Block
-                Continue();
+                // StopParentBlock()确保当前Block正常结束，然后跳转到else Block
+                  StopParentBlock();
                 GetFlowchart().ExecuteBlock(elseBlock.block);
             }
             else

@@ -16,7 +16,9 @@ MonoBehaviour:
   agility: 20
   stamina: 15
   intelligence: 5
-  attackRange: 1.88
-  attackHeight: 4.45
+  maxHealth: 100
+  maxMana: 100
+  attackRange: 3
+  attackHeight: 5
   attackCooldown: 1
   knockbackForce: 8

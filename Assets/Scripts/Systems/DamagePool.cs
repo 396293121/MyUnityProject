@@ -36,22 +36,6 @@ void Update()
             pool.Enqueue(obj.GetComponent<DamagePopup>());
         }
     }
-    private void CleanupPool()
-{
-    // 计算需要清理的对象数量
-    int cleanupCount = pool.Count - MAX_POOL_SIZE;
-    if (cleanupCount <= 0) return;
-
-    // 清理多余对象
-    for (int i = 0; i < cleanupCount; i++)
-    {
-        DamagePopup popup = pool.Dequeue();
-        if (popup != null && popup.gameObject != null)
-        {
-            Destroy(popup.gameObject);
-        }
-    }
-}
     public DamagePopup GetPopup()
     {
         if (pool.Count == 0) 
@@ -79,9 +63,25 @@ void Update()
     {
         for (int i = 0; i < 5; i++) // 每次扩展5个
         {
-            GameObject obj = Instantiate(popupPrefab);
+            GameObject obj = Instantiate(popupPrefab, canvasTransform, false);
             obj.SetActive(false);
             pool.Enqueue(obj.GetComponent<DamagePopup>());
         }
     }
+    public void CleanupPool()
+{
+    // 计算需要清理的对象数量
+    int cleanupCount = pool.Count - MAX_POOL_SIZE;
+    if (cleanupCount <= 0) return;
+
+    // 清理多余对象
+    for (int i = 0; i < cleanupCount; i++)
+    {
+        DamagePopup popup = pool.Dequeue();
+        if (popup != null && popup.gameObject != null)
+        {
+            Destroy(popup.gameObject);
+        }
+    }
+}
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Sirenix.OdinInspector;
 
@@ -169,6 +170,28 @@ public abstract class Character : MonoBehaviour, IDamageable
     [InfoBox("角色是否存活，死亡时为false")]
     public bool isAlive = true;
 
+    [VerticalGroup("状态控制/基础状态/右列")]
+    [LabelText("正在受持续伤害")]
+    [ReadOnly]
+    [InfoBox("角色是否正在受到持续伤害")]
+    protected bool isReceivingContinuousDamage = false;
+
+    [FoldoutGroup("状态控制")]
+    [LabelText("无敌状态")]
+    [ReadOnly]
+    [InfoBox("角色是否处于无敌状态")]
+    protected bool isInvincible = false;
+    public bool IsInvincible => isInvincible;
+    [FoldoutGroup("状态控制")]
+    [LabelText("无敌时间")]
+    [PropertyRange(0.5f, 3f)]
+    [SuffixLabel("秒")]
+    [InfoBox("受到伤害后的无敌时间")]
+    protected float invincibilityTime = 1f;
+
+    // 持续伤害管理
+    protected Coroutine continuousDamageInvincibilityCoroutine;
+
 
 
     [FoldoutGroup("状态控制")]
@@ -305,11 +328,26 @@ public abstract class Character : MonoBehaviour, IDamageable
     /// <param name="damage">伤害值</param>
     /// <param name="hitPoint">命中点</param>
     /// <param name="attacker">攻击者</param>
-    public virtual void TakeDamage(int damage, DamageType damageType = DamageType.Physical, Vector2 hitPoint = default, Character attacker = null)
+    /// <param name="isContinuous">是否为持续伤害</param>
+    public virtual void TakeDamage(int damage, DamageType damageType = DamageType.Physical, Vector2 hitPoint = default, Character attacker = null, bool isContinuous = false)
     {
         if (!isAlive) 
         {
             Debug.Log($"[{gameObject.name}] 已死亡，忽略伤害");
+            return;
+        }
+
+        // 如果是持续伤害，特殊处理
+        if (isContinuous)
+        {
+            HandleContinuousDamage(damage, damageType, hitPoint, attacker);
+            return;
+        }
+
+        // 普通伤害处理 - 检查无敌状态
+        if (isInvincible)
+        {
+            Debug.Log($"[{gameObject.name}] 处于无敌状态，忽略伤害");
             return;
         }
 
@@ -347,7 +385,115 @@ public abstract class Character : MonoBehaviour, IDamageable
             return;
         }
 
+        // 开始无敌状态
+        StartInvincibility();
+
         Debug.Log($"[{gameObject.name}] 受到 {actualDamage} 点{damageType}伤害，剩余生命值: {currentHealth}");
+    }
+
+    /// <summary>
+    /// 处理持续伤害的特殊逻辑
+    /// </summary>
+    /// <param name="damage">伤害值</param>
+    /// <param name="damageType">伤害类型</param>
+    /// <param name="hitPoint">击中点</param>
+    /// <param name="attacker">攻击者</param>
+    protected virtual void HandleContinuousDamage(int damage, DamageType damageType, Vector2 hitPoint, Character attacker)
+    {
+        // 计算实际伤害
+        int actualDamage = damageType == DamageType.Magical ?
+            Mathf.Max(1, damage - magicDefense) :
+            Mathf.Max(1, damage - defense);
+        
+        int oldHealth = currentHealth;
+        currentHealth = Mathf.Max(0, currentHealth - actualDamage);
+        
+        Debug.Log($"[{gameObject.name}] 受到持续伤害 {actualDamage} 点，当前生命值: {currentHealth}");
+
+        // 显示伤害数字
+        Vector3 damageNumberPosition = transform.position;
+        if (collider2D != null)
+        {
+            damageNumberPosition += Vector3.up * collider2D.bounds.size.y;
+        }
+        DamagePopup popup = DamagePool.Instance.GetPopup();
+        popup.Setup(damageNumberPosition, actualDamage, damageType);
+
+        OnHealthChanged?.Invoke(oldHealth, currentHealth);
+
+        // 检查是否死亡
+        if (currentHealth <= 0)
+        {
+            Die();
+            return;
+        }
+
+        // 标记正在接受持续伤害
+        isReceivingContinuousDamage = true;
+        
+        // 持续伤害期间关闭无敌状态
+        isInvincible = false;
+        
+        // 停止之前的持续伤害无敌协程
+        if (continuousDamageInvincibilityCoroutine != null)
+        {
+            StopCoroutine(continuousDamageInvincibilityCoroutine);
+        }
+        
+        // 启动持续伤害结束后的无敌时间
+        continuousDamageInvincibilityCoroutine = StartCoroutine(EndContinuousDamageInvincibility());
+    }
+    
+    /// <summary>
+    /// 结束持续伤害后的无敌状态管理
+    /// </summary>
+    /// <returns></returns>
+    protected virtual IEnumerator EndContinuousDamageInvincibility()
+    {
+        // 等待一小段时间，确保持续伤害已经结束
+        yield return new WaitForSeconds(0.1f);
+        
+        // 等待持续伤害真正结束
+        while (isReceivingContinuousDamage)
+        {
+            yield return new WaitForSeconds(0.1f);
+        }
+        
+        // 持续伤害结束后，开启1秒无敌
+        isInvincible = true;
+        yield return new WaitForSeconds(1f);
+        isInvincible = false;
+        
+        continuousDamageInvincibilityCoroutine = null;
+    }
+    
+    /// <summary>
+    /// 通知持续伤害结束（由持续伤害系统调用）
+    /// </summary>
+    public virtual void OnContinuousDamageEnd()
+    {
+        isReceivingContinuousDamage = false;
+        Debug.Log($"[{gameObject.name}] 持续伤害结束");
+    }
+
+    /// <summary>
+    /// 开始无敌状态 - 公共方法供子类调用
+    /// </summary>
+    public virtual void StartInvincibility()
+    {
+        isInvincible = true;
+        StartCoroutine(EndInvincibilityAfterDelay(invincibilityTime));
+    }
+
+    /// <summary>
+    /// 结束无敌状态
+    /// </summary>
+    /// <param name="delay">延迟时间</param>
+    /// <returns></returns>
+    protected virtual IEnumerator EndInvincibilityAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        isInvincible = false;
     }
 
     /// <summary>
@@ -459,10 +605,13 @@ public abstract class Character : MonoBehaviour, IDamageable
         stamina += 2;
         intelligence += 2;
 
+        int oldHealth = currentHealth;
+        int oldMana = currentMana;
         // 恢复生命值和魔法值
         currentHealth = maxHealth;
         currentMana = maxMana;
-
+        OnHealthChanged?.Invoke(oldHealth, currentHealth);
+        OnManaChanged?.Invoke(oldMana, currentMana);
         // 重新计算衍生属性
         CalculateDerivedStats();
 
@@ -544,7 +693,6 @@ public abstract class Character : MonoBehaviour, IDamageable
 
                 // 播放命中音效
                 onAttackHit?.Invoke();
-                Debug.Log($"攻击命中目标: {target.name} (伤害: {physicalAttack})");
 
                 // 获取IDamageable组件
                 IDamageable damageable = target.GetComponent<IDamageable>();
@@ -566,7 +714,6 @@ public abstract class Character : MonoBehaviour, IDamageable
 
         if (enemiesHit > 0)
         {
-            Debug.Log($"本次攻击命中 {enemiesHit} 个目标");
         }
         showDebugATTACKINGTime = Time.time + 0.5f;
     }
@@ -613,7 +760,6 @@ public abstract class Character : MonoBehaviour, IDamageable
             Vector2 knockback = direction.normalized * knockbackForce;
             targetRb.AddForce(knockback, ForceMode2D.Impulse);
 
-            Debug.Log($"对 {targetRb.name} 应用击退力: {knockbackForce}");
         }
     }
 

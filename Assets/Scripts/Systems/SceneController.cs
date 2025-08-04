@@ -155,7 +155,7 @@ public class SceneController : MonoBehaviour
     [ReadOnly]
     [ShowInInspector]
     private Character character;
-
+    public Character Character => character;
     [FoldoutGroup("状态/组件引用/控制器组件")]
     [LabelText("摄像机跟随组件")]
     [ReadOnly]
@@ -313,7 +313,8 @@ public class SceneController : MonoBehaviour
         if (MapManager.Instance != null)
         {
             MapManager.Instance.OnMapTransitionComplete += OnMapTransitionComplete;
-            Debug.Log("[SceneController] 已订阅地图切换完成事件");
+            MapManager.Instance.OnMapLoaded += OnMapLoaded;
+            Debug.Log("[SceneController] 已订阅地图切换完成事件和地图加载事件");
         }
         else
         {
@@ -329,7 +330,24 @@ public class SceneController : MonoBehaviour
         if (MapManager.Instance != null)
         {
             MapManager.Instance.OnMapTransitionComplete -= OnMapTransitionComplete;
-            Debug.Log("[SceneController] 已取消订阅地图切换完成事件");
+            MapManager.Instance.OnMapLoaded -= OnMapLoaded;
+            Debug.Log("[SceneController] 已取消订阅地图切换完成事件和地图加载事件");
+        }
+    }
+
+    /// <summary>
+    /// 地图加载完成事件处理（用于初次加载）
+    /// </summary>
+    /// <param name="areaId">区域ID</param>
+    private void OnMapLoaded(string areaId)
+    {
+        Debug.Log($"[SceneController] 地图加载完成，区域: {areaId}");
+        
+        // 初次地图加载时不需要重新加载场景内容，因为InitializeTestSceneAsync已经处理了
+        // 这里只是记录日志，避免重复初始化
+        if (!isSceneInitialized)
+        {
+            Debug.Log("[SceneController] 初次地图加载，场景正在初始化中");
         }
     }
 
@@ -337,16 +355,16 @@ public class SceneController : MonoBehaviour
     /// 地图切换完成事件处理
     /// </summary>
     /// <param name="targetAreaId">目标区域ID</param>
-    private void OnMapTransitionComplete(string targetAreaId)
+    private void OnMapTransitionComplete(PortalConfig targetPortalConfig)
     {
-        Debug.Log($"[SceneController] 地图切换完成，目标区域: {targetAreaId}");
+        Debug.Log($"[SceneController] 地图切换完成，目标区域: {targetPortalConfig.sceneAreaId}");
         
         // 只有在场景已经初始化完成后才响应地图切换事件
         // 避免在初始化期间重复生成敌人/NPC
         if (isSceneInitialized)
         {
             // 重新加载场景内容
-            StartCoroutine(ReloadSceneContentAfterTransition(targetAreaId));
+            StartCoroutine(ReloadSceneContentAfterTransition(targetPortalConfig));
         }
         else
         {
@@ -364,11 +382,11 @@ public class SceneController : MonoBehaviour
 
 
     // 修改事件定义，添加场景加载状态参数
-    public static System.Action<string> OnSceneContentReloaded; // 保持原有
+    public static System.Action OnSceneContentReloaded; // 保持原有
     public static System.Action<Enemy> OnEnemySpawned; // 修改为携带敌人实例
 
     // 修改场景重载协程
-    private IEnumerator ReloadSceneContentAfterTransition(string targetAreaId)
+    private IEnumerator ReloadSceneContentAfterTransition(PortalConfig targetPortalConfig)
     {
         Debug.Log("[SceneController] 开始重新加载场景内容...");
 
@@ -390,7 +408,8 @@ public class SceneController : MonoBehaviour
         
         // 重新设置相机
         SetupCamera();
-
+        // 玩家位置设置
+        SetPlayerToPortalPosition(targetPortalConfig.position);
         // 等待一帧确保所有内容完全加载
         yield return null;
 
@@ -398,7 +417,7 @@ public class SceneController : MonoBehaviour
         
         // 关闭批量模式并触发场景加载完成事件
     QuestManager.Instance.SetBatchMode(false);
-        OnSceneContentReloaded?.Invoke(targetAreaId);
+        OnSceneContentReloaded?.Invoke();
     }
 
     /// <summary>
@@ -439,24 +458,27 @@ public class SceneController : MonoBehaviour
     /// <summary>
     /// 设置玩家位置到指定传送门位置
     /// </summary>
-    /// <param name="portalName">传送门名称</param>
-    public void SetPlayerToPortalPosition(string portalName)
+    /// <param name="position">目标位置</param>
+    public void SetPlayerToPortalPosition(Vector3 position)
     {
-        Debug.Log($"[SceneController] 尝试设置玩家位置到传送门: {portalName}");
-        if (currentPlayer != null && mapManager != null && mapManager.CurrentSceneArea != null)
+        SetPlayerPosition(position);
+        Debug.Log($"[SceneController] Player positioned at position {position}");
+    }
+
+    /// <summary>
+    /// 设置玩家位置的辅助方法
+    /// </summary>
+    /// <param name="position">目标位置</param>
+    private void SetPlayerPosition(Vector3 position)
+    {
+        if (currentPlayer != null)
         {
-            // 查找指定传送门的位置
-            var portalConfig = mapManager.CurrentSceneArea.areaTransitionTriggers.Find(p => p.triggerName == portalName);
-            if (portalConfig != null)
-            {
-                Vector3 portalPosition = portalConfig.triggerPosition;
-                currentPlayer.transform.position = portalPosition;
-                Debug.Log($"[SceneController] 玩家位置已设置到传送门: {portalName} 位置: {portalPosition}");
-            }
-            else
-            {
-                Debug.LogWarning($"[SceneController] 未找到传送门: {portalName}");
-            }
+            currentPlayer.transform.position = position;
+            Debug.Log($"[SceneController] 玩家位置已设置到: {position}");
+        }
+        else
+        {
+            Debug.LogWarning("[SceneController] 当前玩家为空，无法设置位置");
         }
     }
     #endregion
@@ -612,7 +634,6 @@ public class SceneController : MonoBehaviour
         if (isSceneInitialized) yield break;
 
         Debug.Log("[TestSceneController] 开始异步初始化测试场景");
-        // BGMManager.Instance.PlayMusic("menu_music", 0.6f, true);
         
         // 获取选择的角色类型
         selectedCharacterType = PlayerPrefs.GetString("SelectedCharacter", "warrior");
@@ -638,6 +659,9 @@ public class SceneController : MonoBehaviour
         isSceneInitialized = true;
 
         Debug.Log("[TestSceneController] 测试场景异步初始化完成");
+        
+        // 触发初始场景内容加载完成事件，让QuestManager等系统知道可以重建索引了
+        OnSceneContentReloaded?.Invoke();
     }
 
     /// <summary>
@@ -1211,5 +1235,36 @@ private IEnumerator AutoGarbageCollection()
         // 回退到UnifiedConfig
         return null;
     }
-    
+    /// <summary>
+    /// 添加敌人控制器
+    /// </summary>
+    /// <param name="enemy">敌人控制器</param>
+    public void AddEnemyController(Enemy enemy)
+    {
+        enemyControllers.Add(enemy);
+    }
+    /// <summary>
+    /// 添加敌人
+    /// </summary>
+    /// <param name="enemy">敌人游戏对象</param>
+    public void AddEnemy(GameObject enemy)
+    {
+        enemies.Add(enemy);
+    }
+    /// <summary>
+    /// 移除敌人控制器
+    /// </summary>
+    /// <param name="enemy">敌人控制器</param>
+    public void RemoveEnemyController(Enemy enemy)
+    {
+        enemyControllers.Remove(enemy);
+    }
+    /// <summary>
+    /// 移除敌人
+    /// </summary>
+    /// <param name="enemy">敌人游戏对象</param>
+    public void RemoveEnemy(GameObject enemy)
+    {
+        enemies.Remove(enemy);
+    }
 }

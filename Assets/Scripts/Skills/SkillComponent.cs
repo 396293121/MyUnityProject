@@ -64,17 +64,45 @@ public class SkillComponent : MonoBehaviour
     [LabelText("显示调试信息")]
     [InfoBox("在Scene视图中显示技能范围等调试信息")]
     public bool showDebugGizmos = true;
+    [FoldoutGroup("技能状态监控/调试信息")]
+    [LabelText("测试技能索引")]
+    [InfoBox("选择要测试的技能索引（0开始）")]
+    public int debugSkillIndex = 0;
+    [FoldoutGroup("技能状态监控/调试信息")]
+    [Button("测试技能", ButtonSizes.Medium)]
+    [InfoBox("点击按钮测试选定的技能")]
+    private void TestSkill()
+    {
+         skillDataConfig skillData = skillDataList[debugSkillIndex];
+
+        // 设置技能执行状态
+        isExecutingSkill = true;
+        currentExecutingSkillIndex = debugSkillIndex;
+        //enmeyController 不需要消耗法力值
+        // 播放技能动画
+        if (characterAnimator != null && !string.IsNullOrEmpty(skillData.animationTrigger))
+        {
+            characterAnimator.SetBool("isSkilling", true);
+            characterAnimator.SetTrigger(skillData.animationTrigger);
+        }
+        // 执行技能位移
+        if (skillData.isMove)
+        {
+            // 直接使用 this（SkillComponent 本身就是 MonoBehaviour）来启动协程
+            StartCoroutine(skillData.ExecuteMovement(gameObject, true));
+        }
+    }
     [FoldoutGroup("技能状态监控/执行状态", expanded: false)]
     [LabelText("正在执行技能")]
-    [ReadOnly]
+    // [ReadOnly]
     [ShowInInspector]
     public bool isExecutingSkill = false;
 
     [FoldoutGroup("技能状态监控/执行状态")]
     [LabelText("当前执行的技能")]
-    [ReadOnly]
+    // [ReadOnly]
     [ShowInInspector]
-    private int currentExecutingSkillIndex = -1;
+    public  int currentExecutingSkillIndex = -1;
 
     // 新增技能状态变化事件
     public event Action<int> OnSkillCooldownUpdated;  // 参数：技能索引
@@ -285,7 +313,7 @@ public class SkillComponent : MonoBehaviour
         {
             stateMachine.NotifySkillInput();
         }
-        else
+        else if(isCharacter)
         {
             Debug.LogWarning("[SkillComponent] 未找到PlayerStateMachine组件");
         }
@@ -420,12 +448,10 @@ public class SkillComponent : MonoBehaviour
         if (stateMachine != null && !isForse)
         {
             bool canTransition = stateMachine.CanTransitionTo(PlayerState.Skill);
-            Debug.LogWarning($"[SkillComponent] 状态机返回{canTransition}");
 
             return canTransition;
         }
 
-        Debug.LogWarning("[SkillComponent] 未找到状态机组件");
         return true;
     }
 
@@ -566,11 +592,8 @@ public class SkillComponent : MonoBehaviour
         // 执行技能位移
         if (skillData.isMove)
         {
-            var movementComponent = gameObject.GetComponent<MonoBehaviour>();
-            if (movementComponent != null)
-            {
-                movementComponent.StartCoroutine(skillData.ExecuteMovement(gameObject, isCharacter ? characterController.GetFacingDirection() : enmeyController.facingRight));
-            }
+            // 直接使用 this（SkillComponent 本身就是 MonoBehaviour）来启动协程
+            StartCoroutine(skillData.ExecuteMovement(gameObject, isCharacter ? characterController.GetFacingDirection() : enmeyController.facingRight));
         }
         // 开始技能冷却
         skillCooldowns[skillIndex] = skillData.cooldown;

@@ -19,7 +19,6 @@ MonoBehaviour:
     rarity: 0
     canBeKillTarget: 1
     canBeBossTarget: 0
-    recommendedLevel: 1
     config: {fileID: 11400000, guid: 092ca990afdc6a142998532bc5a2daf8, type: 2}
   - id: 2
     displayName: "\u5927\u578B\u91CE\u732A"
@@ -27,8 +26,42 @@ MonoBehaviour:
     rarity: 0
     canBeKillTarget: 1
     canBeBossTarget: 0
-    recommendedLevel: 1
     config: {fileID: 11400000, guid: 0c8439119c6f28f489046ff03ff85ba3, type: 2}
+  - id: 3
+    displayName: "\u7070\u72FC"
+    category: 0
+    rarity: 0
+    canBeKillTarget: 1
+    canBeBossTarget: 0
+    config: {fileID: 11400000, guid: eceba29c44c4f574d8afdb9e4fb540cc, type: 2}
+  - id: 4
+    displayName: "\u795E\u79D8\u4EBA"
+    category: 0
+    rarity: 0
+    canBeKillTarget: 1
+    canBeBossTarget: 0
+    config: {fileID: 11400000, guid: 031b695b86705884db2c10d9e4b3f284, type: 2}
+  - id: 5
+    displayName: "\u72FC\u738B"
+    category: 2
+    rarity: 1
+    canBeKillTarget: 1
+    canBeBossTarget: 0
+    config: {fileID: 11400000, guid: f43f5c13f63264747b57a7a9508f911e, type: 2}
+  - id: 6
+    displayName: "\u666E\u901A\u5C71\u8D3C"
+    category: 0
+    rarity: 0
+    canBeKillTarget: 1
+    canBeBossTarget: 0
+    config: {fileID: 11400000, guid: c52ee18872fe7fc48ba7fc438115f04d, type: 2}
+  - id: 7
+    displayName: "\u7CBE\u82F1\u5C71\u8D3C"
+    category: 0
+    rarity: 0
+    canBeKillTarget: 1
+    canBeBossTarget: 0
+    config: {fileID: 11400000, guid: 398f46c653007204e8a8ecf3fe8e26ea, type: 2}
   npcIds:
   - id: 1
     displayName: "\u5927\u578B\u91CE\u732A"
@@ -99,7 +132,45 @@ MonoBehaviour:
     subAreaId: 1
     subAreaName: "\u96F7\u9E23\u90E8\u843D"
     config: {fileID: 11400000, guid: c88364c32419adb43a5aa47abbc6dc08, type: 2}
+  - id: 3
+    displayName: "\u540E\u5C71\u5C0F\u5F84-\u4E2D\u6BB5"
+    description: 
+    mainAreaId: 1
+    mainAreaName: "\u94C1\u8840\u9AD8\u539F"
+    subAreaId: 1
+    subAreaName: "\u96F7\u9E23\u90E8\u843D"
+    config: {fileID: 11400000, guid: c88364c32419adb43a5aa47abbc6dc08, type: 2}
+  portalIds:
+  - id: 1
+    displayName: "\u90E8\u843D\u4E2D\u5FC3\u95E8-\u540E\u5C71\u5C0F\u5F84"
+    description: 
+    sceneAreaId: 1
+    targetPortalId: 2
+    position: {x: -3.23, y: 31.67, z: 0}
+    config: {fileID: 11400000, guid: 6e21816a87fe26249882334fec83f35e, type: 2}
+  - id: 2
+    displayName: "\u540E\u5C71\u5C0F\u5F84-\u90E8\u843D\u4E2D\u5FC3"
+    description: 
+    sceneAreaId: 2
+    targetPortalId: 1
+    position: {x: 87.01, y: 0.32, z: 0}
+    config: {fileID: 11400000, guid: 8fe121e30887cfc439cc90bed229675f, type: 2}
+  - id: 3
+    displayName: "\u540E\u5C71\u5C0F\u5F84-\u540E\u5C71\u5C0F\u5F84\u4E2D\u6BB5"
+    description: 
+    sceneAreaId: 2
+    targetPortalId: 4
+    position: {x: 17.6, y: 0.7, z: 0}
+    config: {fileID: 11400000, guid: b5718ab078683554fb4dba0c3a788092, type: 2}
+  - id: 4
+    displayName: "\u540E\u5C71\u5C0F\u5F84\u4E2D\u6BB5\u95E8-\u540E\u5C71\u5C0F\u5F84"
+    description: 
+    sceneAreaId: 3
+    targetPortalId: 3
+    position: {x: 36.3, y: 11.7, z: 0}
+    config: {fileID: 11400000, guid: 44b3ef080ff8f8041a28ed062638d9bf, type: 2}
   enemyConfigFolder: "Assets/Data/Configs/\u654C\u4EBA\u914D\u7F6E"
   npcConfigFolder: Assets/Data/Configs/NPC
   itemConfigFolder: "Assets/Scripts/ScriptableObjects/\u7269\u54C1\u914D\u7F6E\u6587\u4EF6"
   mapConfigFolder: Assets/Data
+  portalConfigFolder: "Assets/Data/Configs/\u4F20\u9001\u95E8\u914D\u7F6E"

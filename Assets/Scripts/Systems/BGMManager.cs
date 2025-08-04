@@ -69,7 +69,7 @@ public class BGMManager : MonoBehaviour
         if (MapManager.Instance != null)
         {
             MapManager.Instance.OnMapTransitionComplete += OnMapTransitionComplete;
-            Debug.Log("[BGMManager] 已订阅地图切换完成事件");
+            MapManager.Instance.OnMapLoaded += OnMapLoaded;
         }
         else
         {
@@ -85,17 +85,28 @@ public class BGMManager : MonoBehaviour
         if (MapManager.Instance != null)
         {
             MapManager.Instance.OnMapTransitionComplete -= OnMapTransitionComplete;
-            Debug.Log("[BGMManager] 已取消订阅地图切换完成事件");
+            MapManager.Instance.OnMapLoaded -= OnMapLoaded;
+            Debug.Log("[BGMManager] 已取消订阅地图切换完成事件和地图加载事件");
         }
+    }
+
+    /// <summary>
+    /// 地图加载完成事件处理（用于初次加载）
+    /// </summary>
+    /// <param name="areaId">区域ID</param>
+    private void OnMapLoaded(string areaId)
+    {
+        
+        // 初次地图加载时播放背景音乐
+        LoadAndPlayAreaMusic();
     }
 
     /// <summary>
     /// 地图切换完成事件处理
     /// </summary>
     /// <param name="targetAreaId">目标区域ID</param>
-    private void OnMapTransitionComplete(string targetAreaId)
+    private void OnMapTransitionComplete(PortalConfig targetPortalConfig)
     {
-        Debug.Log($"[BGMManager] 地图切换完成，目标区域: {targetAreaId}");
         
         // 停止当前背景音乐并淡出
         if (musicSource.isPlaying)
@@ -103,15 +114,15 @@ public class BGMManager : MonoBehaviour
             StartCoroutine(FadeOutMusic());
         }
         
-        // 根据新区域加载对应的背景音乐
-        LoadAreaBackgroundMusic(targetAreaId);
+        // 加载并播放新区域的背景音乐
+        LoadAndPlayAreaMusic();
     }
 
     /// <summary>
-    /// 根据区域ID加载对应的背景音乐
+    /// 加载并播放区域背景音乐
     /// </summary>
     /// <param name="areaId">区域ID</param>
-    private void LoadAreaBackgroundMusic(string areaId)
+    private void LoadAndPlayAreaMusic()
     {
         try
         {
@@ -123,7 +134,6 @@ public class BGMManager : MonoBehaviour
                 // 检查区域是否有特定的背景音乐配置
                 if (currentArea.backgroundMusic != null)
                 {
-                    Debug.Log($"[BGMManager] 为区域 {areaId} 加载背景音乐: {currentArea.backgroundMusic.name}");
                     
                     // 延迟播放新音乐，确保淡出完成
                     StartCoroutine(PlayMusicAfterDelay(currentArea.backgroundMusic, 1.5f));
@@ -132,7 +142,6 @@ public class BGMManager : MonoBehaviour
                 {
                      StartCoroutine(PlayMusicAfterDelay(defaultBackgroundMusic, 1.5f));
 
-                    Debug.Log($"[BGMManager] 区域 {areaId} 没有配置背景音乐，使用默认背景音乐");
                 }
             }
         }
@@ -170,8 +179,6 @@ public class BGMManager : MonoBehaviour
             musicSource.playOnAwake = false;
         }
         
-        // 加载音频资源到字典
-        LoadAudioClips();
         
         // 应用音量设置
         UpdateVolumes();
@@ -182,23 +189,6 @@ public class BGMManager : MonoBehaviour
         }
     }
     
-    /// <summary>
-    /// 加载音频资源到字典
-    /// </summary>
-    private void LoadAudioClips()
-    {
-        
-
-        // 调试：检查 button_click 是否被加载
-        if (audioClips.ContainsKey("button_click"))
-        {
-            Debug.Log($"[BGMManager] 'button_click' AudioClip 已加载: {audioClips["button_click"].name}");
-        }
-        else
-        {
-            Debug.LogWarning("[BGMManager] 'button_click' AudioClip 未加载。请确保它已添加到 BGMManager 的 UI Sounds 数组中。");
-        }
-    }
     /// <summary>
     /// 播放背景音乐（带音量和循环参数）
     /// </summary>

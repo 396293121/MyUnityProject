@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 906e25d166d923043ae586cc23f54045, type: 3}
+  m_Name: WOLFKINGCONFIG
+  m_EditorClassIdentifier: 
+  enemyId: 5
+  displayName: "\u72FC\u738B"
+  description: 
+  enemyIcon: {fileID: 0}
+  category: 2
+  rarity: 1
+  enemyUI: {fileID: 7152156121433935882, guid: 36f1ea01f0f3c874e980ab2b4ac15970, type: 3}
+  health: 541
+  moveSpeed: 8
+  chaseSpeedRate: 1.2
+  canAttack: 0
+  attackDamage: 15
+  damageType: 0
+  attackRange: 1.5
+  attackCooldown: 2
+  defense: 44
+  detectionRange: 14
+  loseTargetRange: 18
+  keepDistance: 8
+  patrolSpeed: 4
+  patrolWaitTime: 3
+  offScreenUpdateInterval: 0.5
+  onScreenUpdateInterval: 0.05
+  screenBoundaryExtension: 5
+  expReward: 262
+  canBeKillTarget: 1
+  canBeBossTarget: 0
+  chargeDistance: 12
+  enrageHealthThreshold: 0.6

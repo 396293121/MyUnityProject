@@ -221,7 +221,7 @@ public class Dasi : Enemy
         if (isSkill) return;
 
         // 修改为攻击点检测
-        if (IsPlayerInAttackRange())
+        if (IsPlayerInAttackRange()&&canAttack)
         {
             ChangeState(EnemyState.Attack);
             return;

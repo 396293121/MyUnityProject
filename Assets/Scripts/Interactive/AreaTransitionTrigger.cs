@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
-
-
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -19,31 +17,7 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
 {
     #region 配置
     [TitleGroup("切换配置")]
-    [FoldoutGroup("切换配置/目标区域", expanded: true)]
-    [LabelText("目标主区域ID")]
-    [Required("必须指定目标主区域ID")]
-    [ValueDropdown("GetAvailableMainAreaIds")]
-    [OnValueChanged("OnMainAreaIdChanged")]
-    public string targetMainAreaId;
-
-    [FoldoutGroup("切换配置/目标区域")]
-    [LabelText("目标分区域ID")]
-    [Required("必须指定目标分区域ID")]
-    [ValueDropdown("GetAvailableSubAreaIds")]
-    [OnValueChanged("OnSubAreaIdChanged")]
-    public string targetSubAreaId;
-
-    [FoldoutGroup("切换配置/目标区域")]
-    [LabelText("目标场景区域ID")]
-    [Required("必须指定目标场景区域ID")]
-    [ValueDropdown("GetAvailableSceneAreaIds")]
-    public string targetSceneAreaId;
-
-    [FoldoutGroup("切换配置/传送门选择", expanded: false)]
-    [LabelText("目标传送门")]
-    [ValueDropdown("GetAvailablePortals")]
-    [InfoBox("选择目标场景中的传送门作为传送目标位置")]
-    public string targetPortalName;
+    public PortalConfig portalConfig;
     [FoldoutGroup("切换配置/条件设置", expanded: false)]
     [LabelText("需要条件")]
     [InfoBox("可选：切换需要满足的条件，留空表示无条件")]
@@ -54,22 +28,7 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
     [LabelText("条件不满足提示")]
     [ShowIf("@!string.IsNullOrEmpty(requiredCondition)")]
     public string conditionFailMessage = "条件不满足，无法进入该区域";
-    /// <summary>
-    /// 场景切换后设置玩家位置到传送门位置
-    /// </summary>
-    private void SetPlayerPositionAfterTransition(String targetAreaId)
-    {
 
-        // 通过SceneController设置玩家位置
-        if (SceneController.Instance != null)
-        {
-            SceneController.Instance.SetPlayerToPortalPosition(targetPortalName);
-        }
-        else
-        {
-            Debug.LogWarning("[AreaTransitionTrigger] 未找到SceneController，无法设置玩家位置");
-        }
-    }
     public GameIdDictionary idDictionary
     {
         get
@@ -165,15 +124,16 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
 
     private void Start()
     {
-          InputManager.RegisterListener(this);
-          MapManager.Instance.OnMapTransitionComplete += SetPlayerPositionAfterTransition;
+        InputManager.RegisterListener(this);
         SetupTrigger();
     }
+    
     void OnDestroy()
     {
         InputManager.UnregisterListener(this);
     }
-
+    
+    
     #endregion
 
     #region 初始化
@@ -207,7 +167,15 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
         // 设置默认区域名称
         if (string.IsNullOrEmpty(areaDisplayName))
         {
-            areaDisplayName = $"{targetMainAreaId}.{targetSubAreaId}.{targetSceneAreaId}";
+            var targetPortalConfig = idDictionary.GetPortalConfig(portalConfig.targetPortalId);
+            if (targetPortalConfig != null)
+            {
+                areaDisplayName = targetPortalConfig.displayName;
+            }
+            else
+            {
+                areaDisplayName = portalConfig.targetPortalId;
+            }
         }
 
         // 生成入口特效
@@ -216,8 +184,6 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
             GameObject effect = Instantiate(entranceEffect, transform.position, transform.rotation);
             effect.transform.SetParent(transform);
         }
-
-        Debug.Log($"[AreaTransitionTrigger] 切换触发器已设置: {gameObject.name} -> {areaDisplayName}");
     }
     #endregion
 
@@ -247,7 +213,6 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
     /// </summary>
     private void OnPlayerEnterTrigger()
     {
-        Debug.Log($"[AreaTransitionTrigger] 玩家进入切换区域: {areaDisplayName}");
 
         // 播放进入音效
         if (enterSound != null && audioSource != null)
@@ -267,7 +232,6 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
     /// </summary>
     private void OnPlayerExitTrigger()
     {
-        Debug.Log($"[AreaTransitionTrigger] 玩家离开切换区域: {areaDisplayName}");
 
         // 隐藏提示UI
         if (showTransitionUI)
@@ -295,8 +259,6 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
             OnTransitionConditionFailed();
             return;
         }
-
-        Debug.Log($"[AreaTransitionTrigger] 开始切换到区域: {areaDisplayName}");
         isTransitioning = true;
 
         // 播放传送音效
@@ -318,11 +280,30 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
         }
 
         // 执行切换
-        MapManager.Instance.TransitionToArea(targetMainAreaId, targetSubAreaId, targetSceneAreaId);
-        Debug.Log($"[AreaTransitionTrigger] 目标传送门: {targetPortalName}");
+        var targetPortalConfig = idDictionary.GetPortalConfig(portalConfig.targetPortalId);
+        if (targetPortalConfig == null)
+        {
+            Debug.LogError($"[AreaTransitionTrigger] 找不到目标传送门配置: {portalConfig.targetPortalId}");
+            ResetTransitionState();
+            return;
+        }
 
-        // 切换完成后重置状态
-        StartCoroutine(ResetTransitionState());
+        // 从传送门配置中获取目标区域信息
+        string targetSceneAreaId = targetPortalConfig.GetFullAreaId();
+        
+        // 解析场景区域ID获取主区域和分区域信息
+        string[] areaParts = targetSceneAreaId.Split('.');
+        if (areaParts.Length != 3)
+        {
+            Debug.LogError($"[AreaTransitionTrigger] 无效的场景区域ID格式: {targetSceneAreaId}");
+            ResetTransitionState();
+            return;
+        }
+
+        MapManager.Instance.TransitionToArea(targetPortalConfig);
+          ResetTransitionState();
+        Debug.Log($"[AreaTransitionTrigger] 目标传送门: {portalConfig.targetPortalId}");
+
     }
 
     /// <summary>
@@ -359,9 +340,8 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
     /// <summary>
     /// 重置切换状态
     /// </summary>
-    private System.Collections.IEnumerator ResetTransitionState()
+    private void ResetTransitionState()
     {
-        yield return new WaitForSeconds(1f);
         isTransitioning = false;
     }
     #endregion
@@ -376,11 +356,9 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
         // 暂时使用Debug输出，实际项目中需要实现UI显示逻辑
         if (show)
         {
-            Debug.Log($"[UI] 显示切换提示: {transitionPrompt} - {areaDisplayName}");
         }
         else
         {
-            Debug.Log("[UI] 隐藏切换提示");
         }
     }
 
@@ -408,7 +386,15 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
         else
         {
             Debug.Log($"[AreaTransitionTrigger] 测试切换: {areaDisplayName}");
-            Debug.Log($"目标: {targetMainAreaId}.{targetSubAreaId}.{targetSceneAreaId}");
+            var targetPortalConfig = idDictionary.GetPortalConfig(portalConfig.targetPortalId);
+            if (targetPortalConfig != null)
+            {
+                Debug.Log($"目标: {targetPortalConfig.sceneAreaId}");
+            }
+            else
+            {
+                Debug.Log($"目标传送门配置未找到: {portalConfig.targetPortalId}");
+            }
         }
     }
 
@@ -420,291 +406,21 @@ public class AreaTransitionTrigger : MonoBehaviour, IInputListener
         Debug.Log($"[AreaTransitionTrigger] 配置信息:");
         Debug.Log($"  名称: {gameObject.name}");
         Debug.Log($"  显示名称: {areaDisplayName}");
-        Debug.Log($"  目标区域: {targetMainAreaId}.{targetSubAreaId}.{targetSceneAreaId}");
-        if ( !string.IsNullOrEmpty(targetPortalName))
+        Debug.Log($"  当前传送门ID: {portalConfig.sceneAreaId}");
+        Debug.Log($"  目标传送门ID: {portalConfig.targetPortalId}");
+        
+        var targetPortalConfig = idDictionary.GetPortalConfig(portalConfig.targetPortalId);
+        if (targetPortalConfig != null)
         {
-            Debug.Log($"  目标传送门: {targetPortalName}");
+            Debug.Log($"  目标区域: {targetPortalConfig.sceneAreaId}");
         }
+        
         Debug.Log($"  需要条件: {(string.IsNullOrEmpty(requiredCondition) ? "无" : requiredCondition)}");
     }
     #endregion
 
     #region 下拉框数据获取方法
-    /// <summary>
-    /// 获取可用的主区域ID列表
-    /// </summary>
-    private IEnumerable<ValueDropdownItem<string>> GetAvailableMainAreaIds()
-    {
-        var items = new List<ValueDropdownItem<string>>();
 
-        var gameIdDict = idDictionary;
-        if (gameIdDict == null)
-        {
-            items.Add(new ValueDropdownItem<string>("未找到GameIdDictionary", ""));
-            return items;
-        }
-
-        var mainAreaIds = gameIdDict.GetAllMainAreaIds();
-        foreach (var areaId in mainAreaIds)
-        {
-            var displayName = gameIdDict.GetMainAreaDisplayName(areaId);
-            if (!string.IsNullOrEmpty(displayName))
-            {
-                items.Add(new ValueDropdownItem<string>($"{displayName} ({areaId})", areaId));
-            }
-            else
-            {
-                items.Add(new ValueDropdownItem<string>(areaId, areaId));
-            }
-        }
-
-        if (items.Count == 0)
-        {
-            items.Add(new ValueDropdownItem<string>("没有可用的主区域", ""));
-        }
-
-        return items;
-    }
-
-    /// <summary>
-    /// 获取可用的传送门列表
-    /// </summary>
-    private IEnumerable<ValueDropdownItem<string>> GetAvailablePortals()
-    {
-        var items = new List<ValueDropdownItem<string>>();
-
-        if (string.IsNullOrEmpty(targetMainAreaId) || string.IsNullOrEmpty(targetSubAreaId) || string.IsNullOrEmpty(targetSceneAreaId))
-        {
-            items.Add(new ValueDropdownItem<string>("请先选择完整的目标区域", ""));
-            return items;
-        }
-
-        // 获取MapSystemConfig
-        var mapConfig = Resources.FindObjectsOfTypeAll<MapSystemConfig>().FirstOrDefault();
-        if (mapConfig == null)
-        {
-            items.Add(new ValueDropdownItem<string>("未找到MapSystemConfig", ""));
-            return items;
-        }
-
-        // 查找目标场景区域
-        SceneArea targetSceneArea = null;
-        foreach (var mainArea in mapConfig.mainAreas)
-        {
-            if (mainArea.areaId == targetMainAreaId)
-            {
-                foreach (var subArea in mainArea.subAreas)
-                {
-                    if (subArea.areaId == targetSubAreaId)
-                    {
-                        targetSceneArea = subArea.sceneAreas.FirstOrDefault(sa => sa.areaId == targetSceneAreaId);
-                        break;
-                    }
-                }
-                break;
-            }
-        }
-
-        if (targetSceneArea == null)
-        {
-            items.Add(new ValueDropdownItem<string>("未找到目标场景区域", ""));
-            return items;
-        }
-
-        // 获取该场景区域的传送门配置
-        if (targetSceneArea.areaTransitionTriggers == null || targetSceneArea.areaTransitionTriggers.Count == 0)
-        {
-            items.Add(new ValueDropdownItem<string>("目标场景区域没有配置传送门", ""));
-            return items;
-        }
-
-        foreach (var portal in targetSceneArea.areaTransitionTriggers)
-        {
-            if (!string.IsNullOrEmpty(portal.triggerName))
-            {
-                var displayText = portal.triggerName;
-                if (!string.IsNullOrEmpty(portal.triggerName))
-                {
-                    displayText += $" ({portal.triggerName})";
-                }
-                items.Add(new ValueDropdownItem<string>(displayText, portal.triggerName));
-            }
-        }
-
-        if (items.Count == 0)
-        {
-            items.Add(new ValueDropdownItem<string>("目标场景区域的传送门配置无效", ""));
-        }
-
-        return items;
-    }
-
-    /// <summary>
-    /// 获取可用的分区域ID列表
-    /// </summary>
-    private IEnumerable<ValueDropdownItem<string>> GetAvailableSubAreaIds()
-    {
-        var items = new List<ValueDropdownItem<string>>();
-
-        if (string.IsNullOrEmpty(targetMainAreaId))
-        {
-            items.Add(new ValueDropdownItem<string>("请先选择主区域", ""));
-            return items;
-        }
-
-        var gameIdDict = idDictionary;
-        if (gameIdDict == null)
-        {
-            items.Add(new ValueDropdownItem<string>("未找到GameIdDictionary", ""));
-            return items;
-        }
-
-        var subAreaIds = gameIdDict.GetAllSubAreaIds(targetMainAreaId);
-        if (subAreaIds == null || subAreaIds.Count == 0)
-        {
-            items.Add(new ValueDropdownItem<string>("主区域不存在或无分区域", ""));
-            return items;
-        }
-
-        foreach (var areaId in subAreaIds)
-        {
-            var displayName = gameIdDict.GetSubAreaDisplayName(targetMainAreaId, areaId);
-            if (!string.IsNullOrEmpty(displayName))
-            {
-                items.Add(new ValueDropdownItem<string>($"{displayName} ({areaId})", areaId));
-            }
-            else
-            {
-                items.Add(new ValueDropdownItem<string>(areaId, areaId));
-            }
-        }
-
-        return items;
-    }
-
-    /// <summary>
-    /// 获取可用的场景区域ID列表
-    /// </summary>
-    private IEnumerable<ValueDropdownItem<string>> GetAvailableSceneAreaIds()
-    {
-        var items = new List<ValueDropdownItem<string>>();
-
-        if (string.IsNullOrEmpty(targetMainAreaId) || string.IsNullOrEmpty(targetSubAreaId))
-        {
-            items.Add(new ValueDropdownItem<string>("请先选择主区域和分区域", ""));
-            return items;
-        }
-
-        var gameIdDict = idDictionary;
-        if (gameIdDict == null)
-        {
-            items.Add(new ValueDropdownItem<string>("未找到GameIdDictionary", ""));
-            return items;
-        }
-
-        var sceneAreaIds = gameIdDict.GetAllSceneAreaIds(targetMainAreaId, targetSubAreaId);
-        if (sceneAreaIds == null || sceneAreaIds.Count == 0)
-        {
-            items.Add(new ValueDropdownItem<string>("分区域不存在或无场景区域", ""));
-            return items;
-        }
-
-        foreach (var areaId in sceneAreaIds)
-        {
-            var displayName = gameIdDict.GetSceneAreaDisplayName(targetMainAreaId, targetSubAreaId, areaId);
-            if (!string.IsNullOrEmpty(displayName))
-            {
-                items.Add(new ValueDropdownItem<string>($"{displayName} ({areaId})", areaId));
-            }
-            else
-            {
-                items.Add(new ValueDropdownItem<string>(areaId, areaId));
-            }
-        }
-
-        return items;
-    }
-
-    /// <summary>
-
-
-    /// <summary>
-    /// 主区域ID改变时的回调
-    /// </summary>
-    private void OnMainAreaIdChanged()
-    {
-        // 清空下级选择
-        targetSubAreaId = "";
-        targetSceneAreaId = "";
-
-        // 更新显示名称
-        UpdateAreaDisplayName();
-    }
-
-    /// <summary>
-    /// 分区域ID改变时的回调
-    /// </summary>
-    private void OnSubAreaIdChanged()
-    {
-        // 清空下级选择
-        targetSceneAreaId = "";
-
-        // 更新显示名称
-        UpdateAreaDisplayName();
-    }
-
-    /// <summary>
-    /// 更新区域显示名称
-    /// </summary>
-    private void UpdateAreaDisplayName()
-    {
-        if (string.IsNullOrEmpty(targetMainAreaId))
-        {
-            areaDisplayName = "未设置";
-            return;
-        }
-
-        var gameIdDict = idDictionary;
-        if (gameIdDict == null)
-        {
-            areaDisplayName = $"{targetMainAreaId}.{targetSubAreaId}.{targetSceneAreaId}";
-            return;
-        }
-
-        string displayName = gameIdDict.GetMainAreaDisplayName(targetMainAreaId);
-        if (string.IsNullOrEmpty(displayName))
-        {
-            displayName = targetMainAreaId;
-        }
-
-        if (!string.IsNullOrEmpty(targetSubAreaId))
-        {
-            var subAreaDisplayName = gameIdDict.GetSubAreaDisplayName(targetMainAreaId, targetSubAreaId);
-            if (!string.IsNullOrEmpty(subAreaDisplayName))
-            {
-                displayName += $" - {subAreaDisplayName}";
-            }
-            else
-            {
-                displayName += $" - {targetSubAreaId}";
-            }
-
-            if (!string.IsNullOrEmpty(targetSceneAreaId))
-            {
-                var sceneAreaDisplayName = gameIdDict.GetSceneAreaDisplayName(targetMainAreaId, targetSubAreaId, targetSceneAreaId);
-                if (!string.IsNullOrEmpty(sceneAreaDisplayName))
-                {
-                    displayName += $" - {sceneAreaDisplayName}";
-                }
-                else
-                {
-                    displayName += $" - {targetSceneAreaId}";
-                }
-            }
-        }
-
-        areaDisplayName = displayName;
-    }
     #endregion
         #region 输入监听实现
     // 只实现需要的攀爬输入

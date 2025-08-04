@@ -152,7 +152,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerCharacter: {fileID: 395180499527017281}
   aamoveSpeed: 0
-  jumpForce: 20.2
+  jumpForce: 15
   groundCheckDistance: 0.1
   groundLayerMask:
     serializedVersion: 2
@@ -171,7 +171,6 @@ MonoBehaviour:
   canAttack: 1
   isAttacking: 0
   isHurt: 0
-  isInvincible: 0
   interactionCheckInterval: 0.1
 --- !u!114 &4187876456670026591
 MonoBehaviour:
@@ -200,7 +199,9 @@ MonoBehaviour:
   characterController: {fileID: 395180499527017281}
   enmeyController: {fileID: 0}
   showDebugGizmos: 1
+  debugSkillIndex: 0
   isExecutingSkill: 0
+  currentExecutingSkillIndex: -1
 --- !u!114 &395180499527017281
 MonoBehaviour:
   m_ObjectHideFlags: 0

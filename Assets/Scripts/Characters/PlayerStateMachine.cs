@@ -400,7 +400,7 @@ public class PlayerStateMachine : MonoBehaviour
                 conditionsDirty = true;
             }
             
-            bool newInvincible = playerController.isInvincible;
+            bool newInvincible = character != null && character.IsInvincible;
             if (isInvincible != newInvincible)
             {
                 isInvincible = newInvincible;
@@ -558,7 +558,11 @@ public class PlayerStateMachine : MonoBehaviour
                 {
                     playerController.canMove = true;  // 允许移动
                     playerController.canAttack = false;
-                    playerController.isInvincible = true;
+                    // 无敌状态由Character基类管理
+                    if (character != null)
+                    {
+                        character.StartInvincibility();
+                    }
                 }
                 break;
                 
@@ -778,7 +782,6 @@ public class PlayerStateMachine : MonoBehaviour
             {
                 // 检查条件是否满足
                 if (transition.condition != null&&!transition.condition()){
-                        Debug.Log(transition?.conditionDescription+"cnm");
 
                     
                 }

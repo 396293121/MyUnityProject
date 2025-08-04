@@ -77,7 +77,6 @@ public class GameIdDictionaryManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"[GameIdDictionaryManager] 已从编辑器路径加载ID字典");
         }
 #else
         // 运行时从Resources文件夹加载

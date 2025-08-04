@@ -499,6 +499,41 @@ private void RegisterSingleEnemy(Enemy enemy)
         return GetQuestById(questId).CanComplete();
     }
     /// <summary>
+    /// 完成任务 并返回奖励的字符串内容用于对话展示
+    /// </summary>
+    public string CompleteQuestString(string questId)
+    {
+        var quest = GetActiveQuest(questId);
+        if (quest == null)
+        {
+            Debug.LogWarning($"[QuestManager] 找不到活跃任务: {questId}");
+            return "";
+        }
+
+        if (!quest.CanComplete())
+        {
+            Debug.LogWarning($"[QuestManager] 任务目标未完成: {questId}");
+            return "";
+        }
+
+        // 完成任务
+        quest.CompleteQuest();
+        activeQuests.Remove(quest);
+        completedQuests.Add(quest);
+
+        // 清理任务目标索引
+        RemoveObjectiveIndexes(quest);
+
+        // 给予奖励
+        string reward=GiveQuestReward(quest);
+
+        OnQuestCompleted?.Invoke(quest);
+
+        Debug.Log($"[QuestManager] 完成任务: {quest.questName}");
+        return reward;
+    }
+
+    /// <summary>
     /// 完成任务
     /// </summary>
     public bool CompleteQuest(string questId)
@@ -676,21 +711,23 @@ private void RegisterSingleEnemy(Enemy enemy)
     /// <summary>
     /// 给予任务奖励
     /// </summary>
-    private void GiveQuestReward(QuestData quest)
+    private string GiveQuestReward(QuestData quest)
     {
-        if (quest.rewards == null || quest.rewards.Count == 0) return;
-        
+        if (quest.rewards == null || quest.rewards.Count == 0) return "";
+        string rewardString="获得奖励：";
         foreach (var reward in quest.rewards)
         {
             // 给予经验值
             if (reward.experienceReward > 0 && GameManager.Instance != null)
             {
+                rewardString+="经验值："+reward.experienceReward+"\n";
                 GameManager.Instance.AddPlayerExperience(reward.experienceReward);
             }
             
             // 给予金币
             if (reward.goldReward > 0 && GameManager.Instance != null)
             {
+                rewardString+="金币："+reward.goldReward+"\n";
                 GameManager.Instance.AddPlayerGold(reward.goldReward);
             }
             
@@ -698,11 +735,11 @@ private void RegisterSingleEnemy(Enemy enemy)
             foreach (var itemReward in reward.itemRewards)
             {
                 // 这里需要根据实际的物品系统来实现
-                Debug.Log($"[QuestManager] 获得物品: {itemReward.itemId} x{itemReward.quantity}");
+                rewardString+="物品："+itemReward.itemId+" x"+itemReward.quantity+"\n";
             }
         }
+        return rewardString;
     }
-    
     /// <summary>
     /// 获取活跃任务
     /// </summary>
@@ -1142,13 +1179,13 @@ private void RegisterSingleEnemy(Enemy enemy)
         if (MapManager.Instance != null)
         {
             MapManager.Instance.OnMapTransitionComplete += OnMapTransitionComplete;
-            Debug.Log("[QuestManager] 已订阅地图切换完成事件");
+            MapManager.Instance.OnMapLoaded += OnMapLoaded;
+            Debug.Log("[QuestManager] 已订阅地图切换完成事件和地图加载事件");
         }
         else
         {
             Debug.LogWarning("[QuestManager] MapManager实例未找到，无法订阅地图切换事件");
         }
-        
         // 订阅场景内容重新加载完成事件
         SceneController.OnSceneContentReloaded += OnSceneContentReloaded;
         SceneController.OnEnemySpawned += OnEnemySpawned;
@@ -1163,25 +1200,51 @@ private void RegisterSingleEnemy(Enemy enemy)
         if (MapManager.Instance != null)
         {
             MapManager.Instance.OnMapTransitionComplete -= OnMapTransitionComplete;
-            Debug.Log("[QuestManager] 已取消订阅地图切换完成事件");
+            MapManager.Instance.OnMapLoaded -= OnMapLoaded;
+            Debug.Log("[QuestManager] 已取消订阅地图切换完成事件和地图加载事件");
         }
 
         // 取消订阅场景内容重新加载完成事件
-    
+       SceneController.Instance.Character.OnLevelUp-=OnLevelUp;
         SceneController.OnSceneContentReloaded -= OnSceneContentReloaded;
         SceneController.OnEnemySpawned -= OnEnemySpawned;
         Debug.Log("[QuestManager] 已取消订阅场景内容重新加载完成事件");
+    }
+
+    private void OnLevelUp(int obj)
+    {
+        UpdateAllNPCQuestStatus();
+    }
+
+
+    /// <summary>
+    /// 地图加载完成事件处理（用于初次加载）
+    /// </summary>
+    /// <param name="areaId">区域ID</param>
+    private void OnMapLoaded(string areaId)
+    {
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[QuestManager] 地图加载完成，区域: {areaId}");
+        }
+        
+        // 初次地图加载时，等待场景完全初始化后再重建索引
+        // 这里不立即重建索引，而是等待SceneController初始化完成
+        if (enableDebugLogs)
+        {
+            Debug.Log("[QuestManager] 初次地图加载，等待场景初始化完成后重建索引");
+        }
     }
 
     /// <summary>
     /// 地图切换完成后重建任务索引
     /// </summary>
     /// <param name="targetAreaId">目标区域ID</param>
-    private void OnMapTransitionComplete(string targetAreaId)
+    private void OnMapTransitionComplete(PortalConfig targetPortalConfig)
     {
         if (enableDebugLogs)
         {
-            Debug.Log($"[QuestManager] 地图切换完成，目标区域: {targetAreaId}");
+            Debug.Log($"[QuestManager] 地图切换完成，目标区域: {targetPortalConfig.sceneAreaId}");
         }
         
         // 不在这里立即重建索引，而是等待场景内容完全加载后再重建
@@ -1192,13 +1255,14 @@ private void RegisterSingleEnemy(Enemy enemy)
     /// 场景内容重新加载完成后重建任务索引
     /// </summary>
     /// <param name="targetAreaId">目标区域ID</param>
-    private void OnSceneContentReloaded(string targetAreaId)
+    private void OnSceneContentReloaded()
     {
         if (enableDebugLogs)
         {
-            Debug.Log($"[QuestManager] 场景内容重新加载完成，开始重建任务索引: {targetAreaId}");
+            Debug.Log($"[QuestManager] 场景内容重新加载完成，开始重建任务索引");
         }
         
+       SceneController.Instance.Character.OnLevelUp+=OnLevelUp;
         StartCoroutine(RebuildQuestIndexesAfterTransition());
     }
     private void OnEnemySpawned(Enemy enemy)
@@ -1237,7 +1301,7 @@ private void RegisterSingleEnemy(Enemy enemy)
     }
 
     /// <summary>
-    /// 更新所有NPC的任务状态
+    /// 更新当前场景所有NPC的任务状态
     /// </summary>
     private void UpdateAllNPCQuestStatus()
     {

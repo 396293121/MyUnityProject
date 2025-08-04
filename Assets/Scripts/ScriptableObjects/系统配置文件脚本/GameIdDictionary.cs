@@ -52,6 +52,13 @@ public class GameIdDictionary : ScriptableObject
     [ReadOnly]
     public List<SceneAreaIdEntry> sceneAreaIds = new List<SceneAreaIdEntry>();
     
+    [BoxGroup("传送门ID字典", Order = 5)]
+    [LabelText("传送门配置列表")]
+    [InfoBox("从传送门配置文件中自动收集ID")]
+    [ListDrawerSettings(ShowIndexLabels = true, DraggableItems = false)]
+    [ReadOnly]
+    public List<PortalIdEntry> portalIds = new List<PortalIdEntry>();
+    
     [BoxGroup("配置管理", Order = 0)]
     [LabelText("敌人配置文件夹")]
     [InfoBox("存放敌人配置文件的文件夹路径")]
@@ -77,6 +84,12 @@ public class GameIdDictionary : ScriptableObject
     public string mapConfigFolder = "Assets/Scripts/ScriptableObjects/地图配置文件脚本";
     
     [BoxGroup("配置管理")]
+    [LabelText("传送门配置文件夹")]
+    [InfoBox("存放传送门配置文件的文件夹路径")]
+    [FolderPath]
+    public string portalConfigFolder = "Assets/Scripts/ScriptableObjects/系统配置文件脚本";
+    
+    [BoxGroup("配置管理")]
     [Button("刷新所有ID字典", ButtonSizes.Large)]
     [InfoBox("点击此按钮从配置文件中重新收集所有ID")]
     public void RefreshAllDictionaries()
@@ -85,8 +98,9 @@ public class GameIdDictionary : ScriptableObject
         RefreshNPCDictionary();
         RefreshItemDictionary();
         RefreshAreaDictionaries();
+        RefreshPortalDictionary();
         
-        Debug.Log($"[GameIdDictionary] 已刷新所有ID字典 - 敌人:{enemyIds.Count}, NPC:{npcIds.Count}, 物品:{itemIds.Count}, 主区域:{mainAreaIds.Count}, 分区域:{subAreaIds.Count}, 场景区域:{sceneAreaIds.Count}");
+        Debug.Log($"[GameIdDictionary] 已刷新所有ID字典 - 敌人:{enemyIds.Count}, NPC:{npcIds.Count}, 物品:{itemIds.Count}, 主区域:{mainAreaIds.Count}, 分区域:{subAreaIds.Count}, 场景区域:{sceneAreaIds.Count}, 传送门:{portalIds.Count}");
     }
     
     /// <summary>
@@ -115,7 +129,6 @@ public class GameIdDictionary : ScriptableObject
                     rarity = config.rarity,
                     canBeKillTarget = config.canBeKillTarget,
                     canBeBossTarget = config.canBeBossTarget,
-                    recommendedLevel = config.recommendedLevel,
                     config = config
                 });
             }
@@ -123,6 +136,43 @@ public class GameIdDictionary : ScriptableObject
         
         // 按ID排序
         enemyIds = enemyIds.OrderBy(x => x.id).ToList();
+        UnityEditor.EditorUtility.SetDirty(this);
+#endif
+    }
+    
+    /// <summary>
+    /// 刷新传送门ID字典
+    /// </summary>
+    [BoxGroup("配置管理")]
+    [Button("刷新传送门ID")]
+    public void RefreshPortalDictionary()
+    {
+        portalIds.Clear();
+        
+#if UNITY_EDITOR
+        string[] guids = UnityEditor.AssetDatabase.FindAssets("t:PortalConfig", new[] { portalConfigFolder });
+        foreach (string guid in guids)
+        {
+            string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+            PortalConfig config = UnityEditor.AssetDatabase.LoadAssetAtPath<PortalConfig>(path);
+            
+            if (config != null && !string.IsNullOrEmpty(config.portalId))
+            {
+                portalIds.Add(new PortalIdEntry
+                {
+                    id = config.portalId,
+                    displayName = config.displayName,
+                    description = config.description,
+                    sceneAreaId = config.sceneAreaId,
+                    targetPortalId = config.targetPortalId,
+                    position = config.position,
+                    config = config
+                });
+            }
+        }
+        
+        // 按ID排序
+        portalIds = portalIds.OrderBy(x => x.id).ToList();
         UnityEditor.EditorUtility.SetDirty(this);
 #endif
     }
@@ -416,20 +466,37 @@ public class GameIdDictionary : ScriptableObject
     }
     
     /// <summary>
-    /// 获取完整区域路径显示名称
+    /// 获取所有传送门ID
     /// </summary>
-    public string GetFullAreaDisplayName(string mainAreaId, string subAreaId, string sceneAreaId)
+    public List<string> GetAllPortalIds()
     {
-        var mainArea = mainAreaIds.FirstOrDefault(x => x.id == mainAreaId);
-        var subArea = subAreaIds.FirstOrDefault(x => x.id == subAreaId && x.mainAreaId == mainAreaId);
-        var sceneArea = sceneAreaIds.FirstOrDefault(x => x.id == sceneAreaId && x.mainAreaId == mainAreaId && x.subAreaId == subAreaId);
-        
-        string result = "";
-        if (mainArea != null) result += mainArea.displayName;
-        if (subArea != null) result += " - " + subArea.displayName;
-        if (sceneArea != null) result += " - " + sceneArea.displayName;
-        
-        return !string.IsNullOrEmpty(result) ? result : $"{mainAreaId}.{subAreaId}.{sceneAreaId}";
+        return portalIds.Select(x => x.id).ToList();
+    }
+    
+    /// <summary>
+    /// 根据场景区域ID获取传送门ID列表
+    /// </summary>
+    public List<string> GetPortalIdsBySceneArea(string sceneAreaId)
+    {
+        return portalIds.Where(x => x.sceneAreaId == sceneAreaId).Select(x => x.id).ToList();
+    }
+    
+    /// <summary>
+    /// 获取传送门显示名称
+    /// </summary>
+    public string GetPortalDisplayName(string portalId)
+    {
+        var portal = portalIds.FirstOrDefault(x => x.id == portalId);
+        return portal?.displayName ?? portalId;
+    }
+    
+    /// <summary>
+    /// 获取传送门配置
+    /// </summary>
+    public PortalConfig GetPortalConfig(string portalId)
+    {
+        var portal = portalIds.FirstOrDefault(x => x.id == portalId);
+        return portal?.config;
     }
     
     /// <summary>
@@ -516,11 +583,6 @@ public class EnemyIdEntry
     [LabelText("BOSS任务")]
     [ReadOnly]
     public bool canBeBossTarget;
-    
-    [HorizontalGroup("Quest")]
-    [LabelText("推荐等级")]
-    [ReadOnly]
-    public int recommendedLevel;
     
     [HideInInspector]
     public EnemyConfig config;
@@ -634,6 +696,46 @@ public class MainAreaIdEntry
     
     [HideInInspector]
     public MapSystemConfig config;
+}
+
+/// <summary>
+/// 传送门ID条目
+/// </summary>
+[System.Serializable]
+public class PortalIdEntry
+{
+    [HorizontalGroup("Info")]
+    [LabelText("ID")]
+    [ReadOnly]
+    public string id;
+    
+    [HorizontalGroup("Info")]
+    [LabelText("显示名称")]
+    [ReadOnly]
+    public string displayName;
+    
+    [HorizontalGroup("Details")]
+    [LabelText("描述")]
+    [ReadOnly]
+    public string description;
+    
+    [HorizontalGroup("Area")]
+    [LabelText("场景区域ID")]
+    [ReadOnly]
+    public string sceneAreaId;
+    
+    [HorizontalGroup("Target")]
+    [LabelText("目标传送门ID")]
+    [ReadOnly]
+    public string targetPortalId;
+    
+    [HorizontalGroup("Position")]
+    [LabelText("位置")]
+    [ReadOnly]
+    public Vector3 position;
+    
+    [HideInInspector]
+    public PortalConfig config;
 }
 
 /// <summary>

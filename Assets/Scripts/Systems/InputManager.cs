@@ -50,7 +50,6 @@ public class InputManager : MonoBehaviour
     
     void Awake()
     {
-        Debug.Log($"InputManager Awake,{Instance}");
         if (Instance == null)
         {
             Instance = this;

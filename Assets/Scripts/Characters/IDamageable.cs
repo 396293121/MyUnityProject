@@ -9,9 +9,11 @@ public interface IDamageable
     /// 受到伤害
     /// </summary>
     /// <param name="damage">伤害值</param>
+    /// <param name="damageType">伤害类型</param>
     /// <param name="hitPoint">命中点</param>
     /// <param name="attacker">攻击者</param>
-    void TakeDamage(int damage,DamageType damageType=DamageType.Physical, Vector2 hitPoint = default, Character attacker = null);
+    /// <param name="isContinuous">是否为持续伤害</param>
+    void TakeDamage(int damage, DamageType damageType = DamageType.Physical, Vector2 hitPoint = default, Character attacker = null, bool isContinuous = false);
     /// <summary>
     /// 是否存活
     /// </summary>

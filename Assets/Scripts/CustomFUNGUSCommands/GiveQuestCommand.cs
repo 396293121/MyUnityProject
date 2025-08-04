@@ -41,17 +41,19 @@ using UnityEngine;
             }
 
             bool success = questManager.StartQuest(questId);
-
+            QuestData quest=questManager.GetQuestById(questId);
             if (showResultMessage)
             {
-                string message = success ? successMessage.Value : failureMessage.Value;
+                string message =quest.questName+" "+ (success ? successMessage.Value : failureMessage.Value);
 
-                // 通过Fungus的Say系统显示消息
-                var flowchart = GetFlowchart();
-                if (flowchart != null)
+                // 使用SayDialog显示消息
+                var sayDialog = SayDialog.GetSayDialog();
+                if (sayDialog != null)
                 {
-                    // 直接调用Flowchart的Say方法，避免GUI布局问题
-                    // flowchart.Say(message);
+                    sayDialog.SetActive(true);
+                    sayDialog.Say(message, true, true, true, true, false, null, delegate {
+                        // 消息显示完成后的回调，这里不需要额外操作
+                    });
                 }
                 else
                 {

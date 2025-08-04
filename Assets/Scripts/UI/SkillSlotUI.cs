@@ -145,7 +145,6 @@ public class SkillSlotUI : MonoBehaviour
          // 注册事件监听
         component.OnSkillCooldownUpdated += OnSkillUpdated;
         component.OnSkillAvailabilityChanged += OnSkillUpdated;
-        Debug.Log($"[SkillSlotUI] 初始化技能槽位 {index}");
     }
       private void OnDestroy()
     {

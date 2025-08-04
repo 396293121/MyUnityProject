@@ -26,6 +26,14 @@ MonoBehaviour:
     prefab: {fileID: 1485609283496898506, guid: bb356399f2db90e468c51fe5d8ef2b45, type: 3}
   - enemyType: "\u5927\u578B\u91CE\u732A"
     prefab: {fileID: 9212761363567956610, guid: e2831909b7fec034a81282dc9e7338ab, type: 3}
+  - enemyType: "\u7070\u72FC"
+    prefab: {fileID: 1485609283496898506, guid: 51107f622bfe44c4ca7c78690217aa62, type: 3}
+  - enemyType: "\u72FC\u738B"
+    prefab: {fileID: 1485609283496898506, guid: 557a2caabc6537e4ebf6440a43a50637, type: 3}
+  - enemyType: "\u666E\u901A\u5C71\u8D3C"
+    prefab: {fileID: 1485609283496898506, guid: 9d4776a9f9fd10245a1e8a9f2aa69fc2, type: 3}
+  - enemyType: "\u7CBE\u82F1\u5C71\u8D3C"
+    prefab: {fileID: 1485609283496898506, guid: c6297dfe9bd869b4b8d79ed9ae44f5cd, type: 3}
   npcPrefabs:
   - npcType: "\u5E74\u8F7B\u6218\u58EB"
     prefab: {fileID: 7407948314649650544, guid: 4935618181d43c24b9e5619e68e37a2f, type: 3}
@@ -64,9 +72,6 @@ MonoBehaviour:
         isInitArea: 0
         mapPrefab: {fileID: 8076007621738116656, guid: d166eca942bcbd941b217ab2746c0650, type: 3}
         mapSpawnPosition: {x: 0, y: 0, z: 0}
-        areaTransitionTriggers:
-        - triggerName: "\u90E8\u843D\u4E2D\u5FC3\u95E8"
-          triggerPosition: {x: -3.23, y: 31.67, z: 0}
         playerSpawnPosition: {x: 0, y: 0, z: 0}
         enemySpawns:
         - enemyType: "\u91CE\u732A"
@@ -102,6 +107,17 @@ MonoBehaviour:
           autoGeneratePatrolPoints: 1
           patrolRadius: 8
           patrolPoints: []
+        - enemyType: "\u7CBE\u82F1\u5C71\u8D3C"
+          enemyDisplayName: "\u7CBE\u82F1\u5C71\u8D3C"
+          spawnPosition: {x: 0, y: 0, z: 0}
+          spawnDelay: 0
+          spawnCount: 1
+          randomizePosition: 0
+          spawnRadius: 2
+          autoSpawn: 1
+          autoGeneratePatrolPoints: 1
+          patrolRadius: 8
+          patrolPoints: []
         npcSpawns:
         - npcType: "\u5E74\u8F7B\u6218\u58EB"
           npcDisplayName: "\u5E74\u8F7B\u6218\u58EB"
@@ -126,11 +142,44 @@ MonoBehaviour:
         isInitArea: 0
         mapPrefab: {fileID: 8076007621738116656, guid: 81ea8720e8107324d8d8fb361dbd2259, type: 3}
         mapSpawnPosition: {x: 0, y: 0, z: 0}
-        areaTransitionTriggers:
-        - triggerName: "\u540E\u5C71\u5C0F\u5F84\u95E8"
-          triggerPosition: {x: 87.01, y: 0.32, z: 0}
         playerSpawnPosition: {x: 0, y: 0, z: 0}
         enemySpawns: []
+        npcSpawns: []
+        sceneConfig: {fileID: 0}
+        enableStatePersistence: 1
+        preloadOnStart: 0
+      - areaId: 3
+        areaName: "\u540E\u5C71\u5C0F\u5F84-\u4E2D\u6BB5"
+        areaDescription: 
+        areaType: 0
+        backgroundMusic: {fileID: 0}
+        isInitArea: 0
+        mapPrefab: {fileID: 8076007621738116656, guid: 2976e17dfb603c0479e6f278c0e32b13, type: 3}
+        mapSpawnPosition: {x: 0, y: 0, z: 0}
+        playerSpawnPosition: {x: 0, y: 0, z: 0}
+        enemySpawns:
+        - enemyType: "\u7070\u72FC"
+          enemyDisplayName: "\u7070\u72FC"
+          spawnPosition: {x: 50.9, y: 0.08, z: 0}
+          spawnDelay: 0
+          spawnCount: 3
+          randomizePosition: 0
+          spawnRadius: 2
+          autoSpawn: 1
+          autoGeneratePatrolPoints: 1
+          patrolRadius: 5
+          patrolPoints: []
+        - enemyType: "\u72FC\u738B"
+          enemyDisplayName: "\u72FC\u738B"
+          spawnPosition: {x: 0, y: 0, z: 0}
+          spawnDelay: 0
+          spawnCount: 1
+          randomizePosition: 0
+          spawnRadius: 2
+          autoSpawn: 1
+          autoGeneratePatrolPoints: 1
+          patrolRadius: 5
+          patrolPoints: []
         npcSpawns: []
         sceneConfig: {fileID: 0}
         enableStatePersistence: 1
@@ -159,4 +208,4 @@ MonoBehaviour:
     areaConfig: {fileID: 0}
   selectedMainAreaId: 1
   selectedSubAreaId: 1
-  selectedSceneAreaId: 2
+  selectedSceneAreaId: 1

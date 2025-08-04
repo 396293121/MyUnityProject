@@ -105,7 +105,7 @@ public class Warrior : Character
     {
         int damage = Mathf.RoundToInt(physicalAttack * 1.1f);
         enemy.TakeDamage(damage, DamageType.Physical, hitPoint, this);
-        Debug.Log($"战士攻击造成伤害: {damage}");
+
     }
         // var enemy = target.GetComponent<Enemy>();
         // if (enemy != null)

@@ -157,7 +157,6 @@ public class NPCController : MonoBehaviour, IInputListener
                 InitializeQuestSystem();
             }
             
-            Debug.Log($"[NPCController] {gameObject.name}: 初始化完成");
         }
         catch (System.Exception e)
         {
@@ -466,11 +465,10 @@ public class NPCController : MonoBehaviour, IInputListener
         
         // 使用NPC ID记录对话事件
         string npcId = !string.IsNullOrEmpty(npcConfig.npcId) ? npcConfig.npcId : gameObject.name;
-        QuestManager.Instance.HandleNPCTalk(npcId);
-        
-        if (QuestManager.Instance.enableDebugLogs)
+        if (QuestManager.Instance.HasUncompletedTalkObjective(npcId))
         {
-            Debug.Log($"[NPCController] 记录NPC对话事件: {npcId}");
+                    QuestManager.Instance.HandleNPCTalk(npcId);
+
         }
     }
     private void FacePlayer()

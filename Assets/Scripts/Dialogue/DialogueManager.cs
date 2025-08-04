@@ -89,7 +89,6 @@ public class DialogueManager : MonoBehaviour
         // 注册Fungus事件
         RegisterFungusEvents();
         
-        Debug.Log("[DialogueManager] 对话管理器初始化完成");
     }
     
     /// <summary>
@@ -204,7 +203,7 @@ public class DialogueManager : MonoBehaviour
             
             if (hideGameUIDuringDialogue && UIManager.Instance != null)
             {
-                UIManager.Instance.ShowPanel("Gameplay");
+                // UIManager.Instance.ShowPanel("Gameplay");
             }
         }
     }

@@ -17,6 +17,7 @@ MonoBehaviour:
   npcType: 3
   availableQuests:
   - {fileID: 11400000, guid: 8364992da861c17428df2546190ecb97, type: 2}
+  - {fileID: 11400000, guid: b6139574140ebd0428503350ef6577af, type: 2}
   description: 
   interactionRange: 2
   promptOffset: {x: 0, y: 2, z: 0}
@@ -26,7 +27,5 @@ MonoBehaviour:
   completeQuestBlock: CompleteQuest
   defaultQuestBlock: DefaultQuest
   canTrade: 0
-  canGiveQuests: 0
-  canCompleteQuests: 0
   services: 
   canBeTalkTarget: 1

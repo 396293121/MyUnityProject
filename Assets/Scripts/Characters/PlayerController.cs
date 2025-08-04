@@ -161,7 +161,7 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
     [ReadOnly]
     [ShowInInspector]
     private bool facingRight = true;
-
+    public bool FacingRight => facingRight;
     [VerticalGroup("状态/角色状态/状态设置/能力状态")]
     [LabelText("可以移动")]
     [ReadOnly]
@@ -190,14 +190,9 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
     [LabelText("无敌状态")]
     [ReadOnly]
     [ShowInInspector]
-    public bool isInvincible = false;
+    public bool IsInvincible => playerCharacter != null && playerCharacter.IsInvincible;
 
-    [VerticalGroup("状态/角色状态/状态设置/受伤状态")]
-    [LabelText("无敌时间")]
-    [PropertyRange(0.5f, 3f)]
-    [SuffixLabel("秒")]
-    [ShowInInspector]
-    private float invincibilityTime = 1f;
+
     //是否暂停
     private bool isPause = false;
 
@@ -405,12 +400,10 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
         if (rb != null && stateMachine != null)
         {
             Vector2 velocity = rb.velocity;
-
             // 使用状态机的canMove标志判断是否可以移动
             if (stateMachine.canMove)
             {
                 float speedMultiplier = 1f;
-
                 // 根据状态机状态调整移动速度
                 PlayerState currentState = stateMachine.GetCurrentState();
                 switch (currentState)
@@ -457,7 +450,6 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
             }
 
             // 播放跳跃音效 - 优先使用配置化音频系统
-            Debug.Log(playerCharacter.audioCategory);
             PlayerAudioConfig.Instance.PlaySound("jump", playerCharacter.audioCategory);
             // 播放跳跃动画
             if (animator != null)
@@ -552,7 +544,7 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
     /// 角色受到伤害的处理方法
     /// </summary>
     /// <param name="damage">受到的伤害值</param>
-    public void TakeDamage(int damage, DamageType damageType, Vector3 hitPoint = default, Enemy enemy = default)
+    public void TakeDamage(int damage, DamageType damageType, Vector3 hitPoint = default, Enemy enemy = default,bool isContinuous = false)
     {
         // 性能优化：通知状态机伤害事件
         if (stateMachine != null)
@@ -560,17 +552,25 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
             stateMachine.NotifyDamageReceived();
 
             PlayerState currentState = stateMachine.GetCurrentState();
+            
+            // 如果是持续伤害，特殊处理
+            if (isContinuous)
+            {
+                HandleContinuousDamage(damage, damageType, hitPoint, enemy, currentState);
+                return;
+            }
+            
             bool canTakeDamage = playerCharacter.isAlive &&
-                               !isInvincible &&
+                               !playerCharacter.IsInvincible &&
                                currentState != PlayerState.Death &&
                                currentState != PlayerState.Invincible;
 
             if (!canTakeDamage)
             {
-                Debug.Log($"伤害被忽略 - 死亡状态: {!playerCharacter.isAlive}, 无敌状态: {isInvincible}, 当前状态: {currentState}");
+                Debug.Log($"伤害被忽略 - 死亡状态: {!playerCharacter.isAlive}, 无敌状态: {playerCharacter.IsInvincible}, 当前状态: {currentState}");
                 return;
             }
-
+            
             // 让角色承受伤害
             playerCharacter.TakeDamage(damage);
 
@@ -589,15 +589,41 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
                 Debug.Log($"攻击/技能状态下受伤：扣血但不触发受伤动画 - 当前状态: {currentState}");
 
                 // 启动无敌时间但不改变状态
-                isInvincible = true;
-                StartCoroutine(EndInvincibilityAfterDelay(invincibilityTime));
+                playerCharacter.StartInvincibility();
             }
 
-            Debug.Log($"玩家受到伤害: {damage}, 剩余生命值: {playerCharacter.currentHealth}/{playerCharacter.maxHealth}");
 
 
             // 注意：受伤状态的处理已经在上面的shouldPlayHurtAnimation逻辑中完成
         }
+    }
+    /// <summary>
+    /// 处理持续伤害的特殊逻辑
+    /// </summary>
+    /// <param name="damage">伤害值</param>
+    /// <param name="damageType">伤害类型</param>
+    /// <param name="hitPoint">击中点</param>
+    /// <param name="enemy">敌人引用</param>
+    /// <param name="currentState">当前玩家状态</param>
+    private void HandleContinuousDamage(int damage, DamageType damageType, Vector3 hitPoint, Enemy enemy, PlayerState currentState)
+    {
+        // 检查是否可以受到持续伤害
+        bool canTakeContinuousDamage = playerCharacter.isAlive &&
+                                     currentState != PlayerState.Death;
+
+        if (!canTakeContinuousDamage)
+        {
+            Debug.Log($"持续伤害被忽略 - 死亡状态: {!playerCharacter.isAlive}, 当前状态: {currentState}");
+            return;
+        }
+
+        // 通知状态机持续伤害事件（如果需要特殊处理）
+        stateMachine?.NotifyDamageReceived();
+
+        // 调用基类的持续伤害处理，传入当前状态信息
+        playerCharacter.TakeDamage(damage, damageType, hitPoint, null, true);
+        
+        Debug.Log($"持续伤害处理完成 - 伤害值: {damage}, 当前状态: {currentState}");
     }
 
     /// <summary>
@@ -630,29 +656,19 @@ public class PlayerController : MonoBehaviour, IInputListener, IPausable
     /// </summary>
     public void OnHurtEnd()
     {
+        // 防止重复调用
+        if (!isHurt)
+        {
+            return;
+        }
 
         // 结束受伤状态
         isHurt = false;
         animator.SetBool(animIsHurting, false);
         // 通知状态机受伤结束，让状态机自动转换到合适的状态
         // 状态机会根据当前条件自动选择下一个状态（如Idle或Walking）
-        // 启动无敌时间倒计时
-        StartCoroutine(EndInvincibilityAfterDelay(invincibilityTime));
-    }
-
-    /// <summary>
-    /// 延迟结束无敌状态的协程
-    /// </summary>
-    /// <param name="delay">无敌持续时间</param>
-    /// <returns>协程迭代器</returns>
-    private IEnumerator EndInvincibilityAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-
-        // 状态机会自动管理无敌状态
-        isInvincible = false;
-        // 通知状态机无敌状态结束，让状态机自动转换到合适的状态
-        // 状态机会根据当前条件自动选择下一个状态（如Idle或Walking）
+        // 启动无敌时间
+        playerCharacter.StartInvincibility();
     }
 
 

@@ -121,10 +121,7 @@ public class MapStateManager : MonoBehaviour
 
     private void OnApplicationFocus(bool hasFocus)
     {
-        if (!hasFocus && enableStatePersistence)
-        {
-            SaveCurrentState();
-        }
+ 
     }
 
     private void OnDestroy()
@@ -181,7 +178,6 @@ public class MapStateManager : MonoBehaviour
         if (!enableStatePersistence)
             return;
 
-        Debug.Log("[MapStateManager] 保存当前状态");
 
         try
         {
@@ -216,7 +212,6 @@ public class MapStateManager : MonoBehaviour
             SaveToPersistentStorage();
 
             lastSaveTime = DateTime.Now;
-            Debug.Log($"[MapStateManager] 状态保存完成，历史记录数量: {stateHistory.Count}");
         }
         catch (Exception e)
         {
@@ -548,8 +543,6 @@ public class MapStateManager : MonoBehaviour
         
         string filePath = Application.persistentDataPath + "/mapstates.json";
         System.IO.File.WriteAllText(filePath, json);
-        
-        Debug.Log($"[MapStateManager] 状态已保存到: {filePath}");
     }
 
     /// <summary>

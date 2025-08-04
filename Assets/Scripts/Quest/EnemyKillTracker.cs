@@ -58,7 +58,6 @@ public class EnemyKillTracker : MonoBehaviour
     {
         if (enableDebugLogs)
         {
-            Debug.Log("[EnemyKillTracker] 击杀统计管理器初始化完成");
         }
     }
     

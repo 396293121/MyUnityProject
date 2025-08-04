@@ -2,6 +2,8 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System.Collections;
+using UnityEditor.SearchService;
+using System;
 // 技能类型枚举
 public enum SkillTypeTest
 {
@@ -65,7 +67,7 @@ public class skillDataConfig : ScriptableObject
     [TabGroup("基础信息")]
     [LabelText("技能使用者分类")]
     [InfoBox("音效分类")]
-    public AudioCategory audioCategory=AudioCategory.Skill;
+    public AudioCategory audioCategory = AudioCategory.Skill;
     [TabGroup("基础信息")]
     [TextArea(2, 4)]
     [LabelText("技能描述")]
@@ -116,6 +118,7 @@ public class skillDataConfig : ScriptableObject
     [TabGroup("特效配置")]
     [AssetsOnly]
     [LabelText("技能命中音效名称")]
+    [ShowIf("@skillType != SkillTypeTest.Buff && skillType != SkillTypeTest.Heal && skillType != SkillTypeTest.Summon")]
     [InfoBox("在PLAYERAUDIOCONFIG配置的音效名称，默认skillHit")]
     public string skillHitSoundName = "skillHit";
     [TabGroup("特效配置")]
@@ -134,11 +137,6 @@ public class skillDataConfig : ScriptableObject
     [LabelText("技能动画触发器")]
     [InfoBox("在Animator Controller中对应的技能动画触发器名称")]
     public string animationTrigger = "Skill1";
-
-    [TabGroup("动画配置")]
-    [LabelText("动画持续时间(秒)")]
-    [Range(0.1f, 5f)]
-    public float animationDuration = 1f;
 
     [TabGroup("技能效果")]
     [LabelText("技能类型")]
@@ -251,15 +249,49 @@ public class skillDataConfig : ScriptableObject
 
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Summon)]
-    [LabelText("召唤物预制体")]
-    [AssetsOnly]
-    public GameObject summonPrefab;
+    [LabelText("召唤物")]
+    public Summon summon;
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Summon)]
+    [LabelText("召唤物生命值")]
+    [Range(1, 1000)]
+    public int summonHealth = 100;
 
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Summon)]
+    [LabelText("召唤物大小")]
+    public Vector3 summonSize = Vector3.one;
+
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Summon)]
+    [LabelText("召唤数量")]
+    [Range(1, 5)]
+    public int summonCount = 1;
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Summon)]
     [LabelText("召唤物存在时间(秒)")]
     [Range(5f, 120f)]
     public float summonDuration = 30f;
+    
+    [TabGroup("技能效果")]
+    [ShowIf("skillType", SkillTypeTest.Summon)]
+    [LabelText("是否跟随召唤者")]
+    [InfoBox("召唤物是否跟随召唤者移动")]
+    public bool followSummoner = false;
+    
+    [TabGroup("技能效果")]
+    [ShowIf("@skillType == SkillTypeTest.Summon && followSummoner")]
+    [LabelText("跟随距离")]
+    [Range(1f, 10f)]
+    [InfoBox("召唤物与召唤者保持的距离")]
+    public float followDistance = 3f;
+    
+    [TabGroup("技能效果")]
+    [ShowIf("@skillType == SkillTypeTest.Summon && followSummoner")]
+    [LabelText("跟随速度")]
+    [Range(1f, 10f)]
+    [InfoBox("召唤物跟随召唤者的移动速度")]
+    public float followSpeed = 5f;
     [TabGroup("技能效果")]
     [LabelText("是否位移")]
     [InfoBox("技能释放时是否包含位移效果")]
@@ -267,12 +299,17 @@ public class skillDataConfig : ScriptableObject
     public bool isMove = false;
 
     [TabGroup("技能效果")]
-    [ShowIf("isMove")]
+    [ShowIf("@isMove && !autoSetMoveDistance")]
     [LabelText("位移距离")]
     [Range(0f, 20f)]
     [InfoBox("位移的距离，单位为Unity单位")]
     public float moveDistance = 5f;
-
+      [TabGroup("技能效果")]
+    [ShowIf("isMove")]
+    [LabelText("向上位移距离")]
+    [Range(0f, 20f)]
+    [InfoBox("向上位移的距离，单位为Unity单位")]
+    public float updateDistance = 0f;
     [TabGroup("技能效果")]
     [ShowIf("isMove")]
     [LabelText("位移持续时间(秒)")]
@@ -300,9 +337,9 @@ public class skillDataConfig : ScriptableObject
 
     [TabGroup("技能效果")]
     [ShowIf("isMove")]
-    [LabelText("碰撞中断位移")]
-    [InfoBox("遇到障碍物时是否停止位移")]
-    public bool stopOnCollision = true;
+    [LabelText("自动设置水平位移距离")]
+    [InfoBox("根据与目标的距离自动设置水平位移距离（用于敌人AI）")]
+    public bool autoSetMoveDistance = false;
     [TabGroup("技能效果")]
     [ShowIf("skillType", SkillTypeTest.Projectile)]
     [LabelText("投射物预制体")]
@@ -359,7 +396,7 @@ public class skillDataConfig : ScriptableObject
     [InfoBox("投射物的最大飞行距离")]
     public float projectileRange = 20f;
     public Character characterController;
-        public Enemy enmeyController;
+    public Enemy enmeyController;
 
     //是否是角色技能组件，否则是敌人技能组件
     private bool isCharacter = true;
@@ -528,83 +565,146 @@ public class skillDataConfig : ScriptableObject
     }
 
     /// <summary>
-    /// 执行技能位移的协程
+    /// 执行技能位移的协程（使用物理速度）
     /// </summary>
     public System.Collections.IEnumerator ExecuteMovement(GameObject caster, bool isFacingRight)
     {
-        Vector3 startPosition = caster.transform.position;
+        // 获取刚体组件
+        Rigidbody2D rb = null;
+        PlayerController playerController = null;
+        
+        if (isCharacter && characterController != null)
+        {
+            rb = characterController.Rigidbody2D;
+            playerController = characterController.GetComponent<PlayerController>();
+        }
+        else if (!isCharacter && enmeyController != null)
+        {
+            rb = enmeyController.rb;
+        }
+
+        if (rb == null)
+        {
+            Debug.LogError($"[SkillDataConfig] 无法获取 {caster.name} 的刚体组件，位移失败");
+            yield break;
+        }
+
+        // 临时保存原始移动能力状态
+        bool originalCanMove = true;
+        if (playerController != null)
+        {
+            originalCanMove = playerController.canMove;
+            // 临时禁用移动控制，确保位移期间不受输入影响
+            // playerController.canMove = false;
+        }
+
         Vector3 moveDirection = GetMoveDirection(caster, isFacingRight);
-        Vector3 targetPosition = startPosition + moveDirection * moveDistance;
+        
+        // 计算实际的水平位移距离
+        float actualMoveDistance = moveDistance;
+        if (autoSetMoveDistance)
+        {
+            actualMoveDistance = CalculateAutoMoveDistance(caster);
+        }
+        
+        // 保存原始速度
+        Vector2 originalVelocity = rb.velocity;
+        
+        // 计算水平速度：根据moveDistance、moveDuration和moveCurve
+        float baseHorizontalSpeed = actualMoveDistance / moveDuration;
+        
+        // 计算垂直速度：考虑重力影响，使得经过moveDuration后刚好落回原地
+        float initialVerticalVelocity = 0f;
+        if (updateDistance > 0)
+        {
+            // 获取刚体的重力缩放
+            float gravityScale = rb.gravityScale;
+            float gravity = Physics2D.gravity.y * gravityScale;
+            
+            // 计算初始垂直速度，使得在moveDuration时间内达到updateDistance高度后落回原地
+            // 使用运动学公式：v0 = (2 * h) / t - g * t / 2
+            initialVerticalVelocity = (2f * updateDistance) / moveDuration - gravity * moveDuration / 2f;
+        }
 
         float elapsed = 0f;
-        bool movementInterrupted = false;
-
+        
         // 如果启用无敌帧，设置无敌状态
         if (invincibleDuringMove)
         {
             SetInvincible(caster, true);
         }
 
-        while (elapsed < moveDuration && !movementInterrupted)
+        while (elapsed < moveDuration)
         {
             float progress = elapsed / moveDuration;
             float curveValue = moveCurve.Evaluate(progress);
-
-            Vector3 newPosition = Vector3.Lerp(startPosition, targetPosition, curveValue);
-
-            // 碰撞检测
-            if (stopOnCollision)
+            
+            // 计算当前帧的水平速度（应用曲线）
+            float currentHorizontalSpeed = baseHorizontalSpeed * curveValue;
+            Vector2 horizontalVelocity = new Vector2(moveDirection.x * currentHorizontalSpeed, 0);
+            
+            // 计算当前帧的垂直速度
+            Vector2 verticalVelocity = Vector2.zero;
+            if (updateDistance > 0)
             {
-                float skinWidth = 0.1f;
-                Collider2D casterCollider = isCharacter ? characterController?.Collider2D : enmeyController?.EnemyCollider;
-                if (casterCollider == null)
-                {
-                    casterCollider = caster.GetComponent<Collider2D>();
-                }
-
-                // 调整碰撞体尺寸和起点
-                Vector2 colliderSize = casterCollider.bounds.size;
-                Vector2 castSize = new Vector2(
-                    colliderSize.x * 0.8f,
-                    colliderSize.y * 0.3f); // 进一步缩小垂直检测范围
-
-                // 计算起点偏移（从底部锚点上移30%高度）
-                Vector2 castOrigin = caster.transform.position + Vector3.up * (colliderSize.y * 0.5f);
-
-                // 仅检测水平方向位移量
-                float horizontalDistance = Mathf.Abs(newPosition.x - castOrigin.x) + skinWidth;
-            Vector2 castDirection = moveDirection.normalized;
-
-                RaycastHit2D hit = Physics2D.BoxCast(
-                    castOrigin,  // 使用调整后的起点
-                    castSize,
-                    0f,
-                  castDirection,
-                    horizontalDistance,
-                    LayerMask.GetMask("Ground")); // 确保只检测障碍物层
-                if (hit.collider != null && Vector2.Dot(castDirection, (hit.point - (Vector2)castOrigin).normalized) > 0.9f)
-                {
-                    // 计算安全停止位置
-                    float safeDistance = hit.distance - skinWidth;
-                    Vector3 adjustedPosition = caster.transform.position + (newPosition - caster.transform.position).normalized * safeDistance;
-
-                    caster.transform.position = adjustedPosition;
-                    Debug.Log($"{caster.name} 的冲撞被阻挡在 {hit.collider.name} 前");
-                    break;
-                }
+                // 使用抛物线运动公式计算当前垂直速度
+                float gravityScale = rb.gravityScale;
+                float gravity = Physics2D.gravity.y * gravityScale;
+                
+                // 计算当前时间点的垂直速度：v = v0 + a*t
+                float currentVerticalVelocity = initialVerticalVelocity + gravity * elapsed;
+                verticalVelocity = new Vector2(0, currentVerticalVelocity);
             }
-
-            caster.transform.position = newPosition;
+            else
+            {
+                // 没有垂直位移时，保持原有的垂直速度
+                verticalVelocity = new Vector2(0, originalVelocity.y);
+            }
+            
+            // 应用速度
+            rb.velocity = horizontalVelocity + verticalVelocity;
+            
             elapsed += Time.deltaTime;
             yield return null;
         }
 
+        // 恢复原始速度（可选，根据需求决定）
+        rb.velocity = new Vector2(0, rb.velocity.y); // 停止水平移动，保持垂直速度
+        
+        // 恢复原始移动能力状态
+        if (playerController != null)
+        {
+            playerController.canMove = originalCanMove;
+        }
+        
         // 关闭无敌帧
         if (invincibleDuringMove)
         {
             SetInvincible(caster, false);
         }
+    }
 
+    /// <summary>
+    /// 计算自动位移距离
+    /// </summary>
+    private float CalculateAutoMoveDistance(GameObject caster)
+    {
+        // 寻找玩家
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null)
+        {
+            Debug.LogWarning($"[SkillDataConfig] 未找到玩家，使用默认位移距离");
+            return 5f; // 默认距离
+        }
+
+        // 计算与玩家的水平距离
+        float horizontalDistance = Mathf.Abs(player.transform.position.x - caster.transform.position.x)+1f;
+        
+        // 限制最大和最小距离
+        float clampedDistance = Mathf.Clamp(horizontalDistance, 1f, 20f);
+        
+        Debug.Log($"[SkillDataConfig] {caster.name} 自动设置位移距离: {clampedDistance} (与玩家距离: {horizontalDistance})");
+        return clampedDistance;
     }
 
     /// <summary>
@@ -699,7 +799,6 @@ public class skillDataConfig : ScriptableObject
                 hitCount++;
             }
         }
-        Debug.Log($"单体攻击(矩形)命中 {hitCount} 个目标，每个造成 {damage} 点伤害，攻击点：{attackPosition}");
     }
 
     private void ExecuteAreaOfEffectAttack(GameObject caster, Vector3 castPosition)
@@ -746,7 +845,7 @@ public class skillDataConfig : ScriptableObject
         // 播放增益BUFF音效
         if (!string.IsNullOrEmpty(buffSoundName))
         {
-            PlayerAudioConfig.Instance.PlaySound(buffSoundName,isCharacter?characterController.audioCategory:enmeyController.audioCategory);
+            PlayerAudioConfig.Instance.PlaySound(buffSoundName, isCharacter ? characterController.audioCategory : enmeyController.audioCategory);
         }
         buffComponent.ApplyBuff(skillName, attackBonus, speedBonus, buffDuration);
         Debug.Log($"对 {caster.name} 施加BUFF: 攻击力+{attackBonus}, 速度+{speedBonus}, 持续{buffDuration}秒");
@@ -766,14 +865,42 @@ public class skillDataConfig : ScriptableObject
 
     private void ExecuteSummonEffect(GameObject caster, Transform skillSpawnPoint)
     {
-        if (summonPrefab != null && skillSpawnPoint != null)
+        if (summon != null && skillSpawnPoint != null && summon.enemyPrefab != null)
         {
-            GameObject summon = Instantiate(summonPrefab, skillSpawnPoint.position, skillSpawnPoint.rotation);
-
-            // 设置召唤物的生存时间
-            MonoBehaviour.Destroy(summon, summonDuration);
-
-            Debug.Log($"召唤了 {summonPrefab.name}，存在时间: {summonDuration}秒");
+            //敌人召唤
+            if (!isCharacter)
+            {
+                for (var i = 0; i < summonCount; i++)
+                {
+                    GameObject summonInstance = summon.InitializeSummon(summonHealth, summonSize, skillSpawnPoint);
+                    //将召唤物添加到场景敌人列表
+                    SceneController.Instance.AddEnemy(summonInstance);
+                    SceneController.Instance.AddEnemyController(summonInstance.GetComponent<Enemy>());
+                    
+                    // 配置自动销毁组件
+                    SummonAutoDestroy autoDestroy = summonInstance.GetComponent<SummonAutoDestroy>();
+                    if (autoDestroy != null)
+                    {
+                        autoDestroy.Initialize(summonDuration);
+                    }
+                    
+                    // 添加跟随组件（如果启用）
+                    if (followSummoner)
+                    {
+                        SummonFollower follower = summonInstance.AddComponent<SummonFollower>();
+                        follower.Initialize(caster.transform, followDistance, followSpeed);
+                    }
+                    
+                    // 移除原来的简单销毁逻辑，现在由SummonAutoDestroy组件管理
+                    // MonoBehaviour.Destroy(summonInstance, summonDuration);
+                }
+            }
+            else
+            {
+                // 玩家召唤逻辑（暂时保留空白，可后续扩展）
+            }
+          
+            Debug.Log($"召唤了{summonCount}个 {summon.enemyPrefab.name}，存在时间: {summonDuration}秒，跟随召唤者: {followSummoner}");
         }
     }
     // 新增投射物攻击执行方法 技能动画结束后执行
@@ -894,7 +1021,7 @@ public class skillDataConfig : ScriptableObject
             spellPoint: spawnPoint,
             isCastAnimation: isCastAnimation,
             damageType: damageType,
-            Character:characterController
+            Character: characterController
         );
     }
 
@@ -1083,20 +1210,22 @@ public class skillDataConfig : ScriptableObject
         if (target.CompareTag("Enemy"))
         {
             var enmey = target.GetComponent<Enemy>();
-            enmey?.TakeDamage((int)damageAmount, damageType,default,characterController);
+            enmey?.TakeDamage((int)damageAmount, damageType, default, characterController,damageTime==damageTimeType.time);
 
         }
         else if (target.CompareTag("Player"))
         {
             //调用控制器的TAKEDAMAGE方法
             var player = target.GetComponent<PlayerController>();
-            player?.TakeDamage((int)damageAmount,damageType);
+            //如果是持续伤害
+                player?.TakeDamage((int)damageAmount, damageType, default, enmeyController, damageTime == damageTimeType.time);
+          
 
         }
         if (!string.IsNullOrEmpty(skillHitSoundName))
         {
 
-            PlayerAudioConfig.Instance.PlaySound(skillHitSoundName,audioCategory);
+            PlayerAudioConfig.Instance.PlaySound(skillHitSoundName, audioCategory);
         }
         // 如果目标有其他生命值组件，可以在这里添加
         Debug.Log($"对 {target.name} 造成 {damageAmount} 点伤害");
@@ -1331,28 +1460,48 @@ public class skillDataConfig : ScriptableObject
     private IEnumerator ContinuousDamageCoroutine(string damageKey, GameObject caster, Vector3 castPosition)
     {
         float timer = 0f;
-        while (true)
+        
+        // 持续伤害不再基于时间限制，而是等待外部停止信号
+        while (activeContinuousDamageCoroutines.ContainsKey(damageKey))
         {
             timer += Time.deltaTime;
+            
             if (timer >= damageInterval)
             {
                 PerformContinuousDamage(damageKey, caster, castPosition);
                 timer = 0f; // 重置计时器
             }
 
-            // 添加安全退出机制
-            if (!activeContinuousDamageCoroutines.ContainsKey(damageKey))
-            {
-                Debug.Log($"安全退出协程，Key: {damageKey}");
-                break;
-            }
-
             yield return null;
         }
 
-
+        // 持续伤害结束，通知玩家
+        NotifyPlayerContinuousDamageEnd();
+        
+        // 清理
+        if (activeDamagedEnemies.ContainsKey(damageKey))
+        {
+            activeDamagedEnemies[damageKey].Clear();
+            activeDamagedEnemies.Remove(damageKey);
+        }
 
         Debug.Log($"[SkillDataConfig] 技能 {skillName} 持续伤害协程结束");
+    }
+    
+    /// <summary>
+    /// 通知玩家持续伤害结束
+    /// </summary>
+    private void NotifyPlayerContinuousDamageEnd()
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            Character character = player.GetComponent<Character>();
+            if (character != null)
+            {
+                character.OnContinuousDamageEnd();
+            }
+        }
     }
 
     /// <summary>
@@ -1482,7 +1631,6 @@ public class skillDataConfig : ScriptableObject
 
             DealDamageToTarget(enemy.gameObject, damage);
             damagedEnemies.Add(enemy.gameObject);
-            Debug.Log($"[SkillDataConfig] 矩形持续伤害 - 对 {enemy.name} 造成 {damage} 伤害");
         }
     }
 

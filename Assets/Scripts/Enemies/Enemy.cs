@@ -27,6 +27,10 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     [SerializeField]
     [ReadOnly]
     protected BuffManager buffManager;
+    [LabelText("敌人UI")]
+    [SerializeField]
+    [ReadOnly]
+    protected EnemyUI enemyUI;
     [LabelText("敌人配置/攻击点")]
     [Required]
     [SerializeField]
@@ -113,7 +117,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     [VerticalGroup("敌人配置/基础属性/属性设置/身份信息")]
     [LabelText("敌人名称")]
     [SerializeField] private string enemyName = "Enemy";
-
     [VerticalGroup("敌人配置/基础属性/属性设置/身份信息")]
     [LabelText("等级")]
     [PropertyRange(1, 100)]
@@ -192,6 +195,13 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     [Range(0f, 20f)]
     [ShowInInspector]
     public float loseTargetRange = 12f;
+
+    [VerticalGroup("敌人配置/基础属性/移动设置/检测范围")]
+    [LabelText("保持距离")]
+    [Tooltip("敌人与玩家保持的最小距离，小于此距离时会反向移动")]
+    [Range(0f, 10f)]
+    [ShowInInspector]
+    public float keepDistance = 0f;
 
     [VerticalGroup("敌人配置/基础属性/移动设置/奖励")]
     [LabelText("经验奖励")]
@@ -442,6 +452,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
 
         // 从系统配置初始化参数
         InitializeFromSystemConfig();
+        // 初始化敌人UI
+        InitializeEnemyUI();
         // 初始化技能组件
         InitializeSkillComponent();
         InitializeBuffManager();
@@ -522,6 +534,21 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     public void setNPCPaused(bool paused)
     {
         inNPCPaused = paused;
+    }
+    /// <summary>
+    /// 初始化敌人UI
+    /// </summary>
+    private void InitializeEnemyUI()
+    {
+        // 使用EnemyUIManager统一管理敌人UI
+        if (EnemyUIManager.Instance != null)
+        {
+            EnemyUIManager.Instance.CreateEnemyUI(this);
+        }
+        else
+        {
+            Debug.LogWarning($"[Enemy] {gameObject.name} EnemyUIManager未找到，无法创建UI");
+        }
     }
     protected virtual void InitializeSkillComponent()
     {
@@ -641,6 +668,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
             if (baseConfig != null)
             {
                 enemyId = baseConfig.enemyId;
+                enemyUI = baseConfig.enemyUI;
+                enemyName = baseConfig.displayName;
                 // 初始化基础属性
                 maxHealth = baseConfig.health;
                 currentHealth = maxHealth;
@@ -649,12 +678,12 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
                 defense = baseConfig.defense;
                 moveSpeed = baseConfig.moveSpeed;
                 chaseSpeedRate = baseConfig.chaseSpeedRate;
-                attackRange = baseConfig.attackRange;
                 detectionRange = baseConfig.detectionRange;
                 loseTargetRange = baseConfig.loseTargetRange;
+                keepDistance = baseConfig.keepDistance;
                 attackCooldown = baseConfig.attackCooldown;
                 expReward = baseConfig.expReward;
-
+                canAttack = baseConfig.canAttack;
                 // 初始化巡逻属性
                 patrolSpeed = baseConfig.patrolSpeed;
                 patrolWaitTime = baseConfig.patrolWaitTime;
@@ -668,7 +697,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
 
                 if (GameManager.Instance != null && GameManager.Instance.debugMode)
                 {
-                    Debug.Log($"[Enemy] {gameObject.name} 从系统配置初始化完成");
                 }
             }
         }
@@ -711,7 +739,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
 
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
-            Debug.Log($"[Enemy] {gameObject.name} 巡逻点设置完成 - 左: {leftPatrolPoint}, 右: {rightPatrolPoint}");
         }
     }
 
@@ -743,7 +770,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
         cachedPatrolDirection = null;
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
-            Debug.Log($"[Enemy] {gameObject.name} 状态改变: {currentState} -> {newState}");
         }
 
         // 退出当前状态
@@ -949,13 +975,19 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     protected virtual void ExecuteChaseState()
     {
         if (!canMove || player == null) return;
+        
+        // 如果正在执行技能，不进行状态切换
+        if (isSkill) return;
+        
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+        
         // 修改为攻击点检测
-        if (IsPlayerInAttackRange())
+        if (IsPlayerInAttackRange() && canAttack)
         {
             ChangeState(EnemyState.Attack);
             return;
         }
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+        
         // 检查是否失去目标 - 增加缓冲时间避免频繁切换
         if (distanceToPlayer > loseTargetRange)
         {
@@ -966,10 +998,50 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
             return;
         }
 
-        // 追击移动
+        // 保持距离逻辑 - 使用与速度相关的缓冲区间避免抖动
         Vector2 directionToPlayer = (player.position - transform.position).normalized;
-        rb2D.velocity = new Vector2(directionToPlayer.x * moveSpeed * chaseSpeedRate, rb2D.velocity.y);
-        UpdateFacing(directionToPlayer.x > 0);
+        
+        if (keepDistance > 0)
+        {
+            // 技能执行期间不执行保持距离逻辑，避免与技能位移冲突
+            if (isSkill)
+            {
+                return;
+            }
+            
+            // 定义与移动速度相关的缓冲区间：速度越快，缓冲区间越大
+            float currentMoveSpeed = moveSpeed * chaseSpeedRate;
+            float dynamicBuffer = Mathf.Max(0.5f, currentMoveSpeed * 0.3f); // 最小0.5f，最大为速度的30%
+            
+            float startRetreatDistance = keepDistance;
+            float stopRetreatDistance = keepDistance + dynamicBuffer;
+            
+            // 判断是否应该后退：距离太近时开始后退，距离足够远时停止后退
+            bool shouldRetreat = distanceToPlayer < startRetreatDistance || 
+                                (rb2D.velocity.x != 0 && Mathf.Sign(rb2D.velocity.x) != Mathf.Sign(directionToPlayer.x) && 
+                                 distanceToPlayer < stopRetreatDistance);
+            
+            if (shouldRetreat)
+            {
+                // 反向移动 - 远离玩家，但保持面向玩家
+                Vector2 awayFromPlayer = -directionToPlayer;
+                rb2D.velocity = new Vector2(awayFromPlayer.x * currentMoveSpeed, rb2D.velocity.y);
+                // 保持距离时始终面向玩家，避免频繁转向
+                UpdateFacing(directionToPlayer.x > 0);
+            }
+            else
+            {
+                // 正常追击移动
+                rb2D.velocity = new Vector2(directionToPlayer.x * currentMoveSpeed, rb2D.velocity.y);
+                UpdateFacing(directionToPlayer.x > 0);
+            }
+        }
+        else
+        {
+            // 没有保持距离要求时，正常追击
+            rb2D.velocity = new Vector2(directionToPlayer.x * moveSpeed * chaseSpeedRate, rb2D.velocity.y);
+            UpdateFacing(directionToPlayer.x > 0);
+        }
     }
 
 
@@ -1021,7 +1093,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
                 break;
 
             case EnemyState.Chase:
-                if (distanceToPlayer <= attackRange)
+                if (distanceToPlayer <= attackRange&&canAttack)
                 {
                     ChangeState(EnemyState.Attack);
                 }
@@ -1094,7 +1166,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
 
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
-            Debug.Log($"[Enemy] {gameObject.name} 执行攻击");
         }
 
         // 子类可以重写此方法实现具体的攻击逻辑
@@ -1104,7 +1175,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     /// 受到伤害
     /// </summary>
     /// <param name="damage">伤害值</param>
-    public virtual void TakeDamage(int damage, DamageType damageType, Vector2 hitPoint = default, Character attacker = null)
+    public virtual void TakeDamage(int damage, DamageType damageType, Vector2 hitPoint = default, Character attacker = null,bool isContinuous = false)
     {
         if (!isAlive)
         {
@@ -1143,7 +1214,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
         }
         PlayerAudioConfig.Instance.PlaySound("hurt", audioCategory);
 
-        Debug.Log($"[{gameObject.name}] 受到 {actualDamage} 点{damageType}伤害，剩余生命值: {currentHealth}");
     }
     protected void showNumber(int damage, DamageType damageType)
 
@@ -1216,10 +1286,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
 
         if (GameManager.Instance != null && GameManager.Instance.debugMode)
         {
-            Debug.Log($"[Enemy] {gameObject.name} 死亡");
         }
         showExp(expReward);
-        Debug.Log(attacker);
         if (attacker != null)
         {
             attacker.GainExperience(expReward);
@@ -1319,6 +1387,12 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
     void OnDestroy()
     {
         GamePauseManager.Instance.Unregister(this);
+        
+        // 清理敌人UI
+        if (EnemyUIManager.Instance != null)
+        {
+            EnemyUIManager.Instance.RemoveEnemyUI(this);
+        }
     }
     #region 公共方法
 
@@ -1405,7 +1479,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPausable
         }
         return false;
     }
-
+    public void SetDie(bool die){
+        isDead = die;
+    }
     protected virtual void ExecuteAttackState(float damage)
     {
         if (!canAttack || isDead) return;

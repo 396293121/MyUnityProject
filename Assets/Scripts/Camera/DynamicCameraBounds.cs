@@ -110,7 +110,6 @@ public class DynamicCameraBounds : MonoBehaviour
     [InfoBox("点击此按钮手动触发边界检测和设置")]
     public void DetectAndSetBounds(Tilemap[] tilemaps)
     {
-        Debug.Log(tilemaps + "地图12345");
         this.tilemaps = tilemaps;
         CalculateBounds();
         ApplyBoundsToCamera();

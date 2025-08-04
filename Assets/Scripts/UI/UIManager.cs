@@ -90,9 +90,6 @@ public class UIManager : MonoBehaviour
         }
         // 设置按钮事件
         SetupButtonEvents();
-        
-        // 显示主菜单
-        ShowPanel("MainMenu");
     }
     
     private void Update()
@@ -194,35 +191,7 @@ public class UIManager : MonoBehaviour
     //     }
     // }
     
-    /// <summary>
-    /// 显示UI面板
-    /// </summary>
-    public void ShowPanel(string panelName)
-    {
-        if (!uiPanels.ContainsKey(panelName))
-        {
-            Debug.LogWarning($"[UIManager] 找不到UI面板: {panelName}");
-            return;
-        }
-        
-        GameObject panel = uiPanels[panelName];
-        if (panel == null) return;
-        
-        // 隐藏当前顶层面板
-        if (uiStack.Count > 0)
-        {
-            GameObject currentPanel = uiStack.Peek();
-            if (currentPanel != null)
-            {
-                currentPanel.SetActive(false);
-            }
-        }
-        
-        // 显示新面板
-        panel.SetActive(true);
-        uiStack.Push(panel);
-    }
-    
+
     // 重复的SetCurrentCharacter方法已删除
     
     /// <summary>
@@ -402,7 +371,6 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-            ShowPanel(panelName);
         }
     }
     
@@ -608,7 +576,6 @@ public class UIManager : MonoBehaviour
     public void OnGameStart()
     {
         HideAllPanels();
-        ShowPanel("Gameplay");
     }
     
     /// <summary>
@@ -617,7 +584,6 @@ public class UIManager : MonoBehaviour
     public void OnGameOver()
     {
         HideAllPanels();
-        ShowPanel("GameOver");
     }
     
     /// <summary>
@@ -625,7 +591,6 @@ public class UIManager : MonoBehaviour
     /// </summary>
     public void OnGamePause()
     {
-        ShowPanel("PauseMenu");
     }
     
     /// <summary>

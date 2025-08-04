@@ -86,6 +86,17 @@ public class MapManager : MonoBehaviour
     public bool IsTransitioning => isTransitioning;
 
     [FoldoutGroup("地图系统配置/运行时状态")]
+    [LabelText("是否为初次加载")]
+    [ReadOnly]
+    [ShowInInspector]
+    private bool isInitialLoad = true;
+    
+    /// <summary>
+    /// 是否为初次加载
+    /// </summary>
+    public bool IsInitialLoad => isInitialLoad;
+
+    [FoldoutGroup("地图系统配置/运行时状态")]
     [LabelText("已加载的地图缓存")]
     [ReadOnly]
     [ShowInInspector]
@@ -103,7 +114,7 @@ public class MapManager : MonoBehaviour
     [FoldoutGroup("事件系统/地图事件")]
     [LabelText("地图切换完成事件")]
     [ShowInInspector]
-    public System.Action<string> OnMapTransitionComplete; // 切换到的区域
+    public System.Action<PortalConfig> OnMapTransitionComplete; // 切换到的区域
 
     [FoldoutGroup("事件系统/地图事件")]
     [LabelText("地图加载事件")]
@@ -195,7 +206,12 @@ public class MapManager : MonoBehaviour
         
         string areaId = $"{mainAreaId}.{subAreaId}.{sceneAreaId}";
         Debug.Log($"[MapManager] 初始区域加载完成: {areaId}");
-        OnMapTransitionComplete?.Invoke(areaId);
+        
+        // 标记初次加载完成
+        isInitialLoad = false;
+        
+        // 触发初始区域加载完成事件，而不是地图切换完成事件
+        OnMapLoaded?.Invoke(areaId);
     }
     /// <summary>
     /// 设置地图系统配置
@@ -215,7 +231,7 @@ public class MapManager : MonoBehaviour
     /// <param name="subAreaId">分区域ID</param>
     /// <param name="sceneAreaId">场景区域ID</param>
     /// <param name="transitionType">切换类型</param>
-    public void TransitionToArea(string mainAreaId, string subAreaId, string sceneAreaId)
+    public void TransitionToArea(PortalConfig targetPortalConfig)
     {
         if (isTransitioning)
         {
@@ -223,20 +239,17 @@ public class MapManager : MonoBehaviour
             return;
         }
 
-        StartCoroutine(TransitionToAreaCoroutine(mainAreaId, subAreaId, sceneAreaId));
+        StartCoroutine(TransitionToAreaCoroutine(   targetPortalConfig));
     }
 
     /// <summary>
     /// 切换区域协程
     /// </summary>
-    private IEnumerator TransitionToAreaCoroutine(string mainAreaId, string subAreaId, string sceneAreaId)
+    private IEnumerator TransitionToAreaCoroutine(PortalConfig targetPortalConfig)
     {
         isTransitioning = true;
-        string fromAreaId = GetCurrentAreaId();
-        string toAreaId = $"{mainAreaId}.{subAreaId}.{sceneAreaId}";
-
-        Debug.Log($"[MapManager] 开始切换场景: {fromAreaId} -> {toAreaId}");
-        OnMapTransitionStart?.Invoke(fromAreaId, toAreaId);
+        Debug.Log($"[MapManager] 开始切换场景: {targetPortalConfig.sceneAreaId}");
+        // OnMapTransitionStart?.Invoke(fromAreaId, toAreaId);
 
 
         // 2. 播放切换效果
@@ -249,14 +262,13 @@ public class MapManager : MonoBehaviour
         }
 
         // 4. 加载新地图
-        yield return StartCoroutine(LoadNewArea(mainAreaId, subAreaId, sceneAreaId));
-        MapStateManager.Instance.RestoreAreaState(mainAreaId);
+        yield return StartCoroutine(LoadNewArea(targetPortalConfig.mainAreaId, targetPortalConfig.subAreaId, targetPortalConfig.sceneAreaId));
+        MapStateManager.Instance.RestoreAreaState(targetPortalConfig.sceneAreaId);
         // 6. 结束切换效果
         yield return StartCoroutine(PlayTransitionEffect(false));
 
         isTransitioning = false;
-        Debug.Log($"[MapManager] 场景切换完成: {toAreaId}");
-        OnMapTransitionComplete?.Invoke(toAreaId);
+        OnMapTransitionComplete?.Invoke(targetPortalConfig);
     }
 
     /// <summary>
@@ -271,38 +283,62 @@ public class MapManager : MonoBehaviour
             Debug.LogError($"[MapManager] 未找到主区域: {mainAreaId}");
             yield break;
         }
-
+    
         SubArea subArea = mainArea.subAreas.Find(s => s.areaId == subAreaId);
         if (subArea == null)
         {
             Debug.LogError($"[MapManager] 未找到分区域: {subAreaId}");
             yield break;
         }
-
+    
         SceneArea sceneArea = subArea.sceneAreas.Find(s => s.areaId == sceneAreaId);
         if (sceneArea == null)
         {
             Debug.LogError($"[MapManager] 未找到场景区域: {sceneAreaId}");
             yield break;
         }
-
+    
         // 更新当前区域引用
         currentMainArea = mainArea;
         currentSubArea = subArea;
         currentSceneArea = sceneArea;
-
-        // 实例化地图预制体
-        if (sceneArea.mapPrefab != null)
+    
+        string targetAreaId = $"{mainAreaId}.{subAreaId}.{sceneAreaId}";
+    
+        // 检查缓存中是否存在目标地图
+        if (mapSystemConfig.enableMapCaching && loadedMaps.ContainsKey(targetAreaId))
         {
-            currentMapInstance = Instantiate(sceneArea.mapPrefab);
-            currentMapInstance.name = $"Map_{mainAreaId}_{subAreaId}_{sceneAreaId}";
+            // 从缓存中恢复地图
+            currentMapInstance = loadedMaps[targetAreaId];
+            currentMapInstance.SetActive(true);
             
-            // 设置地图位置
+            // 更新地图位置（可能在缓存期间发生变化）
             currentMapInstance.transform.position = sceneArea.mapSpawnPosition;
-            Debug.Log($"[MapManager] 地图加载完成: {sceneArea.areaName}");
+            
+            Debug.Log($"[MapManager] 从缓存加载地图: {sceneArea.areaName}");
+            
+            // 从缓存字典中移除，因为现在是活跃状态
+            loadedMaps.Remove(targetAreaId);
+        }
+        else
+        {
+            // 缓存中不存在，创建新实例
+            if (sceneArea.mapPrefab != null)
+            {
+                currentMapInstance = Instantiate(sceneArea.mapPrefab);
+                currentMapInstance.name = $"Map_{mainAreaId}_{subAreaId}_{sceneAreaId}";
+                
+                // 设置地图位置
+                currentMapInstance.transform.position = sceneArea.mapSpawnPosition;
+                Debug.Log($"[MapManager] 新建地图实例: {sceneArea.areaName}");
+            }
+        }
+    
+        if (currentMapInstance != null)
+        {
             OnMapLoaded?.Invoke(GetCurrentAreaId());
         }
-
+    
         yield return null;
     }
 
@@ -315,15 +351,36 @@ public class MapManager : MonoBehaviour
         {
             string currentAreaId = GetCurrentAreaId();
             
-            // 可选：将地图实例缓存起来而不是直接销毁
-            if (mapSystemConfig.enableMapCaching && !loadedMaps.ContainsKey(currentAreaId))
+            if (mapSystemConfig.enableMapCaching)
             {
-                currentMapInstance.SetActive(false);
-                loadedMaps[currentAreaId] = currentMapInstance;
-                Debug.Log($"[MapManager] 地图已缓存: {currentAreaId}");
+                // 如果已经缓存了这个地图，直接销毁当前实例
+                if (loadedMaps.ContainsKey(currentAreaId))
+                {
+                    Destroy(currentMapInstance);
+                    Debug.Log($"[MapManager] 地图已存在缓存中，直接销毁: {currentAreaId}");
+                }
+                else
+                {
+                    // 检查缓存数量限制
+                    if (loadedMaps.Count >= mapSystemConfig.maxCachedMaps)
+                    {
+                        // 清理最旧的缓存（简单的FIFO策略）
+                        var oldestKey = loadedMaps.Keys.First();
+                        var oldestMap = loadedMaps[oldestKey];
+                        if (oldestMap != null) Destroy(oldestMap);
+                        loadedMaps.Remove(oldestKey);
+                        Debug.Log($"[MapManager] 缓存已满，清理旧地图: {oldestKey}");
+                    }
+                    
+                    // 缓存当前地图
+                    currentMapInstance.SetActive(false);
+                    loadedMaps[currentAreaId] = currentMapInstance;
+                    Debug.Log($"[MapManager] 地图已缓存: {currentAreaId}");
+                }
             }
             else
             {
+                // 缓存功能禁用时直接销毁
                 Destroy(currentMapInstance);
                 Debug.Log($"[MapManager] 地图已卸载: {currentAreaId}");
             }

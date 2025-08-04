@@ -1294,12 +1294,6 @@ public class SceneArea
     [FoldoutGroup("地图设置")]
     [LabelText("地图生成位置")]
     public Vector3 mapSpawnPosition = Vector3.zero;
-      [FoldoutGroup("地图设置")]
-    [LabelText("地图转换触发器")]
-    [InfoBox("该地图内的转换触发器配置")]
-    [ListDrawerSettings(ShowIndexLabels = true, ListElementLabelName = "triggerName")]
-    public List<AreaTransitionTriggerConfig> areaTransitionTriggers = new List<AreaTransitionTriggerConfig>();
-
     [FoldoutGroup("玩家设置", expanded: false)]
     [LabelText("玩家生成点")]
     [InfoBox("玩家进入此区域时的生成位置")]
@@ -1336,34 +1330,7 @@ public class SceneArea
 }
 #endregion
 
-#region 传送门配置数据结构
 
-/// <summary>
-/// 区域转换触发器配置
-/// </summary>
-[System.Serializable]
-public class AreaTransitionTriggerConfig
-{
-    [FoldoutGroup("基本信息", expanded: true)]
-    [LabelText("传送门名称")]
-    public string triggerName;
-    [FoldoutGroup("位置设置", expanded: true)]
-    [LabelText("传送门")]
-    [InfoBox("传送门")]
-      [ShowInInspector]
-
-    public Transform triggerPortal{get { return null; }
-        set {triggerPosition=value.position; }
-    }
-    [FoldoutGroup("位置设置", expanded: true)]
-    [LabelText("传送门位置")]
-    [InfoBox("传送门在场景中的位置")]
-    [ShowInInspector]
-    [ReadOnly]
-    public Vector3 triggerPosition;
-}
-
-#endregion
 
 #region 初始场景配置数据结构
 

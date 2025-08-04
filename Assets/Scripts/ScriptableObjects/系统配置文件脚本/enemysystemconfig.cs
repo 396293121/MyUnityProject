@@ -47,7 +47,10 @@ public class EnemyConfig: ScriptableObject
     [LabelText("稀有度")]
     [PropertyOrder(0.5f)]
     public EnemyRarity rarity = EnemyRarity.Common;
-    
+    [BoxGroup("标识信息")]
+    [LabelText("敌人UI预制体")]
+    [PropertyOrder(0.6f)]
+    public EnemyUI enemyUI;
     [FoldoutGroup("基础属性", expanded: true)]
     [LabelText("生命值")]
     [PropertyRange(1, 1000)]
@@ -82,14 +85,6 @@ public class EnemyConfig: ScriptableObject
     public DamageType damageType = DamageType.Physical;
     
     [FoldoutGroup("基础属性")]
-    [LabelText("攻击范围")]
-    [PropertyRange(0.1f, 10f)]
-      [ShowIf("canAttack")]
-    [SuffixLabel("米")]
-    [PropertyOrder(4)]
-    public float attackRange = 1.5f;
-    
-    [FoldoutGroup("基础属性")]
     [LabelText("攻击冷却时间")]
     [PropertyRange(0.5f, 10f)]
       [ShowIf("canAttack")]
@@ -115,7 +110,12 @@ public class EnemyConfig: ScriptableObject
     [SuffixLabel("米")]
     [PropertyOrder(6)]
     public float loseTargetRange = 12f;
-    
+    [FoldoutGroup("基础属性")]
+    [LabelText("保持距离")]
+    [Tooltip("敌人与玩家保持的最小距离，小于此距离时会反向移动")]
+    [Range(0f, 15f)]
+    [PropertyOrder(7)]
+    public float keepDistance = 0f;
     
     [FoldoutGroup("巡逻属性", expanded: true)]
     [LabelText("巡逻速度")]
@@ -167,13 +167,7 @@ public class EnemyConfig: ScriptableObject
     [LabelText("可用于BOSS任务")]
     [PropertyOrder(21)]
     public bool canBeBossTarget = false;
-    
-    [BoxGroup("任务相关配置")]
-    [LabelText("推荐等级")]
-    [InfoBox("推荐玩家等级")]
-    [PropertyRange(1, 100)]
-    [PropertyOrder(23)]
-    public int recommendedLevel = 1;
+
 
     [BoxGroup("任务相关配置")]
 

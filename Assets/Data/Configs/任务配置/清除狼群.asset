@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ff99bfb272ca674d8027a7fd8daa0ca, type: 3}
+  m_Name: "\u6E05\u9664\u72FC\u7FA4"
+  m_EditorClassIdentifier: 
+  questId: 2
+  questName: "\u6E05\u9664\u72FC\u7FA4"
+  description: "\u6E05\u9664\u5728\u540E\u5C71\u5C0F\u5F84\u5F98\u5F8A\u7684\u72FC\u7FA4"
+  questType: 1
+  questIcon: {fileID: 1041388216, guid: fe947e49ab348e244a59414e99568a46, type: 3}
+  questStatus: 0
+  requiredLevel: 3
+  prerequisiteQuests: []
+  objectives:
+  - description: "\u51FB\u67403\u53EA\u72FC"
+    objectiveType: 0
+    targetId: 3
+    targetDisplayName: "\u7070\u72FC"
+    idDictionary: {fileID: 11400000, guid: 7c94643e86c852b47b6cd5b6347c4cf3, type: 2}
+    currentProgress: 0
+    targetProgress: 3
+    isCompleted: 0
+    parameters:
+      minEnemyLevel: 0
+      maxEnemyLevel: 999
+      requiredQuality: 0
+      targetPosition: {x: 0, y: 0, z: 0}
+      targetRange: 5
+      customParameters: 
+      objectiveType: 0
+  rewards:
+  - experienceReward: 200
+    goldReward: 100
+    itemRewards: []

@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2971944022372277803}
   - component: {fileID: 5746987044232930164}
   m_Layer: 15
-  m_Name: "\u6D4B\u8BD5\u4EEC"
+  m_Name: "\u90E8\u843D\u4E2D\u5FC3\u95E8"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -147,10 +147,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf71f34741cd41b4eb454ef59f8cc694, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetMainAreaId: 1
-  targetSubAreaId: 1
-  targetSceneAreaId: 2
-  targetPortalName: "\u540E\u5C71\u5C0F\u5F84\u95E8"
+  portalConfig: {fileID: 11400000, guid: 6e21816a87fe26249882334fec83f35e, type: 2}
   requiredCondition: 
   conditionFailMessage: "\u6761\u4EF6\u4E0D\u6EE1\u8DB3\uFF0C\u65E0\u6CD5\u8FDB\u5165\u8BE5\u533A\u57DF"
   showTransitionUI: 1

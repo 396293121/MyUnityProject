@@ -1,0 +1,104 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88d4516ea41d539408c492ba3473857f, type: 3}
+  m_Name: "\u72FC\u738B\u51B2\u649E"
+  m_EditorClassIdentifier: 
+  skillName: "\u6280\u80FD\u540D\u79F0"
+  skillIcon: {fileID: 0}
+  audioCategory: 4
+  description: "\u6280\u80FD\u63CF\u8FF0"
+  damage: 1
+  damageType: 0
+  cooldown: 5
+  manaCost: 20
+  range: 5
+  skillEffect: {fileID: 0}
+  skillSound: 
+  skillHitSoundName: skillHit
+  buffSoundName: 
+  skillTimeStartSoundName: 
+  animationTrigger: Charge
+  animationDuration: 1
+  skillType: 2
+  targetType: 1
+  coneAngle: 90
+  coneRadius: 5
+  boxForward: 5
+  boxBackward: 0.2
+  boxLeft: 4.8
+  boxRight: 4.8
+  isCircularAOE: 1
+  aoeUp: 3
+  aoeDown: 1
+  aoeLeft: 2
+  aoeRight: 2
+  buffDuration: 10
+  attackBonus: 0
+  speedBonus: 0
+  healAmount: 50
+  summon: {fileID: 0}
+  summonHealth: 100
+  summonSize: {x: 1, y: 1, z: 1}
+  summonCount: 1
+  summonDuration: 30
+  followSummoner: 0
+  followDistance: 3
+  followSpeed: 5
+  isMove: 1
+  moveDistance: 20
+  updateDistance: 0.3
+  moveDuration: 0.8
+  moveType: 0
+  moveCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  invincibleDuringMove: 0
+  autoSetMoveDistance: 1
+  projectilePrefab: {fileID: 0}
+  type: 0
+  projectileDamageInterval: 0.5
+  isCastAnimation: 0
+  projectileDamageTime: 1
+  homingRadius: 5
+  homingProjectileCount: 1
+  spawnOffset: {x: 0, y: 0}
+  projectileSpeed: 15
+  projectileRange: 20
+  characterController: {fileID: 0}
+  enmeyController: {fileID: 0}
+  damageTime: 1
+  isMultiDamage: 1
+  damageInterval: 0.05
+  showHitbox: 1
+  hitboxColor: {r: 0, g: 0.10951256, b: 0.91194963, a: 1}
+  hitboxAlpha: 0.3

@@ -12,6 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5922000d7314764396f6754179dbfa7, type: 3}
   m_Name: DasiConfig
   m_EditorClassIdentifier: 
+  enemyId: 4
+  displayName: "\u795E\u79D8\u4EBA"
+  description: 
+  enemyIcon: {fileID: 0}
+  category: 0
+  rarity: 0
+  enemyUI: {fileID: 7152156121433935882, guid: 36f1ea01f0f3c874e980ab2b4ac15970, type: 3}
   health: 518
   moveSpeed: 4
   chaseSpeedRate: 1.4
@@ -29,5 +36,7 @@ MonoBehaviour:
   onScreenUpdateInterval: 0.02
   screenBoundaryExtension: 5
   expReward: 100
+  canBeKillTarget: 1
+  canBeBossTarget: 0
   twoSwingSkillTriggerDistance: 6
   energyBallTriggerDistance: 12

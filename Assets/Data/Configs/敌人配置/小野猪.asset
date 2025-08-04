@@ -18,6 +18,7 @@ MonoBehaviour:
   enemyIcon: {fileID: 0}
   category: 0
   rarity: 0
+  enemyUI: {fileID: 7152156121433935882, guid: 36f1ea01f0f3c874e980ab2b4ac15970, type: 3}
   health: 50
   moveSpeed: 3
   chaseSpeedRate: 1.2
@@ -26,7 +27,7 @@ MonoBehaviour:
   damageType: 0
   attackRange: 1.5
   attackCooldown: 2
-  defense: 5
+  defense: 15
   detectionRange: 10
   loseTargetRange: 12
   patrolSpeed: 1
@@ -37,7 +38,6 @@ MonoBehaviour:
   expReward: 10
   canBeKillTarget: 1
   canBeBossTarget: 0
-  recommendedLevel: 1
   chargeDistance: 8
   enrageHealthThreshold: 0.5
   stunDuration: 1.5

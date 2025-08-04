@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   npcConfig: {fileID: 11400000, guid: 8feef173ee056594eb890c562f07f81b, type: 2}
-  collider2D: {fileID: 7531239863870693263}
+  c2d: {fileID: 7531239863870693263}
   dialogueFlowchart: {fileID: 1130656374993832726, guid: 5e7b7ad473ae1314fad3241a6cd05d5b, type: 3}
   questIndicator: {fileID: 0}
   questActiveIndicator: {fileID: 0}

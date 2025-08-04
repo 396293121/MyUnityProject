@@ -245,10 +245,6 @@ public class PlayerAudioConfig : MonoBehaviour
             activeSources.Add(audioSource);
         }
 
-        if (enableDebugLog)
-        {
-            Debug.Log($"[PlayerAudioConfig] 播放音效: {soundName}, 音量: {audioSource.volume:F2}, 音调: {audioSource.pitch:F2}");
-        }
 
         // 启动协程来清理完成的音源
         StartCoroutine(CleanupAudioSource(audioSource, config.audioClip.length / finalPitch));

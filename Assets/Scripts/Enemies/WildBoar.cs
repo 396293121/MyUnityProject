@@ -229,7 +229,6 @@ public class WildBoar : Enemy
 //             Mathf.Abs(transform.localScale.x) * (shouldFaceRight ? 1 : -1),
 //             transform.localScale.y,
 //             transform.localScale.z);        
-                Debug.Log($"[WildBoar] 触发冲锋技能");
         }
         else
         {
@@ -238,41 +237,6 @@ public class WildBoar : Enemy
     }
 
     #region AI状态机系统
-
-    /// <summary>
-    /// 重写执行追击行为 - 野猪版本
-    /// </summary>
-    protected override void ExecuteChaseState()
-    {
-        if (!canMove || player == null) return;
-
-        // 如果正在执行技能，不进行状态切换
-        if (isSkill) return;
-
-        // 修改为攻击点检测
-        if (IsPlayerInAttackRange())
-        {
-            ChangeState(EnemyState.Attack);
-            return;
-        }
-
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-
-        // 检查是否失去目标
-        if (distanceToPlayer > loseTargetRange)
-        {
-            if (stateTimer > 2f) // 至少追击2秒后才能失去目标
-            {
-                ChangeState(EnemyState.Patrol);
-            }
-            return;
-        }
-
-        // 追击移动
-        Vector2 directionToPlayer = (player.position - transform.position).normalized;
-        rb2D.velocity = new Vector2(directionToPlayer.x * moveSpeed * chaseSpeedRate, rb2D.velocity.y);
-        UpdateFacing(directionToPlayer.x > 0);
-    }
 
     /// <summary>
     /// 重写执行巡逻行为 - 野猪版本
